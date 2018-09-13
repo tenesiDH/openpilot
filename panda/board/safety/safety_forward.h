@@ -64,7 +64,9 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       }
     }
     if (matched) {
-      // we found an exact match, begin forwarding
+      // re-init can to allow sending messages
+      safety_cb_enable_all();
+      // we found an exact match, begin forwarding with that profile
       identified_car = i;
       break;
     }
