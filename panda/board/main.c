@@ -491,6 +491,18 @@ int spi_cb_rx(uint8_t *data, int len, uint8_t *data_out) { return 0; };
 
 #endif
 
+// allow safety_forward to enable sending can messages
+void safety_cb_enable_all() {
+      // allow sending can messages
+      can_silent = ALL_CAN_LIVE;
+      can_autobaud_enabled[0] = false;
+      can_autobaud_enabled[1] = false;
+      #ifdef PANDA
+        can_autobaud_enabled[2] = false;
+      #endif
+      can_init_all();
+}
+
 
 // ***************************** main code *****************************
 
@@ -659,27 +671,17 @@ int main() {
     #endif
 
     // reset this every 16th pass
-    if ((cnt&0xF) == 0) {
-      // // check if usb connection is active, attempt forwarding if not
-      // if (usb_live == 0 && current_safety_mode != SAFETY_FORWARD) {
-      //   safety_set_mode(SAFETY_FORWARD, 0);
-      //   can_silent = ALL_CAN_LIVE;
-      //   can_init_all();
-      // }
-      // usb_live = 0;
-      pending_can_live = 0;
-    }
+    if ((cnt&0xF) == 0) pending_can_live = 0;
 
     // reset this every 2nd pass
     if ((cnt&0x2) == 0) {
       // check if usb connection is active, attempt forwarding if not
       if (usb_live == 0 && current_safety_mode != SAFETY_FORWARD) {
         safety_set_mode(SAFETY_FORWARD, 0);
-        can_silent = ALL_CAN_LIVE;
+        // leave can_silent in it's current state.  Fingerprinting will work with ALL_CAN_SILENT
         can_init_all();
       }
       usb_live = 0;
-      // pending_can_live = 0;
     }    
 
     #ifdef DEBUG

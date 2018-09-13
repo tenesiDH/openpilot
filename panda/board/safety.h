@@ -50,6 +50,8 @@ typedef struct {
 // This can be set by the safety hooks.
 int controls_allowed = 0;
 
+void safety_cb_enable_all();
+
 // Include the actual safety policies.
 #include "safety/safety_defaults.h"
 #include "safety/safety_honda.h"
