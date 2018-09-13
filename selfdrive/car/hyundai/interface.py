@@ -97,7 +97,7 @@ class CarInterface(object):
       ret.steerRatio = 16.9
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
       ret.steerKpV, ret.steerKiV = [[0.20], [0.01]]
-      ret.minSteerSpeed = 35 * CV.MPH_TO_MS
+      ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
