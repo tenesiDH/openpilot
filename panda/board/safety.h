@@ -50,6 +50,8 @@ typedef struct {
 // This can be set by the safety hooks.
 int controls_allowed = 0;
 
+void safety_cb_enable_all();
+
 // Include the actual safety policies.
 #include "safety/safety_defaults.h"
 #include "safety/safety_honda.h"
@@ -62,6 +64,7 @@ int controls_allowed = 0;
 #include "safety/safety_cadillac.h"
 #include "safety/safety_hyundai.h"
 #include "safety/safety_elm327.h"
+#include "safety/safety_forward.h"
 
 const safety_hooks *current_hooks = &nooutput_hooks;
 
@@ -104,6 +107,7 @@ typedef struct {
 #define SAFETY_TOYOTA_NOLIMITS 0x1336
 #define SAFETY_ALLOUTPUT 0x1337
 #define SAFETY_ELM327 0xE327
+#define SAFETY_FORWARD 0xFA0D
 
 const safety_hook_config safety_hook_registry[] = {
   {SAFETY_NOOUTPUT, &nooutput_hooks},
@@ -120,15 +124,19 @@ const safety_hook_config safety_hook_registry[] = {
 #endif
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
   {SAFETY_ELM327, &elm327_hooks},
+  {SAFETY_FORWARD, &forward_hooks},
 };
 
 #define HOOK_CONFIG_COUNT (sizeof(safety_hook_registry)/sizeof(safety_hook_config))
+
+extern uint16_t current_safety_mode = SAFETY_NOOUTPUT;
 
 int safety_set_mode(uint16_t mode, int16_t param) {
   for (int i = 0; i < HOOK_CONFIG_COUNT; i++) {
     if (safety_hook_registry[i].id == mode) {
       current_hooks = safety_hook_registry[i].hooks;
       if (current_hooks->init) current_hooks->init(param);
+      current_safety_mode = mode;
       return 0;
     }
   }

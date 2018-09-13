@@ -70,6 +70,8 @@ void debug_ring_callback(uart_ring *ring) {
 
 // ***************************** USB port *****************************
 
+int usb_live = 0;
+
 int get_health_pkt(void *dat) {
   struct __attribute__((packed)) {
     uint32_t voltage;
@@ -129,6 +131,7 @@ int get_health_pkt(void *dat) {
 }
 
 int usb_cb_ep1_in(uint8_t *usbdata, int len, int hardwired) {
+  usb_live = 1;
   CAN_FIFOMailBox_TypeDef *reply = (CAN_FIFOMailBox_TypeDef *)usbdata;
   int ilen = 0;
   while (ilen < min(len/0x10, 4) && can_pop(&can_rx_q, &reply[ilen])) ilen++;
@@ -137,6 +140,7 @@ int usb_cb_ep1_in(uint8_t *usbdata, int len, int hardwired) {
 
 // send on serial, first byte to select the ring
 void usb_cb_ep2_out(uint8_t *usbdata, int len, int hardwired) {
+  usb_live = 1;  
   if (len == 0) return;
   uart_ring *ur = get_ring_by_number(usbdata[0]);
   if (!ur) return;
@@ -147,6 +151,7 @@ void usb_cb_ep2_out(uint8_t *usbdata, int len, int hardwired) {
 
 // send on CAN
 void usb_cb_ep3_out(uint8_t *usbdata, int len, int hardwired) {
+  usb_live = 1;  
   int dpkt = 0;
   for (dpkt = 0; dpkt < len; dpkt += 0x10) {
     uint32_t *tf = (uint32_t*)(&usbdata[dpkt]);
@@ -166,11 +171,13 @@ void usb_cb_ep3_out(uint8_t *usbdata, int len, int hardwired) {
 int is_enumerated = 0;
 
 void usb_cb_enumeration_complete() {
+  usb_live = 1;
   puts("USB enumeration complete\n");
   is_enumerated = 1;
 }
 
 int usb_cb_control_msg(USB_Setup_TypeDef *setup, uint8_t *resp, int hardwired) {
+  usb_live = 1;
   int resp_len = 0;
   uart_ring *ur = NULL;
   int i;
@@ -484,6 +491,18 @@ int spi_cb_rx(uint8_t *data, int len, uint8_t *data_out) { return 0; };
 
 #endif
 
+// allow safety_forward to enable sending can messages
+void safety_cb_enable_all() {
+      // allow sending can messages
+      can_silent = ALL_CAN_LIVE;
+      can_autobaud_enabled[0] = false;
+      can_autobaud_enabled[1] = false;
+      #ifdef PANDA
+        can_autobaud_enabled[2] = false;
+      #endif
+      can_init_all();
+}
+
 
 // ***************************** main code *****************************
 
@@ -653,6 +672,17 @@ int main() {
 
     // reset this every 16th pass
     if ((cnt&0xF) == 0) pending_can_live = 0;
+
+    // reset this every 2nd pass
+    if ((cnt&0x2) == 0) {
+      // check if usb connection is active, attempt forwarding if not
+      if (usb_live == 0 && current_safety_mode != SAFETY_FORWARD) {
+        safety_set_mode(SAFETY_FORWARD, 0);
+        // leave can_silent in it's current state.  Fingerprinting will work with ALL_CAN_SILENT
+        can_init_all();
+      }
+      usb_live = 0;
+    }    
 
     #ifdef DEBUG
       puts("** blink ");
