@@ -20,6 +20,7 @@ class SteerLimitParams:
 class CarController(object):
   def __init__(self, dbc_name, car_fingerprint, enable_camera):
     self.apply_steer_last = 0
+    self.turning_inhibit = 0
     self.car_fingerprint = car_fingerprint
     self.lkas11_cnt = 0
     self.cnt = 0
