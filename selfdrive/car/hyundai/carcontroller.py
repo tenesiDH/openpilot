@@ -12,7 +12,7 @@ from selfdrive.can.packer import CANPacker
 class SteerLimitParams:
   STEER_MAX = 250   # 409 is the max
   STEER_DELTA_UP = 3
-  STEER_DELTA_DOWN = 7
+  STEER_DELTA_DOWN = 5
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
@@ -41,7 +41,15 @@ class CarController(object):
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
-    if not enabled:
+
+    if CS.left_blinker_on == 1 or CS.right_blinker_on == 1 or \
+      CS.left_blinker_flash == 1 or CS.right_blinker_flash == 1:
+      self.turning_inhibit = 100  # Disable for 1.0 Seconds after blinker turned off
+
+    if self.turning_inhibit > 0:
+      self.turning_inhibit = self.turning_inhibit - 1
+
+    if not enabled or self.turning_inhibit > 0:
       apply_steer = 0
 
     steer_req = 1 if enabled else 0
@@ -60,6 +68,9 @@ class CarController(object):
         can_sends.append(create_1191())
       if (self.cnt % 7) == 0:
         can_sends.append(create_1156())
+
+    if (self.cnt % 20) == 1:
+      print "Steer", apply_steer
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    enabled, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
