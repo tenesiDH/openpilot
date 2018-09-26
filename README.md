@@ -1,4 +1,20 @@
-[![](https://i.imgur.com/VlKV6V8.png)](#)
+Community Port information
+======
+
+This is the "Community Port" for Kia and Hyundai.
+
+The port was started by Andrew Frahn of Emmertex.  
+@ku7 on commaai Slack.  
+https://www.youtube.com/channel/UCXmUBvIuFLjLRuJ0mX298Ng
+
+Please support the port however you can!
+
+
+
+The Community port must be safe, and drivable, but will contain many features not in line with Comma policies.
+
+If you have changes which you think can be upstreamed to official comma, either do a PR direct to their github repo, or PR to hyundai-dev on emmertex repo.
+
 
 Welcome to openpilot
 ======
@@ -16,20 +32,6 @@ We have a [Twitter you should follow](https://twitter.com/comma_ai).
 
 Also, we have a 3500+ person [community on slack](https://slack.comma.ai).
 
-<table>
-  <tr>
-    <td><a href="https://www.youtube.com/watch?v=9TDi0BHgXyo" title="YouTube" rel="noopener"><img src="https://i.imgur.com/gBTo7yB.png"></a></td>
-    <td><a href="https://www.youtube.com/watch?v=1zCtj3ckGFo" title="YouTube" rel="noopener"><img src="https://i.imgur.com/gNhhcep.png"></a></td>
-    <td><a href="https://www.youtube.com/watch?v=Qd2mjkBIRx0" title="YouTube" rel="noopener"><img src="https://i.imgur.com/tFnSexp.png"></a></td>
-    <td><a href="https://www.youtube.com/watch?v=ju12vlBm59E" title="YouTube" rel="noopener"><img src="https://i.imgur.com/3BKiJVy.png"></a></td>
-  </tr>
-  <tr>
-    <td><a href="https://www.youtube.com/watch?v=Z5VY5FzgNt4" title="YouTube" rel="noopener"><img src="https://i.imgur.com/3I9XOK2.png"></a></td>
-    <td><a href="https://www.youtube.com/watch?v=blnhZC7OmMg" title="YouTube" rel="noopener"><img src="https://i.imgur.com/f9IgX6s.png"></a></td>
-    <td><a href="https://www.youtube.com/watch?v=iRkz7FuJsA8" title="YouTube" rel="noopener"><img src="https://i.imgur.com/Vo5Zvmn.png"></a></td>
-    <td><a href="https://www.youtube.com/watch?v=IHjEqAKDqjM" title="YouTube" rel="noopener"><img src="https://i.imgur.com/V9Zd81n.png"></a></td>
-  </tr>
-</table>
 
 Hardware
 ------
@@ -40,6 +42,8 @@ Install openpilot on a neo device by entering ``https://openpilot.comma.ai`` dur
 
 Supported Cars
 ------
+
+Please note, this is the HYUNDAI AND KIA Community Build, while others are supported, this is not their intended fork.
 
 | Make               | Model                 | Supported Package    | Lateral | Longitudinal   | No Accel Below   | No Steer Below |
 | -------------------| ----------------------| ---------------------| --------| ---------------| -----------------| ---------------|
