@@ -66,8 +66,8 @@ class CarInterface(object):
     centerToFront_civic = wheelbase_civic * 0.4
     centerToRear_civic = wheelbase_civic - centerToFront_civic
     rotationalInertia_civic = 2500
-    tireStiffnessFront_civic = 192150
-    tireStiffnessRear_civic = 202500
+    tireStiffnessFront_civic = 192150   # Elantra Requires 192150 * 0.405
+    tireStiffnessRear_civic = 202500    # Elantra Requires 202500 * 0.405
 
     ret.steerActuatorDelay = 0.1  # Default delay
     tire_stiffness_factor = 1.
@@ -95,13 +95,13 @@ class CarInterface(object):
       ret.steerKpV, ret.steerKiV = [[0.25], [0.05]]
       ret.minSteerSpeed = 0.
     elif candidate == CAR.ELANTRA:
-      ret.steerKf = 0.00004
+      ret.steerKf = 0.00006
       ret.steerRateCost = 0.5
       ret.mass = 1275 + std_cargo
       ret.wheelbase = 2.7
-      ret.steerRatio = 16.9
+      ret.steerRatio = 13.73        # Spec
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.20], [0.01]]
+      ret.steerKpV, ret.steerKiV = [[0.40], [0.1]]
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS:
       ret.steerKf = 0.00005
