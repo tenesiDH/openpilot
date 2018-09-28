@@ -72,7 +72,7 @@ class CarInterface(object):
     ret.steerActuatorDelay = 0.1  # Default delay
     tire_stiffness_factor = 1.
 
-    if candidate == CAR.SANTA_FE:
+    if candidate == CAR.SANTA_FE or candidate == CAR.SANTA_FE_2:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
       ret.mass = 3982 * CV.LB_TO_KG + std_cargo
@@ -192,7 +192,10 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    ret.gearShifter = self.CS.gear_shifter
+    if self.CP.carFingerprint == CAR.ELANTRA or self.CP.carFingerprint == CAR.KIA_SORENTO:
+      ret.gearShifter = self.CS.gear_shifter_cluster
+    else:
+      ret.gearShifter = self.CS.gear_shifter
 
     # gas pedal
     ret.gas = self.CS.car_gas
