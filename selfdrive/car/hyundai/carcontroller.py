@@ -5,14 +5,14 @@ from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_clu11
 from selfdrive.car.hyundai.values import Buttons
 from selfdrive.can.packer import CANPacker
-
+import numpy as np
 
 # Steer torque limits
 
 class SteerLimitParams:
   STEER_MAX = 250   # 409 is the max
   STEER_DELTA_UP = 3
-  STEER_DELTA_DOWN = 5
+  STEER_DELTA_DOWN = 4
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
@@ -29,8 +29,8 @@ class CarController(object):
     # True when giraffe switch 2 is low and we need to replace all the camera messages
     # otherwise we forward the camera msgs and we just replace the lkas cmd signals
     self.camera_disconnected = False
-
     self.packer = CANPacker(dbc_name)
+
 
   def update(self, sendcan, enabled, CS, actuators, pcm_cancel_cmd, hud_alert):
 
@@ -39,6 +39,8 @@ class CarController(object):
 
     ### Steering Torque
     apply_steer = actuators.steer * SteerLimitParams.STEER_MAX
+
+    
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
