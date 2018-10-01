@@ -72,7 +72,7 @@ class CarInterface(object):
     ret.steerActuatorDelay = 0.1  # Default delay
     tire_stiffness_factor = 1.
 
-    if candidate == CAR.SANTA_FE or candidate == CAR.SANTA_FE_2:
+    if candidate == CAR.SANTA_FE:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
       ret.mass = 3982 * CV.LB_TO_KG + std_cargo
@@ -84,6 +84,19 @@ class CarInterface(object):
 
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
       ret.steerKpV, ret.steerKiV = [[0.37], [0.1]]
+      ret.minSteerSpeed = 0.
+    elif candidate == CAR.SANTA_FE_2:
+      ret.steerKf = 0.00005
+      ret.steerRateCost = 0.5
+      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.766
+
+      # Values from optimizer
+      ret.steerRatio = 16.55  # 13.8 is spec end-to-end
+      tire_stiffness_factor = 0.82
+
+      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
+      ret.steerKpV, ret.steerKiV = [[0.30], [0.05]]
       ret.minSteerSpeed = 0.
     elif candidate == CAR.KIA_SORENTO:
       ret.steerKf = 0.00005
