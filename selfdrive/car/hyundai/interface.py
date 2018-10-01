@@ -70,7 +70,7 @@ class CarInterface(object):
     tireStiffnessRear_civic = 202500
 
     ret.steerActuatorDelay = 0.1  # Default delay
-    tire_stiffness_factor = 1.
+    tire_stiffness_factor = 0.85  # Given all tested vehicle so far run better with this reduced below 0.85, this will becomes the default for now
 
     if candidate == CAR.SANTA_FE:
       ret.steerKf = 0.00005
