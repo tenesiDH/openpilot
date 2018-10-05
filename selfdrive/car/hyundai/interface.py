@@ -103,8 +103,8 @@ class CarInterface(object):
       ret.steerRateCost = 0.5
       ret.mass = 1985 + std_cargo
       ret.wheelbase = 2.78
-      ret.steerRatio = 14.4 * 1.17  # 12% higher at the center seems reasonable
-      tire_stiffness_factor = 0.80  # Based on Santa Fe since they are basically the same vehicle
+      ret.steerRatio = 14.4         # Stock Value
+      tire_stiffness_factor = 0.75  # Based on testing
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
       ret.steerKpV, ret.steerKiV = [[0.20], [0.05]]
       ret.minSteerSpeed = 0.
