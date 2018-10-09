@@ -5,6 +5,7 @@ from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_clu11
 from selfdrive.car.hyundai.values import Buttons
 from selfdrive.can.packer import CANPacker
+from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
 
 # Steer torque limits
@@ -30,9 +31,16 @@ class CarController(object):
     # otherwise we forward the camera msgs and we just replace the lkas cmd signals
     self.camera_disconnected = False
     self.packer = CANPacker(dbc_name)
+    self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
 
   def update(self, sendcan, enabled, CS, actuators, pcm_cancel_cmd, hud_alert):
+
+    #update custom UI buttons and alerts
+    CS.UE.update_custom_ui()
+    if (frame % 1000 == 0):
+      CS.cstm_btns.send_button_info()
+      CS.UE.uiSetCarEvent(CS.cstm_btns.car_folder,CS.cstm_btns.car_name)
 
     if not self.enable_camera:
       return
@@ -40,17 +48,32 @@ class CarController(object):
     ### Steering Torque
     apply_steer = actuators.steer * SteerLimitParams.STEER_MAX
 
-    
+ 
+
+    # Get the angle from ALCA.
+    alca_enabled = False
+    alca_steer = 0.
+    alca_angle = 0.
+    turn_signal_needed = 0
+    # Update ALCA status and custom button every 0.1 sec.
+    if self.ALCA.pid == None:
+      self.ALCA.set_pid(CS)
+    if (frame % 10 == 0):
+      self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
+
+    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, frame, actuators)
+    apply_steer = int(round(alca_steer * STEER_MAX))
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
 
-    if CS.left_blinker_on == 1 or CS.right_blinker_on == 1 or \
-      CS.left_blinker_flash == 1 or CS.right_blinker_flash == 1:
-      self.turning_inhibit = 100  # Disable for 1.0 Seconds after blinker turned off
 
-    if self.turning_inhibit > 0:
-      self.turning_inhibit = self.turning_inhibit - 1
+    #if CS.left_blinker_on == 1 or CS.right_blinker_on == 1 or \
+    #  CS.left_blinker_flash == 1 or CS.right_blinker_flash == 1:
+    #  self.turning_inhibit = 100  # Disable for 1.0 Seconds after blinker turned off
+
+    #if self.turning_inhibit > 0:
+    #  self.turning_inhibit = self.turning_inhibit - 1
 
     if not enabled or self.turning_inhibit > 0:
       apply_steer = 0
