@@ -25,7 +25,7 @@ def apply_std_steer_torque_limits(apply_torque, apply_torque_last, driver_torque
 
   return int(round(apply_torque))
 
-def limit_steer_rate(apply_torque, apply_torque_last, LIMITS)
+def limit_steer_rate(apply_torque, apply_torque_last, LIMITS):
 
   # slow rate if steer torque increases in magnitude
   if apply_torque_last > 0:
