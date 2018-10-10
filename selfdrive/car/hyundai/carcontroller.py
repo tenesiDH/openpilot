@@ -38,7 +38,7 @@ class CarController(object):
 
     #update custom UI buttons and alerts
     CS.UE.update_custom_ui()
-    if (frame % 1000 == 0):
+    if (self.cnt % 100 == 0):
       CS.cstm_btns.send_button_info()
       CS.UE.uiSetCarEvent(CS.cstm_btns.car_folder,CS.cstm_btns.car_name)
 
@@ -58,11 +58,11 @@ class CarController(object):
     # Update ALCA status and custom button every 0.1 sec.
     if self.ALCA.pid == None:
       self.ALCA.set_pid(CS)
-    if (frame % 10 == 0):
+    if (self.cnt % 10 == 0):
       self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
-    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, frame, actuators)
-    apply_steer = int(round(alca_steer * STEER_MAX))
+    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
+    apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
