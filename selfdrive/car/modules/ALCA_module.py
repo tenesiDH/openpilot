@@ -84,6 +84,7 @@ class ALCAController(object):
     self.laneChange_direction = 0 # direction of the lane change 
     self.prev_right_blinker_on = False # local variable for prev position
     self.prev_left_blinker_on = False # local variable for prev position
+    self.ignore_missing_blinker = 0
     self.pid = None
     self.last10delta = []
 
@@ -128,14 +129,14 @@ class ALCAController(object):
     turn_signal_needed = 0 # send 1 for left, 2 for right 0 for not needed
 
     if (not CS.right_blinker_on) and (not CS.left_blinker_on) and \
-    (self.laneChange_enabled ==7):
+    (self.laneChange_enabled ==7) and (not ignore_missing_blinker):
         self.laneChange_enabled =1
         self.laneChange_counter =0
         self.laneChange_direction =0
         CS.UE.custom_alert_message(-1,"",0)
     
     if (not CS.right_blinker_on) and (not CS.left_blinker_on) and \
-      (self.laneChange_enabled > 1):
+      (self.laneChange_enabled > 1) and (not ignore_missing_blinker):
       # no blinkers on but we are still changing lane, so we need to send blinker command
       if self.laneChange_direction == -1:
         turn_signal_needed = 1
@@ -361,9 +362,10 @@ class ALCAController(object):
 
 
 
-  def update(self,enabled,CS,frame,actuators):
+  def update(self,enabled,CS,frame,actuators,turning_signal=0):
     if self.alcaEnabled:
       # ALCA enabled
+        self.ignore_missing_blinker = turning_signal # Kia / Hyundai Blinker Fix
         new_angle = 0.
         new_ALCA_Enabled = False
         new_turn_signal = 0

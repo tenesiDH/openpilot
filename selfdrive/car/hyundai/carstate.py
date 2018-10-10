@@ -65,8 +65,14 @@ def get_can_parser(CP):
     ("CR_Mdps_DrvTq", "MDPS11", 0),
 
     ("CR_Mdps_StrColTq", "MDPS12", 0),
+    ("CF_Mdps_Def", "MDPS12", 0),
     ("CF_Mdps_ToiActive", "MDPS12", 0),
     ("CF_Mdps_ToiUnavail", "MDPS12", 0),
+    ("CF_Mdps_MsgCount2", "MDPS12", 0),
+    ("CF_Mdps_Chksum2", "MDPS12", 0),
+    ("CF_Mdps_ToiFlt", "MDPS12", 0),
+    ("CF_Mdps_SErr", "MDPS12", 0),
+    ("CR_Mdps_StrTq", "MDPS12", 0),
     ("CF_Mdps_FailStat", "MDPS12", 0),
     ("CR_Mdps_OutTq", "MDPS12", 0),
 
@@ -115,12 +121,14 @@ def get_camera_parser(CP):
     ("CF_Lkas_FcwCollisionWarning", "LKAS11", 0),
     ("CF_Lkas_FusionState", "LKAS11", 0),
     ("CF_Lkas_FcwOpt_USM", "LKAS11", 0),
-    ("CF_Lkas_LdwsOpt_USM", "LKAS11", 0)
+    ("CF_Lkas_LdwsOpt_USM", "LKAS11", 0),
+    ("CF_Lkas_Unknown1", "LKAS11", 0),
+    ("CF_Lkas_Unknown2", "LKAS11", 0)
   ]
 
   checks = []
 
-  return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 2)
+  return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 1)
 
 class CarState(object):
   def __init__(self, CP):
@@ -160,8 +168,8 @@ class CarState(object):
   def init_ui_buttons(self):
     btns = []
     btns.append(UIButton("alca", "ALC", 0, "", 0))
-    btns.append(UIButton("", "", 0, "", 1))
-    btns.append(UIButton("", "", 0, "", 2))
+    btns.append(UIButton("cam", "CAM", 0, "", 1))
+    btns.append(UIButton("alwon", "ON", 0, "", 2))
     btns.append(UIButton("sound", "SND", 1, "", 3))
     btns.append(UIButton("", "", 0, "", 4))
     btns.append(UIButton("", "", 0, "", 5))
@@ -266,6 +274,7 @@ class CarState(object):
     else:
       self.gear_shifter_cluster = "unknown"
 
-    # save the entire LKAS11 and CLU11
+    # save the entire LKAS11, CLU11 and MDPS12
     self.lkas11 = cp_cam.vl["LKAS11"]
     self.clu11 = cp.vl["CLU11"]
+    self.mdps12 = cp.vl["MDPS12"]

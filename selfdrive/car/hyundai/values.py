@@ -50,10 +50,10 @@ CHECKSUM = {
 }
 
 DBC = {
-  CAR.SANTA_FE: dbc_dict('hyundai_santa_fe_2019_ccan', None),
-  CAR.SANTA_FE_2: dbc_dict('hyundai_santa_fe_2019_ccan', None),
-  CAR.ELANTRA: dbc_dict('hyundai_santa_fe_2019_ccan', None),
-  CAR.GENESIS: dbc_dict('hyundai_santa_fe_2019_ccan', None),
-  CAR.KIA_SORENTO: dbc_dict('hyundai_santa_fe_2019_ccan', None),
-  CAR.KIA_STINGER: dbc_dict('hyundai_santa_fe_2019_ccan', None),
+  CAR.SANTA_FE: dbc_dict('hyundai_kia_generic', None),
+  CAR.SANTA_FE_2: dbc_dict('hyundai_kia_generic', None),
+  CAR.ELANTRA: dbc_dict('hyundai_kia_generic', None),
+  CAR.GENESIS: dbc_dict('hyundai_kia_generic', None),
+  CAR.KIA_SORENTO: dbc_dict('hyundai_kia_generic', None),
+  CAR.KIA_STINGER: dbc_dict('hyundai_kia_generic', None),
 }
