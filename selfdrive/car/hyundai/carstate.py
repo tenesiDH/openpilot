@@ -82,6 +82,9 @@ def get_can_parser(CP):
 
     ("SAS_Angle", "SAS11", 0),
     ("SAS_Speed", "SAS11", 0),
+
+    ("CF_Lca_IndLeft", "LCA11", 0),
+    ("CF_Lca_IndRight", "LCA11", 0),
   ]
 
   checks = [
@@ -107,6 +110,7 @@ def get_camera_parser(CP):
 
   signals = [
     # sig_name, sig_address, default
+    ("CF_Lkas_Icon", "LKAS11", 0),
     ("CF_Lkas_LdwsSysState", "LKAS11", 0),
     ("CF_Lkas_SysWarning", "LKAS11", 0),
     ("CF_Lkas_LdwsLHWarning", "LKAS11", 0),
@@ -123,7 +127,9 @@ def get_camera_parser(CP):
     ("CF_Lkas_FcwOpt_USM", "LKAS11", 0),
     ("CF_Lkas_LdwsOpt_USM", "LKAS11", 0),
     ("CF_Lkas_Unknown1", "LKAS11", 0),
-    ("CF_Lkas_Unknown2", "LKAS11", 0)
+    ("CF_Lkas_Unknown2", "LKAS11", 0),
+    ("CF_Lkas_ActToi", "LKAS11", 0),
+    ("CR_Lkas_StrToqReq", "LKAS11", 0)
   ]
 
   checks = []
@@ -169,7 +175,7 @@ class CarState(object):
     btns = []
     btns.append(UIButton("alca", "ALC", 0, "", 0))
     btns.append(UIButton("cam", "CAM", 0, "", 1))
-    btns.append(UIButton("alwon", "ON", 0, "", 2))
+    btns.append(UIButton("alwon", "MAD", 0, "", 2))
     btns.append(UIButton("sound", "SND", 1, "", 3))
     btns.append(UIButton("", "", 0, "", 4))
     btns.append(UIButton("", "", 0, "", 5))
@@ -278,3 +284,7 @@ class CarState(object):
     self.lkas11 = cp_cam.vl["LKAS11"]
     self.clu11 = cp.vl["CLU11"]
     self.mdps12 = cp.vl["MDPS12"]
+
+    # Lane Change Assist Messages
+    self.lca_left = cp.vl["LCA11"]["CF_Lca_IndLeft"]
+    self.lca_right = cp.vl["LCA11"]["CF_Lca_IndRight"]

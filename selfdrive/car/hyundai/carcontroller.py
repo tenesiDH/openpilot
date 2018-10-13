@@ -2,7 +2,7 @@ from selfdrive.car import limit_steer_rate
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11
+                                             create_clu11, create_mdps12
 from selfdrive.car.hyundai.values import Buttons
 from selfdrive.can.packer import CANPacker
 from selfdrive.car.modules.ALCA_module import ALCAController
@@ -16,13 +16,13 @@ class SteerLimitParams:
   STEER_DELTA_DOWN = 4
 
 class CarController(object):
-  STEER_DRIVER_KILL = 1.5
 
   def __init__(self, dbc_name, car_fingerprint, enable_camera):
     self.apply_steer_last = 0
     self.turning_signal_timer = 0
     self.car_fingerprint = car_fingerprint
     self.lkas11_cnt = 0
+    self.mdps12_cnt = 0
     self.cnt = 0
     self.last_resume_cnt = 0
     self.enable_camera = enable_camera
@@ -41,7 +41,7 @@ class CarController(object):
     force_enable = False
 
     # I don't care about your opinion, deal with it!
-    if (CS.cstm_btns.get_button_status("alwon") > 0) and (CS.acc_active > 0):
+    if (CS.cstm_btns.get_button_status("alwon") > 0): # and CS.acc_active:
       enabled = True
       force_enable = True
 
@@ -76,7 +76,10 @@ class CarController(object):
       self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
     alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators, turning_signal)
-    apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
+    if force_enable and not CS.acc_active:
+      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
+    else:
+      apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
 
     # Limit steer rate for safety
     apply_steer = limit_steer_rate(apply_steer, self.apply_steer_last, SteerLimitParams)
@@ -93,6 +96,7 @@ class CarController(object):
 
     self.lkas11_cnt = self.cnt % 0x10
     self.clu11_cnt = self.cnt % 0x10
+    self.mdps12_cnt = self.cnt % 0x100
 
     if self.camera_disconnected:
       if (self.cnt % 10) == 0:
@@ -108,7 +112,7 @@ class CarController(object):
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), keep_stock=(not self.camera_disconnected)))
 
-    can_sends.append(create_mdps12(CS.mdps12, CS.lkas11))
+    can_sends.append(create_mdps12(self.packer, self.mdps12_cnt, CS.mdps12, CS.lkas11))
 
     if pcm_cancel_cmd and (not force_enable):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))

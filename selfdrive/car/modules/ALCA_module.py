@@ -129,14 +129,14 @@ class ALCAController(object):
     turn_signal_needed = 0 # send 1 for left, 2 for right 0 for not needed
 
     if (not CS.right_blinker_on) and (not CS.left_blinker_on) and \
-    (self.laneChange_enabled ==7) and (not ignore_missing_blinker):
+    (self.laneChange_enabled ==7) and (not self.ignore_missing_blinker):
         self.laneChange_enabled =1
         self.laneChange_counter =0
         self.laneChange_direction =0
         CS.UE.custom_alert_message(-1,"",0)
     
     if (not CS.right_blinker_on) and (not CS.left_blinker_on) and \
-      (self.laneChange_enabled > 1) and (not ignore_missing_blinker):
+      (self.laneChange_enabled > 1) and (not self.ignore_missing_blinker):
       # no blinkers on but we are still changing lane, so we need to send blinker command
       if self.laneChange_direction == -1:
         turn_signal_needed = 1
@@ -160,6 +160,8 @@ class ALCAController(object):
       CS.UE.custom_alert_message(3,"Auto Lane Change Unavailable!",500,3)
       CS.cstm_btns.set_button_status("alca",9)
 
+    
+    
 
     if self.alcaEnabled and enabled and (((not self.prev_right_blinker_on) and CS.right_blinker_on) or \
       ((not self.prev_left_blinker_on) and CS.left_blinker_on))  and \
@@ -321,7 +323,10 @@ class ALCAController(object):
       # the same test for hand on wheel is done at ANY stage throughout the lane change process
       # CONTROL: during this stage we use the actuator angle to steer (OP Control)
       if self.laneChange_enabled == 5:
-        if self.laneChange_counter == 1:
+        if (self.laneChange_direction == -1 and CS.lca_left == 1) or (self.laneChange_direction == 1 and CS.lca_right == 1):
+          self.laneChange_counter = 1
+          CS.UE.custom_alert_message(2,"Lane not clear, waiting(w)", 100)
+        elif self.laneChange_counter == 1:
           CS.UE.custom_alert_message(2,"Auto Lane Change Engaged! (2)",self.laneChange_wait * 100)
         self.laneChange_counter += 1
         if self.laneChange_counter > (self.laneChange_wait -1) *100:
