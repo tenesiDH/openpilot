@@ -4,6 +4,7 @@ from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
 from selfdrive.car.modules.UIBT_module import UIButtons,UIButton
 from selfdrive.car.modules.UIEV_module import UIEvents
+from selfdrive.car.modules.OSM_module import OSM
 import numpy as np
 
 
@@ -77,6 +78,7 @@ def get_can_parser(CP):
     ("CR_Mdps_OutTq", "MDPS12", 0),
 
     ("VSetDis", "SCC11", 0),
+    ("MainMode_ACC", "SCC11", 0),
     ("SCCInfoDisplay", "SCC11", 0),
     ("ACCMode", "SCC12", 1),
 
@@ -158,6 +160,10 @@ class CarState(object):
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
 
+    # OSM
+    #self.OSM = OSM(self)
+    #self.OSM.getlocal()
+
     #BB UIEvents
     self.UE = UIEvents(self)
 
@@ -204,7 +210,8 @@ class CarState(object):
 
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
     self.main_on = True
-    self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else 1  # I'm Dangerous!
+    self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
+      (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
     self.pcm_acc_status = int(self.acc_active)
 
     # calc best v_ego estimate, by averaging two opposite corners
