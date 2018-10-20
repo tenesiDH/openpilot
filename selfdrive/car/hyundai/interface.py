@@ -128,13 +128,15 @@ class CarInterface(object):
       ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
       ret.minSteerSpeed = 35 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_STINGER:
-      ret.steerKf = 0.00005
+      ret.steerKf = 0.00004
       ret.steerRateCost = 0.5
-      ret.mass = 1825 + std_cargo
-      ret.wheelbase = 2.78
-      ret.steerRatio = 14.4 * 1.15   # 15% higher at the center seems reasonable
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.25], [0.05]]
+      ret.mass = 3637 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.91
+      ret.steerRatio = 12.6 * 1.15   # 15% higher at the center seems reasonable
+      tire_stiffness_factor = 0.82
+      # Speed conversion:                 0,  20,  45,  75 mph
+      ret.steerKpBP, ret.steerKiBP = [[  0.,  9., 20., 34.], [  0.,  9., 20., 34.]]          
+      ret.steerKpV, ret.steerKiV =   [[0.15,0.15,0.35,0.35], [0.03,0.03,0.01,0.01]]   # 0.15 had some ponging, 0.05 still had some
       ret.minSteerSpeed = 0.
 
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
