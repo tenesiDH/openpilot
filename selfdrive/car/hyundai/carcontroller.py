@@ -41,7 +41,7 @@ class CarController(object):
     force_enable = False
 
     # I don't care about your opinion, deal with it!
-    if (CS.cstm_btns.get_button_status("alwon") > 0): # and CS.acc_active:
+    if (CS.cstm_btns.get_button_status("alwon") > 0) and CS.acc_active:
       enabled = True
       force_enable = True
 
