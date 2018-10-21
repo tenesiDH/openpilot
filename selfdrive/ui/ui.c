@@ -236,6 +236,7 @@ typedef struct UIState {
 
 
 #include "bbui.h"
+#include "dashcam.h"
 
 static int last_brightness = -1;
 static void set_brightness(UIState *s, int brightness) {
@@ -1860,6 +1861,7 @@ int main() {
     }
 
     if (s->awake) {
+      dashcam(s, touch_x, touch_y);
       ui_draw(s);
       glFinish();
       should_swap = true;
