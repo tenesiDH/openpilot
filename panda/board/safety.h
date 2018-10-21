@@ -58,6 +58,7 @@ void safety_cb_enable_all();
 #include "safety/safety_toyota.h"
 #ifdef PANDA
 #include "safety/safety_toyota_ipas.h"
+#include "safety/safety_tesla.h"
 #endif
 #include "safety/safety_gm.h"
 #include "safety/safety_ford.h"
@@ -103,6 +104,7 @@ typedef struct {
 #define SAFETY_FORD 5
 #define SAFETY_CADILLAC 6
 #define SAFETY_HYUNDAI 7
+#define SAFETY_TESLA 8
 #define SAFETY_TOYOTA_IPAS 0x1335
 #define SAFETY_TOYOTA_NOLIMITS 0x1336
 #define SAFETY_ALLOUTPUT 0x1337
@@ -121,6 +123,7 @@ const safety_hook_config safety_hook_registry[] = {
   {SAFETY_TOYOTA_NOLIMITS, &toyota_nolimits_hooks},
 #ifdef PANDA
   {SAFETY_TOYOTA_IPAS, &toyota_ipas_hooks},
+  {SAFETY_TESLA, &tesla_hooks},
 #endif
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
   {SAFETY_ELM327, &elm327_hooks},
