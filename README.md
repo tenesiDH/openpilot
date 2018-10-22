@@ -31,7 +31,7 @@ It's unfettered awesome with no corporate fears!
 Welcome to openpilot
 ======
 
-[openpilot](http://github.com/commaai/openpilot) is an open source driving agent. Currently it performs the functions of Adaptive Cruise Control (ACC) and Lane Keeping Assist System (LKAS) for Hondas, Acuras, Toyotas, and a Chevy. It's about on par with Tesla Autopilot and GM Super Cruise, and better than [all other manufacturers](http://www.thedrive.com/tech/5707/the-war-for-autonomous-driving-part-iii-us-vs-germany-vs-japan).
+[openpilot](http://github.com/commaai/openpilot) is an open source driving agent. Currently it performs the functions of Adaptive Cruise Control (ACC) and Lane Keeping Assist System (LKAS) for selected Honda, Toyota, Acura, Lexus, Chevrolet, Hyundai, Kia. It's about on par with Tesla Autopilot and GM Super Cruise, and better than [all other manufacturers](http://www.thedrive.com/tech/5707/the-war-for-autonomous-driving-part-iii-us-vs-germany-vs-japan).
 
 The openpilot codebase has been written to be concise and enable rapid prototyping. We look forward to your contributions - improving real vehicle automation has never been easier.
 
@@ -42,7 +42,7 @@ openpilot is developed by [comma.ai](https://comma.ai/) and users like you.
 
 We have a [Twitter you should follow](https://twitter.com/comma_ai).
 
-Also, we have a 3500+ person [community on slack](https://slack.comma.ai).
+Also, we have a several thousand people community on [slack](https://slack.comma.ai).
 
 
 Hardware
@@ -119,8 +119,11 @@ Community Maintained Cars
 | Make          | Model                     | Supported Package    | Lateral | Longitudinal   | No Accel Below   | No Steer Below |
 | -------       | ----------------------    | -------------------- | ------- | ------------   | --------------   | -------------- |
 | Honda         | Fit 2018                  | Honda Sensing        | Yes     | Yes            | 25mph<sup>1</sup>| 12mph          |
+| Tesla         | Model S 2012              | All                  | Yes     | Not yet        | Not applicable   | 0mph           |
+| Tesla         | Model S 2013              | All                  | Yes     | Not yet        | Not applicable   | 0mph           |
 
 [[Honda Fit Pull Request]](https://github.com/commaai/openpilot/pull/266).
+[[Tesla Model S Pull Request]](https://github.com/commaai/openpilot/pull/246)
 
 Community Maintained Cars are not confirmed by comma.ai to meet our [safety model](https://github.com/commaai/openpilot/blob/devel/SAFETY.md). Be extra cautious using them.
 
