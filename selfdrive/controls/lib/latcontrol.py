@@ -30,6 +30,16 @@ class LatControl(object):
     self.last_cloudlog_t = 0.0
     self.setup_mpc(VM.CP.steerRateCost)
 
+  def update_rt_params(self, VM, rt_mpc_flag):
+    # TODO:  Is this really necessary, or is the original reference preserved through the cap n' proto setup?
+    # Real-time tuning:  Update these values from the CP if called from real-time tuning logic in controlsd
+    self.pid._k_p = (VM.CP.steerKpBP, VM.CP.steerKpV)    # proportional gain
+    self.pid._k_i = (VM.CP.steerKiBP, VM.CP.steerKiV)    # integral gain
+    self.pid.k_f = VM.CP.steerKf                         # feedforward gain
+    # Re-init the MPC with the new steerRateCost if it changed
+    if rt_mpc_flag:
+      self.rtt_reset_mpc = True
+
   def setup_mpc(self, steer_rate_cost):
     self.libmpc = libmpc_py.libmpc
     self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.LANE, MPC_COST_LAT.HEADING, steer_rate_cost)
@@ -48,6 +58,7 @@ class LatControl(object):
     self.angle_steers_des_mpc = 0.0
     self.angle_steers_des_prev = 0.0
     self.angle_steers_des_time = 0.0
+    self.rtt_reset_mpc = False
 
   def reset(self):
     self.pid.reset()
@@ -85,6 +96,13 @@ class LatControl(object):
       self.angle_steers_des_mpc = float(math.degrees(delta_desired * VM.CP.steerRatio) + angle_offset)
       self.angle_steers_des_time = cur_time
       self.mpc_updated = True
+
+      # Real-Time Tuning:  Reset MPC if steerRateCost changed
+      # TODO:  Figure out if this is the best way to accomplish the real-time change to steerRateCost
+      if self.rtt_reset_mpc:
+        self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.LANE, MPC_COST_LAT.HEADING, VM.CP.steerRateCost)
+        self.cur_state[0].delta = math.radians(angle_steers) / VM.CP.steerRatio
+        self.rtt_reset_mpc = False
 
       #  Check for infeasable MPC solution
       self.mpc_nans = np.any(np.isnan(list(self.mpc_solution[0].delta)))
