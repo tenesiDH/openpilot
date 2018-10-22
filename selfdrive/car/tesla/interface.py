@@ -19,13 +19,13 @@ except ImportError:
 K_MULT = .8
 K_MULTi = 280.
 def tesla_compute_gb(accel, speed):
-  creep_brake = 0.0
-  creep_speed = 2.3
-  creep_brake_value = 0.15
-  if speed < creep_speed:
-    creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
-  return float(accel) / 4.8 - creep_brake
-  #return float(accel)
+  #creep_brake = 0.0
+  #creep_speed = 2.3
+  #creep_brake_value = 0.15
+  #if speed < creep_speed:
+  #  creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
+  #return float(accel) / 4.8 - creep_brake
+  return float(accel)
 
 
 class CarInterface(object):
@@ -119,7 +119,7 @@ class CarInterface(object):
       ret.centerToFront = centerToFront_models
       ret.steerRatio = 15.75
       # Kp and Ki for the lateral control for 0, 20, 40, 60 mph
-      ret.steerKpV, ret.steerKiV = [[0.60, 0.40, 0.30, 0.15], [0.08, 0.06, 0.04, 0.02]]
+      ret.steerKpV, ret.steerKiV = [[1.20, 0.80, 0.60, 0.30], [0.16, 0.12, 0.08, 0.04]]
       ret.steerKf = 0.00006 # Initial test value TODO: investigate FF steer control for Model S?
       ret.steerActuatorDelay = 0.09
       
@@ -168,7 +168,7 @@ class CarInterface(object):
 
     # no max steer limit VS speed
     ret.steerMaxBP = [0.,15.]  # m/s
-    ret.steerMaxV = [17.,17.]   # max steer allowed
+    ret.steerMaxV = [420.,420.]   # max steer allowed
 
     ret.gasMaxBP = [0.]  # m/s
     ret.gasMaxV = [0.6] #if ret.enableGasInterceptor else [0.] # max gas allowed

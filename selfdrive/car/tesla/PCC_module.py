@@ -1,11 +1,15 @@
 from selfdrive.car.tesla import teslacan
-from selfdrive.controls.lib.pid import PIController
+#from selfdrive.controls.lib.pid import PIController
+from selfdrive.car.tesla.longcontrol_tesla import LongControl, STARTING_TARGET_SPEED
+#from selfdrive.car.tesla.interface import tesla_compute_gb
+from selfdrive.car.tesla import teslacan
 from common.numpy_fast import clip, interp
 from selfdrive.services import service_list
 from selfdrive.car.tesla.values import AH,CruiseState, CruiseButtons, CAR
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.speed_smoother import speed_smoother
+from common.realtime import sec_since_boot
 from common.numpy_fast import clip
 import selfdrive.messaging as messaging
 import os
@@ -15,21 +19,19 @@ import zmq
 import math
 import numpy as np
 
+
+MPC_BRAKE_MULTIPLIER = 6.
+
 # TODO: these should end up in values.py at some point, probably variable by trim
 # Accel limits
 ACCEL_HYST_GAP = 0.5  # don't change accel command for small oscilalitons within this value
-ACCEL_MAX = 1.
-ACCEL_MIN = -1.
-ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
-ACCEL_REWIND_MAX = 4.
-PEDAL_DEADZONE = 3.
+
 PEDAL_MAX_UP = 2.
 PEDAL_MAX_DOWN = 5.
 #BB
 MIN_SAFE_DIST_M = 4. # min safe distance in meters
-FRAMES_PER_SEC = 5.
-BRAKE_THRESHOLD =0.1
-ACCEL_THRESHOLD = 0.1
+FRAMES_PER_SEC = 100.
+
 SPEED_UP = 1. #3. / FRAMES_PER_SEC   # 2 m/s = 7.5 mph = 12 kph 
 SPEED_DOWN = 1. #6. / FRAMES_PER_SEC
 
@@ -42,22 +44,10 @@ FOLLOW_UP_TIME = 1.5 #time in seconds to follow car in front
 MIN_PCC_V = 0. #
 MAX_PCC_V = 170.
 
-STOPPING_EGO_SPEED = 0.5
 MIN_CAN_SPEED = 0.3  #TODO: parametrize this in car interface
-STOPPING_TARGET_SPEED = MIN_CAN_SPEED + 0.01
-STARTING_TARGET_SPEED = 0.5
-BRAKE_THRESHOLD_TO_PID = 0.2
 
 
-#### from planner
-#
-_DT = 0.01    # 100Hz
-_DT_MPC = 0.02  # 50Hz
-MAX_SPEED_ERROR = 2.0
 AWARENESS_DECEL = -0.2     # car smoothly decel at .2m/s^2 when user is distracted
-_LEAD_ACCEL_TAU = 1.5
-
-GPS_PLANNER_ADDR = "192.168.5.1"
 
 # lookup tables VS speed to determine min and max accels in cruise
 # make sure these accelerations are smaller than mpc limits
@@ -80,18 +70,26 @@ _FCW_A_ACT_BP = [0., 30.]
 # max acceleration allowed in acc, which happens in restart
 A_ACC_MAX = max(_A_CRUISE_MAX_V_FOLLOWING)
 
+_DT = 0.01    # 100Hz
+_DT_MPC = 0.01  # 100Hz in our case
+
+def tesla_compute_gb(accel, speed):
+  return float(accel) / 3.0
+
 def calc_cruise_accel_limits(v_ego, following):
   a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V)
+
   if following:
     a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_FOLLOWING)
   else:
     a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
   return np.vstack([a_cruise_min, a_cruise_max])
 
+
 def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
   """
-  This function returns a limited long acceleration allow    ed, depending on the existing lateral acceleration
-  this should avoid accelerating when losing the target i    n turns
+  This function returns a limited long acceleration allowed, depending on the existing lateral acceleration
+  this should avoid accelerating when losing the target in turns
   """
 
   a_total_max = interp(v_ego, _A_TOTAL_MAX_BP, _A_TOTAL_MAX_V)
@@ -101,6 +99,7 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
   a_target[1] = min(a_target[1], a_x_allowed)
   return a_target
 
+
 class PCCState(object):
   # Possible state of the ACC system, following the DI_cruiseState naming
   # scheme.
@@ -108,6 +107,8 @@ class PCCState(object):
   STANDBY = 1     # Ready to be enaged.
   ENABLED = 2     # Engaged.
   NOT_READY = 9   # Not ready to be engaged due to the state of the car.
+
+
 
 def _current_time_millis():
   return int(round(time.time() * 1000))
@@ -156,7 +157,6 @@ class PCCController(object):
     self.PedalForZeroTorque = 18. #starting number, works on my S85
     self.lastTorqueForPedalForZeroTorque = TORQUE_LEVEL_DECEL
     self.follow_time = FOLLOW_UP_TIME # in seconds
-    self.pid = None
     self.v_pid = 0.
     self.a_pid = 0.
     self.b_pid = 0.
@@ -170,19 +170,29 @@ class PCCController(object):
     self.wd5=0
     self.wd6=0
     self.wd7=0
-    
+    #for smoothing the changes in speed
+    self.v_acc_start = 0.0
+    self.a_acc_start = 0.0
+    self.acc_start_time = sec_since_boot()
+    self.v_acc = 0.0
+    self.v_acc_sol = 0.0
+    self.v_acc_future = 0.0
+    self.a_acc = 0.0
+    self.a_acc_sol = 0.0
+    self.v_cruise = 0.0
+    self.a_cruise = 0.0
+    #Long Control
+    self.LoC = None
+
+
   def reset(self, v_pid):
-    self.pid.reset()
-    self.v_pid = v_pid
+    if self.LoC:
+      self.LoC.reset(v_pid)
 
   def update_stat(self,CS, enabled, sendcan):
-    if self.pid == None:
-      CP = CS.CP
-      self.pid = PIController((CP.longitudinalKpBP, CP.longitudinalKpV),
-                            (CP.longitudinalKiBP, CP.longitudinalKiV),
-                            rate=100.0,
-                            sat_limit=0.8) #,convert=compute_gb)
-      self.reset(0.)
+    if self.LoC == None:
+      self.LoC = LongControl(CS.CP, tesla_compute_gb)
+
 
     can_sends = []
     #BBTODO: a better way to engage the pedal early and reset its CAN
@@ -236,6 +246,7 @@ class PCCController(object):
       if ready and double_pull:
         # A double pull enables ACC. updating the max ACC speed if necessary.
         self.enable_pedal_cruise = True
+        self.LoC.reset(CS.v_ego)
         # Increase ACC speed to match current, if applicable.
         self.pedal_speed_kph = max(CS.v_ego * CV.MS_TO_KPH, self.pedal_speed_kph)
       else:
@@ -294,13 +305,12 @@ class PCCController(object):
     
 
   def update_pdl(self,enabled,CS,frame,actuators,pcm_speed):
-
+    cur_time = sec_since_boot()
     idx = self.pedal_idx
     self.pedal_idx = (self.pedal_idx + 1) % 16
     if not self.pedal_hardware_present or not enabled:
       return 0.,0,idx
-
-
+    following = False
     # Alternative speed decision logic that uses the lead car's distance
     # and speed more directly.
     # Bring in the lead car distance from the Live20 feed
@@ -317,18 +327,6 @@ class PCCController(object):
     accel_max = interp(CS.v_ego, CS.CP.gasMaxBP, CS.CP.gasMaxV)
     brake_max = interp(CS.v_ego, CS.CP.brakeMaxBP, CS.CP.brakeMaxV)
 
-    following = self.lead_1.status and self.lead_1.dRel   < 45.0 and self.lead_1.vLeadK > CS.v_ego and self.lead_1.aLeadK > 0.0
-    
-
-    accel_limits = map(float, calc_cruise_accel_limits(CS.v_ego, following))
-    # TODO: make a separate lookup for jerk tuning
-    jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]
-    accel_limits = limit_accel_in_turns(CS.v_ego,CS.angle_steers, accel_limits, CS.CP)
-
-    if brake_max <= 0.2:
-      # if required so, force a smooth deceleration
-      accel_limits[1] = min(accel_limits[1], AWARENESS_DECEL)
-      accel_limits[0] = min(accel_limits[0], accel_limits[1])
     output_gb = 0
     ####################################################################
     # this mode (Follow) uses the Follow logic created by JJ for ACC
@@ -336,35 +334,60 @@ class PCCController(object):
     # once the speed is detected we have to use our own PID to determine
     # how much accel and break we have to do
     ####################################################################
-    if (CS.cstm_btns.get_button_label2("pedal") == "Follow"):
+    if (CS.cstm_btns.get_button_label2_index("pedal") == 1):
       self.v_pid, self.b_pid = self.calc_follow_speed(CS)
       # cruise speed can't be negative even is user is distracted
       self.v_pid = max(self.v_pid, 0.)
-
-      self.pid.pos_limit = accel_max
-      self.pid.neg_limit = - brake_max
+      self.b_pid *= MPC_BRAKE_MULTIPLIER
 
       v_ego_pid = max(CS.v_ego, MIN_CAN_SPEED)
 
-      deadzone = interp(v_ego_pid, CS.CP.longPidDeadzoneBP, CS.CP.longPidDeadzoneV)
+      if self.enable_pedal_cruise:
+        accel_limits = map(float, calc_cruise_accel_limits(CS.v_ego, following))
+        # TODO: make a separate lookup for jerk tuning
+        jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]
+        accel_limits = limit_accel_in_turns(CS.v_ego, CS.angle_steers, accel_limits, CS.CP)
+        self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
+                                                      self.v_pid,
+                                                      accel_limits[1], accel_limits[0],
+                                                      jerk_limits[1], jerk_limits[0],
+                                                      _DT_MPC)
+        
+        # cruise speed can't be negative even is user is distracted
+        self.v_cruise = max(self.v_cruise, 0.)
+        self.v_acc = self.v_cruise
+        self.a_acc = self.a_cruise
 
-      #BBAD adding overridet to pid to see if we can engage sooner
-      override = self.enable_pedal_cruise and CS.v_ego *  CV.MS_TO_KPH > self.pedal_speed_kph and CS.user_pedal_pressed
+        self.v_acc_future = self.v_pid
+        vTargetFuture = self.v_acc_future
 
-      # we will try to feed forward the pedal position.... we might want to feed the last output_gb....
-      # it's all about testing now.
+        # Interpolation of trajectory
+        dt = min(cur_time - self.acc_start_time, _DT_MPC + _DT) + _DT  # no greater than dt mpc + dt, to prevent too high extraps
+        self.a_acc_sol = self.a_acc_start + (dt / _DT_MPC) * (self.a_acc - self.a_acc_start)
+        self.v_acc_sol = self.v_acc_start + dt * (self.a_acc_sol + self.a_acc_start) / 2.0
 
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, override=override, deadzone=deadzone, feedforward= 0.00000005 * self.prev_tesla_accel, freeze_integrator=prevent_overshoot)
 
-      if prevent_overshoot:
-        output_gb = min(output_gb, 0.0)
+        # we will try to feed forward the pedal position.... we might want to feed the last output_gb....
+        # it's all about testing now.
+        aTarget = self.a_acc_sol
+        vTarget = self.v_acc_sol
+
+        t_go, t_brake = self.LoC.update(self.enable_pedal_cruise, CS.v_ego, CS.brake_pressed != 0, CS.standstill, False,
+                                              self.v_pid, vTarget, vTargetFuture, aTarget,
+                                              CS.CP, self.lead_1)
+        output_gb = t_go - t_brake
+      else:
+        self.LoC.reset(CS.v_ego)
+        output_gb = 0.
+
+      
     ##############################################################
     # this mode (Lng MPC) uses the longitudinal MPC built in OP
     #
     # we use the values from actuator.accel and actuator.brake
     ##############################################################
     elif (CS.cstm_btns.get_button_label2("pedal") == "Lng MPC"):
-      self.b_pid = 1.
+      self.b_pid = MPC_BRAKE_MULTIPLIER
       output_gb = actuators.gas -  actuators.brake
 
 
@@ -411,7 +434,7 @@ class PCCController(object):
   def decrement_wd(self):
     self.wd1 = max (self.wd1-1 , 0)
     self.wd2 = max (self.wd2-1 , 0)
-    self.d3 = max (self.wd3-1 , 0)
+    self.wd3 = max (self.wd3-1 , 0)
     self.wd4 = max (self.wd4-1 , 0)
     self.wd5 = max (self.wd5-1 , 0)
     self.wd6 = max (self.wd6-1 , 0)
@@ -458,12 +481,12 @@ class PCCController(object):
       if lead_dist == 0 and new_speed > self.pedal_speed_kph:
         msg =  "Slow to max"
         new_speed -= SPEED_DOWN 
-        new_brake =0.5
+        new_brake = 1.
       # If lead_dist is reported as 0, no one is detected in front of you so you
       # can speed up don't speed up when steer-angle > 2; vision radar often
       # loses lead car in a turn.
       elif lead_dist == 0 and CS.angle_steers < 5.0:
-        if new_speed < self.pedal_speed_kph + SPEED_UP: 
+        if new_speed <= self.pedal_speed_kph + SPEED_UP: 
           msg =  "Accel to max"
           new_speed += SPEED_UP 
       # if we have a populated lead_distance
@@ -566,7 +589,7 @@ class PCCController(object):
         new_brake = 0.2
       if msg:
         print msg  
-      new_speed = clip(new_speed, 0, self.pedal_speed_kph)
+      #new_speed = clip(new_speed, 0, self.pedal_speed_kph)
       new_speed = clip(new_speed,MIN_PCC_V,MAX_PCC_V)
       self.last_speed = new_speed
     return new_speed * CV.KPH_TO_MS, new_brake
