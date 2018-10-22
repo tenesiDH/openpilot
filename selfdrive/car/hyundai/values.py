@@ -12,7 +12,6 @@ class CAR:
   GENESIS_2 = "HYUNDAI GENESIS 2018 type 2"           # First User @Saeed     <-- Ported by @xx979xx and @ku7
   KIA_SORENTO = "KIA SORENTO GT LINE 2018"            # First User @ku7       <-- Ported by @ku7 (First Kia in World)
   KIA_STINGER = "KIA STINGER GT2 2018"                # First User @killian   <-- Ported by @ku7 (Third)
-  KIA_STINGER_2 = "KIA STINGER 2.0L"                  # First User @James-T   <-- Ported by @James-T
   SANTA_FE = "HYUNDAI SANTA FE LIMITED 2019"          # First User @rickbias  <-- Ported by @rickbias
   SANTA_FE_2 = "HYUNDAI SANTA FW ULTIMATE 2.0 2019"   # First User @nate      <-- Ported by @ku7
 
@@ -38,9 +37,6 @@ FINGERPRINTS = {
   CAR.KIA_STINGER: [{
     67: 8, 127: 8, 304: 8, 320: 8, 339: 8, 356: 4, 358: 6, 359: 8, 544: 8, 576: 8, 593: 8, 608: 8, 688: 5, 809: 8, 832: 8, 854: 7, 870: 7, 871: 8, 872: 8, 897: 8, 902: 8, 909: 8, 916: 8, 1040: 8, 1042: 8, 1056: 8, 1057: 8, 1064: 8, 1078: 4, 1107: 5, 1136: 8, 1151: 6, 1168: 7, 1170: 8, 1173: 8, 1184: 8, 1265: 4, 1280: 1, 1281: 4, 1287: 4, 1290: 8, 1292: 8, 1294: 8, 1312: 8, 1322: 8, 1342: 6, 1345: 8, 1348: 8, 1363: 8, 1369: 8, 1378: 4, 1379: 8, 1384: 8, 1407: 8, 1419: 8, 1425: 2, 1427: 6, 1456: 4, 1470: 8
   }],
-  CAR.KIA_STINGER_2: [{
-    67: 8, 127: 8, 304: 8, 320: 8, 339: 8, 356: 4, 358: 6, 544: 8, 576: 8, 593: 8, 608: 8, 688: 5, 809: 8, 832: 8, 854: 7, 870: 7, 871: 8, 872: 8, 897: 8, 902: 8, 909: 8, 916: 8, 1040: 8, 1042: 8, 1056: 8, 1057: 8, 1078: 4, 1107: 5, 1136: 8, 1151: 6, 1168: 7, 1170: 8, 1173: 8, 1184: 8, 1265: 4, 1280: 1, 1287: 4, 1290: 8, 1292: 8, 1294: 8, 1312: 8, 1322: 8, 1342: 6, 1345: 8, 1348: 8, 1363: 8, 1369: 8, 1379: 8, 1384: 8, 1407: 8, 1419: 8, 1427: 6, 1456: 4, 1470: 8
-  }],
   CAR.SANTA_FE: [{
     67: 8, 127: 8, 304: 8, 320: 8, 339: 8, 356: 4, 544: 8, 593: 8, 608: 8, 688: 6, 809: 8, 832: 8, 854: 7, 870: 7, 871: 8, 872: 8, 897: 8, 902: 8, 903: 8, 905: 8, 909: 8, 916: 8, 1040: 8, 1042: 8, 1056: 8, 1057: 8, 1078: 4, 1107: 5, 1136: 8, 1151: 6, 1155: 8, 1156: 8, 1162: 8, 1164: 8, 1168: 7, 1170: 8, 1173: 8, 1183: 8, 1186: 2, 1191: 2, 1227: 8, 1265: 4, 1280: 1, 1287: 4, 1290: 8, 1292: 8, 1294: 8, 1312: 8, 1322: 8, 1342: 6, 1345: 8, 1348: 8, 1363: 8, 1369: 8, 1379: 8, 1384: 8, 1407: 8, 1414: 3, 1419: 8, 1427: 6, 1456: 4, 1470: 8
   }],
@@ -53,7 +49,7 @@ CAMERA_MSGS = [832, 1156, 1191, 1342]
 
 CHECKSUM = {
   "6B": [CAR.KIA_SORENTO, CAR.GENESIS, CAR.GENESIS_2],
-  "7B": [CAR.KIA_STINGER, CAR.KIA_STINGER_2, CAR.ELANTRA],
+  "7B": [CAR.KIA_STINGER, CAR.ELANTRA],
   "crc8": [CAR.SANTA_FE, CAR.SANTA_FE_2],
 }
 
@@ -63,7 +59,6 @@ DBC = {
   CAR.GENESIS_2: dbc_dict('hyundai_kia_generic', None),
   CAR.KIA_SORENTO: dbc_dict('hyundai_kia_generic', None),
   CAR.KIA_STINGER: dbc_dict('hyundai_kia_generic', None),
-  CAR.KIA_STINGER_2: dbc_dict('hyundai_kia_generic', None),
   CAR.SANTA_FE: dbc_dict('hyundai_kia_generic', None),
   CAR.SANTA_FE_2: dbc_dict('hyundai_kia_generic', None),
 }
