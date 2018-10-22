@@ -1852,6 +1852,7 @@ int main() {
       // BB check touch area
       bb_handle_ui_touch(s,touch_x,touch_y);
     }
+    dashcam(s, touch_x, touch_y);
 
     // manage wakefulness
     if (s->awake_timeout > 0) {
@@ -1861,7 +1862,6 @@ int main() {
     }
 
     if (s->awake) {
-      dashcam(s, touch_x, touch_y);
       ui_draw(s);
       glFinish();
       should_swap = true;
