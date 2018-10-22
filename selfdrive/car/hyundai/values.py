@@ -12,7 +12,8 @@ class CAR:
   ELANTRA = "HYUNDAI ELANTRA LIMITED ULTIMATE 2017"
   GENESIS = "HYUNDAI GENESIS 2018"
   KIA_SORENTO = "KIA SORENTO GT LINE 2018"  # Top Trim Kia Sorento for Australian Market, AWD Diesel 8sp Auto
-  KIA_STINGER = "KIA STINGER GT2 2018"
+  KIA_STINGER = "KIA STINGER GT2 2018" 
+  KIA_STINGER_2 = "KIA STINGER 2.0L" # James-T
 
 class Buttons:
   NONE = 0
@@ -39,6 +40,9 @@ FINGERPRINTS = {
   CAR.KIA_STINGER: [{
     67: 8, 127: 8, 304: 8, 320: 8, 339: 8, 356: 4, 358: 6, 359: 8, 544: 8, 576: 8, 593: 8, 608: 8, 688: 5, 809: 8, 832: 8, 854: 7, 870: 7, 871: 8, 872: 8, 897: 8, 902: 8, 909: 8, 916: 8, 1040: 8, 1042: 8, 1056: 8, 1057: 8, 1064: 8, 1078: 4, 1107: 5, 1136: 8, 1151: 6, 1168: 7, 1170: 8, 1173: 8, 1184: 8, 1265: 4, 1280: 1, 1281: 4, 1287: 4, 1290: 8, 1292: 8, 1294: 8, 1312: 8, 1322: 8, 1342: 6, 1345: 8, 1348: 8, 1363: 8, 1369: 8, 1378: 4, 1379: 8, 1384: 8, 1407: 8, 1419: 8, 1425: 2, 1427: 6, 1456: 4, 1470: 8
   }],
+  CAR.KIA_STINGER_2: [{
+    67: 8, 127: 8, 304: 8, 320: 8, 339: 8, 356: 4, 358: 6, 544: 8, 576: 8, 593: 8, 608: 8, 688: 5, 809: 8, 832: 8, 854: 7, 870: 7, 871: 8, 872: 8, 897: 8, 902: 8, 909: 8, 916: 8, 1040: 8, 1042: 8, 1056: 8, 1057: 8, 1078: 4, 1107: 5, 1136: 8, 1151: 6, 1168: 7, 1170: 8, 1173: 8, 1184: 8, 1265: 4, 1280: 1, 1287: 4, 1290: 8, 1292: 8, 1294: 8, 1312: 8, 1322: 8, 1342: 6, 1345: 8, 1348: 8, 1363: 8, 1369: 8, 1379: 8, 1384: 8, 1407: 8, 1419: 8, 1427: 6, 1456: 4, 1470: 8
+  }],
 }
 
 CAMERA_MSGS = [832, 1156, 1191, 1342]   # msgs sent by the camera
@@ -46,7 +50,7 @@ CAMERA_MSGS = [832, 1156, 1191, 1342]   # msgs sent by the camera
 CHECKSUM = {
   "crc8": [CAR.SANTA_FE, CAR.SANTA_FE_2],
   "6B": [CAR.KIA_SORENTO, CAR.GENESIS],
-  "7B": [CAR.KIA_STINGER, CAR.ELANTRA],
+  "7B": [CAR.KIA_STINGER, CAR.KIA_STINGER_2, CAR.ELANTRA],
 }
 
 DBC = {
@@ -56,4 +60,5 @@ DBC = {
   CAR.GENESIS: dbc_dict('hyundai_kia_generic', None),
   CAR.KIA_SORENTO: dbc_dict('hyundai_kia_generic', None),
   CAR.KIA_STINGER: dbc_dict('hyundai_kia_generic', None),
+  CAR.KIA_STINGER_2: dbc_dict('hyundai_kia_generic', None),
 }
