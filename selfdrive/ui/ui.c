@@ -236,6 +236,7 @@ typedef struct UIState {
 
 
 #include "bbui.h"
+#include "dashcam.h"
 
 static int last_brightness = -1;
 static void set_brightness(UIState *s, int brightness) {
@@ -1851,6 +1852,7 @@ int main() {
       // BB check touch area
       bb_handle_ui_touch(s,touch_x,touch_y);
     }
+    dashcam(s, touch_x, touch_y);
 
     // manage wakefulness
     if (s->awake_timeout > 0) {

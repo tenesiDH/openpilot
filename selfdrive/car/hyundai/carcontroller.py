@@ -41,7 +41,7 @@ class CarController(object):
     force_enable = False
 
     # I don't care about your opinion, deal with it!
-    if (CS.cstm_btns.get_button_status("alwon") > 0): # and CS.acc_active:
+    if (CS.cstm_btns.get_button_status("alwon") > 0) and CS.acc_active:
       enabled = True
       force_enable = True
 
@@ -104,9 +104,6 @@ class CarController(object):
         can_sends.append(create_1191())
       if (self.cnt % 7) == 0:
         can_sends.append(create_1156())
-
-    if (self.cnt % 20) == 1:
-      print "Steer", apply_steer
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), keep_stock=(not self.camera_disconnected)))

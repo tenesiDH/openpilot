@@ -166,6 +166,63 @@ def get_epas_parser(CP):
 
 class CarState(object):
   def __init__(self, CP):
+    #labels for buttons
+    self.btns_init = [["alca","ALC",["MadMax","Normal","Wifey"]], \
+                      ["acc","ACC",["Mod OP","Mod JJ"]], \
+                      ["steer","STR",[""]], \
+                      ["brake","BRK",[""]], \
+                      ["msg", "MSG",[""]], \
+                      ["sound", "SND", [""]]]
+
+    if (CP.carFingerprint == CAR.MODELS):
+      # ALCA PARAMS
+
+      # max REAL delta angle for correction vs actuator
+      self.CL_MAX_ANGLE_DELTA_BP = [10., 44.]
+      self.CL_MAX_ANGLE_DELTA = [2.2, .3]
+
+      # adjustment factor for merging steer angle to actuator; should be over 4; the higher the smoother
+      self.CL_ADJUST_FACTOR_BP = [10., 44.]
+      self.CL_ADJUST_FACTOR = [16. , 8.]
+
+
+      # reenrey angle when to let go
+      self.CL_REENTRY_ANGLE_BP = [10., 44.]
+      self.CL_REENTRY_ANGLE = [5. , 5.]
+
+      # a jump in angle above the CL_LANE_DETECT_FACTOR means we crossed the line
+      self.CL_LANE_DETECT_BP = [10., 44.]
+      self.CL_LANE_DETECT_FACTOR = [1.5, 1.5]
+
+      self.CL_LANE_PASS_BP = [10., 20., 44.]
+      self.CL_LANE_PASS_TIME = [40.,10., 3.] 
+
+      # change lane delta angles and other params
+      self.CL_MAXD_BP = [10., 32., 44.]
+      self.CL_MAXD_A = [.358, 0.084, 0.042] #delta angle based on speed; needs fine tune, based on Tesla steer ratio of 16.75
+
+      self.CL_MIN_V = 8.9 # do not turn if speed less than x m/2; 20 mph = 8.9 m/s
+
+      # do not turn if actuator wants more than x deg for going straight; this should be interp based on speed
+      self.CL_MAX_A_BP = [10., 44.]
+      self.CL_MAX_A = [10., 10.] 
+
+      # define limits for angle change every 0.1 s
+      # we need to force correction above 10 deg but less than 20
+      # anything more means we are going to steep or not enough in a turn
+      self.CL_MAX_ACTUATOR_DELTA = 2.
+      self.CL_MIN_ACTUATOR_DELTA = 0. 
+      self.CL_CORRECTION_FACTOR = 1.
+
+      #duration after we cross the line until we release is a factor of speed
+      self.CL_TIMEA_BP = [10., 32., 44.]
+      self.CL_TIMEA_T = [0.7 ,0.30, 0.20]
+
+      #duration to wait (in seconds) with blinkers on before starting to turn
+      self.CL_WAIT_BEFORE_START = 1
+
+      #END OF ALCA PARAMS
+      
     self.brake_only = CP.enableCruise
     self.last_cruise_stalk_pull_time = 0
     self.CP = CP
@@ -250,58 +307,33 @@ class CarState(object):
     # Actual cruise speed currently active on the car.
     self.v_cruise_actual = 0.0
 
+
   def init_ui_buttons(self):
-    btns = []
-    btns.append(UIButton("alca","ALC",0,"",0))
-    if self.pedal_hardware_present:
-      btns.append(UIButton("pedal","PDL",0,"Longit",1))
-    else:
-      btns.append(UIButton("acc","ACC",0,"Mod OP",1))
-    btns.append(UIButton("steer","STR",0,"",2))
-    btns.append(UIButton("brake","BRK",1,"",3))
-    btns.append(UIButton("msg","MSG",1,"",4))
-    btns.append(UIButton("sound","SND",1,"",5))
-    return btns
+    #if self.pedal_hardware_present:
+    self.btns_init[1] = ["pedal","PDL",["Lng MPC","Follow"]]
+    return 0
    
   def config_ui_buttons(self,pedalPresent):
     #self.CP.enableGasInterceptor = pedalPresent
+    hasChanges = False
     if pedalPresent:
       btn = self.cstm_btns.get_button("acc")
       if btn:
-        btn.btn_name = "pedal"
-        btn.btn_label = "PDL"
-        btn.btn_label2 = "Lng MPC"
-        btn.btn_status = 1
+        self.btns_init[1] = ["pedal","PDL",["Lng MPC","Follow"]]
+        hasChanges = True
     else:
       #we don't have pedal interceptor
       btn = self.cstm_btns.get_button("pedal")
       if btn:
-        btn.btn_name = "acc"
-        btn.btn_label = "ACC"
-        btn.btn_label2 = "Mod OP"
-        btn.btn_status = 1
-    self.update_ui_buttons(1,1)    
-
-  def update_ui_buttons(self,id,btn_status):
-    if self.cstm_btns.btns[id].btn_status > 0:
-      if (id == 1) and (btn_status == 0) and self.cstm_btns.btns[id].btn_name=="acc":
-          #don't change status, just model
-          if (self.cstm_btns.btns[id].btn_label2 == "Mod OP"):
-              self.cstm_btns.btns[id].btn_label2 = "Mod JJ"
-          else:
-              self.cstm_btns.btns[id].btn_label2 = "Mod OP"
-          self.cstm_btns.hasChanges = True
-      elif (id == 1) and (btn_status == 0) and self.cstm_btns.btns[id].btn_name=="pedal":
-          #don't change status, just model
-          if (self.cstm_btns.btns[id].btn_label2 == "Follow"):
-              self.cstm_btns.btns[id].btn_label2 = "Lng MPC"
-          else:
-              self.cstm_btns.btns[id].btn_label2 = "Follow"
-          self.cstm_btns.hasChanges = True
-      else:
-          self.cstm_btns.btns[id].btn_status = btn_status * self.cstm_btns.btns[id].btn_status
-    else:
-        self.cstm_btns.btns[id].btn_status = btn_status
+        self.btns_init[1] = ["acc","ACC",["Mod OP","Mod JJ"]]
+        hasChanges = True
+    if hasChanges:
+      i = 1
+      btn.btn_name = self.btns_init[i][0]
+      btn.btn_label = self.btns_init[i][1]
+      btn.btn_label2 = self.btns_init[i][2][0]
+      btn.btn_status = 1
+      self.cstm_btns.update_ui_buttons(1,1)    
 
   def update(self, cp, epas_cp):
 
@@ -357,7 +389,7 @@ class CarState(object):
     self.a_ego = float(v_ego_x[1])
 
     #BB this is a hack for the interceptor
-    self.pedal_hardware_present = epas_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] != 0
+    self.pedal_hardware_present = True #epas_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'] != 0
     #print "Pedal present? %s" % (self.pedal_hardware_present)
     #print "Pedal value = %s" % (epas_cp.vl["GAS_SENSOR"]['INTERCEPTOR_GAS'])
     if self.pedal_hardware_present != self.pedal_hardware_present_prev:
