@@ -7,6 +7,10 @@
 //      accel rising edge
 //      brake rising edge
 //      brake > 0mph
+//
+int fmax_limit_check(float val, const float MAX, const float MIN) {
+  return (val > MAX) || (val < MIN);
+}
 
 // 2m/s are added to be less restrictive
 const struct lookup_t TESLA_LOOKUP_ANGLE_RATE_UP = {
@@ -23,59 +27,29 @@ const struct lookup_t TESLA_LOOKUP_MAX_ANGLE = {
 
 const int TESLA_RT_INTERVAL = 250000; // 250ms between real time checks
 
-struct sample_t tesla_angle_meas; // last 3 steer angles
-
 // state of angle limits
-int tesla_desired_angle_last = 0; // last desired steer angle
-int16_t tesla_rt_angle_last = 0.; // last real time angle
-uint32_t tesla_ts_angle_last = 0;
+float tesla_desired_angle_last = 0; // last desired steer angle
+float tesla_rt_angle_last = 0.; // last real time angle
+float tesla_ts_angle_last = 0;
 
 int tesla_controls_allowed_last = 0;
-int steer_allowed = 1;
 
 int tesla_brake_prev = 0;
 int tesla_gas_prev = 0;
 int tesla_speed = 0;
-int current_car_time = -1;
-int time_at_last_stalk_pull = -1;
 int eac_status = 0;
 
 int tesla_ignition_started = 0;
 
-// interp function that holds extreme values
-float tesla_interpolate(struct lookup_t xy, float x)
-{
-  int size = sizeof(xy.x) / sizeof(xy.x[0]);
-  // x is lower than the first point in the x array. Return the first point
-  if (x <= xy.x[0])
-  {
-    return xy.y[0];
-  }
-  else
-  {
-    // find the index such that (xy.x[i] <= x < xy.x[i+1]) and linearly interp
-    for (int i = 0; i < size - 1; i++)
-    {
-      if (x < xy.x[i + 1])
-      {
-        float x0 = xy.x[i];
-        float y0 = xy.y[i];
-        float dx = xy.x[i + 1] - x0;
-        float dy = xy.y[i + 1] - y0;
-        // dx should not be zero as xy.x is supposed ot be monotonic
-        if (dx <= 0.)
-          dx = 0.0001;
-        return dy * (x - x0) / dx + y0;
-      }
-    }
-    // if no such point is found, then x > xy.x[size-1]. Return last point
-    return xy.y[size - 1];
-  }
-}
+
+void set_gmlan_digital_output(int to_set);
+void reset_gmlan_switch_timeout(void);
+void gmlan_switch_init(int timeout_enable);
+
 
 static void tesla_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
 {
-  set_gmlan_digital_output(GMLAN_HIGH);
+  set_gmlan_digital_output(0); // #define GMLAN_HIGH 0
   reset_gmlan_switch_timeout(); //we're still in tesla safety mode, reset the timeout counter and make sure our output is enabled
 
   //int bus_number = (to_push->RDTR >> 4) & 0xFF;
@@ -93,15 +67,6 @@ static void tesla_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
     addr = to_push->RIR >> 21;
   }
 
-  // Record the current car time in current_car_time (for use with double-pulling cruise stalk)
-  if (addr == 0x318)
-  {
-    int hour = (to_push->RDLR & 0x1F000000) >> 24;
-    int minute = (to_push->RDHR & 0x3F00) >> 8;
-    int second = (to_push->RDLR & 0x3F0000) >> 16;
-    current_car_time = (hour * 3600) + (minute * 60) + second;
-  }
-
   if (addr == 0x45)
   {
     // 6 bits starting at position 0
@@ -109,11 +74,8 @@ static void tesla_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
     if (lever_position == 2)
     { // pull forward
       // activate openpilot
-      // TODO: uncomment the if to use double pull to activate
-      //if (current_car_time <= time_at_last_stalk_pull + 1 && current_car_time != -1 && time_at_last_stalk_pull != -1) {
       controls_allowed = 1;
       //}
-      time_at_last_stalk_pull = current_car_time;
     }
     else if (lever_position == 1)
     { // push towards the back
@@ -138,9 +100,9 @@ static void tesla_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
     if (((to_push->RDLR & 0x8000)) >> 15 == 1)
     {
       //disable break cancel by commenting line below
-      //controls_allowed = 0;
+      controls_allowed = 0;
     }
-    //get vehicle speed in m/2. Tesla gives MPH
+    //get vehicle speed in m/s. Tesla gives MPH
     tesla_speed = ((((((to_push->RDLR >> 24) & 0x0F) << 8) + ((to_push->RDLR >> 16) & 0xFF)) * 0.05 - 25) * 1.609 / 3.6);
     if (tesla_speed < 0)
     {
@@ -155,26 +117,26 @@ static void tesla_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
     // if EPAS_eacStatus is not 1 or 2, disable control
     eac_status = ((to_push->RDHR >> 21)) & 0x7;
     // For human steering override we must not disable controls when eac_status == 0
-    // Additional safety: we could only allow eac_status == 0 when we have human steerign allowed
+    // Additional safety: we could only allow eac_status == 0 when we have human steering allowed
     if ((controls_allowed == 1) && (eac_status != 0) && (eac_status != 1) && (eac_status != 2))
     {
       controls_allowed = 0;
-      puts("EPAS error! \n");
+      //puts("EPAS error! \n");
     }
   }
   //get latest steering wheel angle
   if (addr == 0x00E)
   {
-    int angle_meas_now = (int)((((to_push->RDLR & 0x3F) << 8) + ((to_push->RDLR >> 8) & 0xFF)) * 0.1 - 819.2);
+    float angle_meas_now = (int)((((to_push->RDLR & 0x3F) << 8) + ((to_push->RDLR >> 8) & 0xFF)) * 0.1 - 819.2);
     uint32_t ts = TIM2->CNT;
     uint32_t ts_elapsed = get_ts_elapsed(ts, tesla_ts_angle_last);
 
     // *** angle real time check
     // add 1 to not false trigger the violation and multiply by 25 since the check is done every 250 ms and steer angle is updated at     100Hz
-    int rt_delta_angle_up = ((int)((tesla_interpolate(TESLA_LOOKUP_ANGLE_RATE_UP, tesla_speed) * 25. + 1.)));
-    int rt_delta_angle_down = ((int)((tesla_interpolate(TESLA_LOOKUP_ANGLE_RATE_DOWN, tesla_speed) * 25. + 1.)));
-    int highest_rt_angle = tesla_rt_angle_last + (tesla_rt_angle_last > 0 ? rt_delta_angle_up : rt_delta_angle_down);
-    int lowest_rt_angle = tesla_rt_angle_last - (tesla_rt_angle_last > 0 ? rt_delta_angle_down : rt_delta_angle_up);
+    float rt_delta_angle_up = interpolate(TESLA_LOOKUP_ANGLE_RATE_UP, tesla_speed) * 25. + 1.;
+    float rt_delta_angle_down = interpolate(TESLA_LOOKUP_ANGLE_RATE_DOWN, tesla_speed) * 25. + 1.;
+    float highest_rt_angle = tesla_rt_angle_last + (tesla_rt_angle_last > 0 ? rt_delta_angle_up : rt_delta_angle_down);
+    float lowest_rt_angle = tesla_rt_angle_last - (tesla_rt_angle_last > 0 ? rt_delta_angle_down : rt_delta_angle_up);
 
     if ((ts_elapsed > TESLA_RT_INTERVAL) || (controls_allowed && !tesla_controls_allowed_last))
     {
@@ -182,20 +144,17 @@ static void tesla_rx_hook(CAN_FIFOMailBox_TypeDef *to_push)
       tesla_ts_angle_last = ts;
     }
 
-    // update array of samples
-    update_sample(&tesla_angle_meas, angle_meas_now);
-
     // check for violation;
-    if (max_limit_check(angle_meas_now, highest_rt_angle, lowest_rt_angle))
+    if (fmax_limit_check(angle_meas_now, highest_rt_angle, lowest_rt_angle))
     {
       // We should not be able to STEER under these conditions
       // Other sending is fine (to allow human override)
-      steer_allowed = 0;
-      puts("WARN: RT Angle - No steer allowed! \n");
+      controls_allowed = 0;
+      //puts("WARN: RT Angle - No steer allowed! \n");
     }
     else
     {
-      steer_allowed = 1;
+      controls_allowed = 1;
     }
 
     tesla_controls_allowed_last = controls_allowed;
@@ -212,8 +171,8 @@ static int tesla_tx_hook(CAN_FIFOMailBox_TypeDef *to_send)
 {
 
   uint32_t addr;
-  int angle_raw;
-  int desired_angle;
+  float angle_raw;
+  float desired_angle;
 
   addr = to_send->RIR >> 21;
 
@@ -234,50 +193,28 @@ static int tesla_tx_hook(CAN_FIFOMailBox_TypeDef *to_send)
 
     if (controls_allowed)
     {
-      if (steer_allowed)
-      {
+      // add 1 to not false trigger the violation
+      float delta_angle_up = interpolate(TESLA_LOOKUP_ANGLE_RATE_UP, tesla_speed) + 1.;
+      float delta_angle_down = interpolate(TESLA_LOOKUP_ANGLE_RATE_DOWN, tesla_speed) + 1.;
+      float highest_desired_angle = tesla_desired_angle_last + (tesla_desired_angle_last > 0 ? delta_angle_up : delta_angle_down);
+      float lowest_desired_angle = tesla_desired_angle_last - (tesla_desired_angle_last > 0 ? delta_angle_down : delta_angle_up);
+      float TESLA_MAX_ANGLE = interpolate(TESLA_LOOKUP_MAX_ANGLE, tesla_speed) + 1.;
 
-        // add 1 to not false trigger the violation
-        int delta_angle_up = (int)(tesla_interpolate(TESLA_LOOKUP_ANGLE_RATE_UP, tesla_speed) * 25. + 1.);
-        int delta_angle_down = (int)(tesla_interpolate(TESLA_LOOKUP_ANGLE_RATE_DOWN, tesla_speed) * 25. + 1.);
-        int highest_desired_angle = tesla_desired_angle_last + (tesla_desired_angle_last > 0 ? delta_angle_up : delta_angle_down);
-        int lowest_desired_angle = tesla_desired_angle_last - (tesla_desired_angle_last > 0 ? delta_angle_down : delta_angle_up);
-        int TESLA_MAX_ANGLE = (int)(tesla_interpolate(TESLA_LOOKUP_MAX_ANGLE, tesla_speed) + 1.);
+      //check for max angles
+      violation |= fmax_limit_check(desired_angle, TESLA_MAX_ANGLE, -TESLA_MAX_ANGLE);
 
-        if (max_limit_check(desired_angle, highest_desired_angle, lowest_desired_angle))
-        {
-          violation = 1;
-          controls_allowed = 0;
-          puts("Angle limit - delta! \n");
-        }
-        if (max_limit_check(desired_angle, TESLA_MAX_ANGLE, -TESLA_MAX_ANGLE))
-        {
-          violation = 1;
-          controls_allowed = 0;
-          puts("Angle limit - max! \n");
-        }
-      }
-      else
+      //check for angle delta changes
+      violation |= fmax_limit_check(desired_angle, highest_desired_angle, lowest_desired_angle);
+
+      if (violation)
       {
-        violation = 1;
         controls_allowed = 0;
-        puts("Steering commads disallowed");
+        return false;
       }
+      tesla_desired_angle_last = desired_angle;
+      return true;
     }
-
-    // makes no sense to have angle limits when not engaged
-    //    if ((!controls_allowed) && max_limit_check(desired_angle, tesla_angle_meas.max + 1, tesla_angle_meas.min -1)) {
-    //       violation = 1;
-    //       puts("Angle limit when not engaged! \n");
-    //    }
-
-    tesla_desired_angle_last = desired_angle;
-
-    if (violation)
-    {
-      return false;
-    }
-    return true;
+    return false;
   }
   return true;
 }
