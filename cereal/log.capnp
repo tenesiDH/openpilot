@@ -410,7 +410,6 @@ struct Live100Data {
   alertStatus @38 :AlertStatus;
   alertSize @39 :AlertSize;
   alertBlinkingRate @42 :Float32;
-  alertType @44 :Text;
   awarenessStatus @26 :Float32;
   angleOffset @27 :Float32;
   gpsPlannerActive @40 :Bool;
@@ -1559,13 +1558,6 @@ struct Boot {
   lastPmsg @2 :Data;
 }
 
-struct LiveParametersData {
-  valid @0 :Bool;
-  gyroBias @1 :Float32;
-  angleOffset @2 :Float32;
-}
-
-
 struct Event {
   # in nanoseconds?
   logMonoTime @0 :UInt64;
@@ -1631,6 +1623,5 @@ struct Event {
     orbFeaturesSummary @58 :OrbFeaturesSummary;
     driverMonitoring @59 :DriverMonitoring;
     boot @60 :Boot;
-    liveParameters @61 :LiveParametersData;
   }
 }
