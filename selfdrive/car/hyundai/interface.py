@@ -111,14 +111,17 @@ class CarInterface(object):
       ret.steerKpV, ret.steerKiV = [[0.20], [0.05]]
       ret.minSteerSpeed = 0.
     elif candidate == CAR.KIA_STINGER:
-      ret.steerKf = 0.00005
+      ret.steerKf = 0.000025
       ret.steerRateCost = 0.5
-      ret.mass = 1825 + std_cargo
-      ret.wheelbase = 2.78
-      ret.steerRatio = 14.4 * 1.15   # 15% higher at the center seems reasonable
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.25], [0.05]]
+      ret.mass = 3637 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.91
+      ret.steerRatio = 12.6
+      tire_stiffness_factor = 1.23
+      # Speed conversion:                0,  20,  45,  75 mph
+      ret.steerKpBP, ret.steerKiBP = [[  0.,  9., 20., 34.], [  0.,  9., 20., 34.]]          
+      ret.steerKpV, ret.steerKiV =   [[0.15,0.15,0.31,0.31], [0.03,0.03,0.05,0.05]]
       ret.minSteerSpeed = 0.
+      ret.steerActuatorDelay = 0.125    
     elif candidate == CAR.SANTA_FE:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5

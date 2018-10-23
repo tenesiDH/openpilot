@@ -24,6 +24,11 @@ from selfdrive.controls.lib.latcontrol import LatControl
 from selfdrive.controls.lib.alertmanager import AlertManager
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.controls.lib.driver_monitor import DriverStatus
+try:    # Real-time tuning
+    import cPickle as pickle
+except ImportError:
+    import pickle
+import os
 
 ThermalStatus = log.ThermalData.ThermalStatus
 State = log.Live100Data.ControlState
@@ -505,6 +510,11 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
 
   prof = Profiler(False)  # off by default
 
+  # Setup for real-time tuning
+  rt_tuning_file = '/data/.openpilot_rtt_params.pkl'
+  rtt_params = {}
+  last_mod_time = 0
+
   while 1:
 
     prof.checkpoint("Ratekeeper", ignore=True)
@@ -533,6 +543,124 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
     CC = data_send(PL.perception_state, plan, plan_ts, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk, carstate, carcontrol,
       live100, livempc, AM, driver_status, LaC, LoC, angle_offset, passive)
     prof.checkpoint("Sent")
+
+    ######################   Real-Time Tuning Add-on  ########################
+    # TODO:  Move this into it's own function to clean things up
+    # TODO:  Need to delay until fingerprint, or is this after already?
+    # Run this once per second... on frame 29, of course.
+    if rk.frame % 100 == 29:
+      # Get the last update time of our real-time tuning file
+      #print('Real-Time Tuning:  Checking tuning file modification time.')
+      try:
+        mod_time = os.path.getmtime(rt_tuning_file)
+        #print('RTT mod_time:  {0}'.format(mod_time))
+      except OSError:
+        # File doesn't exist or is inaccessible
+        mod_time = None
+        print('Real-Time Tuning:  RT_TUNING_FILE did not exist or was inaccessible.')
+
+      # If rt_tuning_file doesn't exist, then create it from the current CarParams:
+      if mod_time is None:
+        rtt_params['steerKpBP'] = list(CP.steerKpBP)      # Note that the Kp/Ki are lists!  But if you reference them directly they are <capnp list builder []>.. oops.
+        rtt_params['steerKpV'] = list(CP.steerKpV)
+        rtt_params['steerKiBP'] = list(CP.steerKiBP)
+        rtt_params['steerKiV'] = list(CP.steerKiV)
+        rtt_params['steerKf'] = CP.steerKf
+        # TODO:  Give the option to link the front and rear tire stiffness changes together
+        rtt_params['tireStiffnessFront'] = CP.tireStiffnessFront
+        rtt_params['tireStiffnessRear'] = CP.tireStiffnessRear
+        rtt_params['steerRatio'] = CP.steerRatio
+        rtt_params['steerRateCost'] = CP.steerRateCost
+        rtt_params['latPidDeadzone'] = 0.0
+        rtt_params['steerActuatorDelay'] = CP.steerActuatorDelay
+        rtt_params['Camera Offset'] = PL.PP.CAMERA_OFFSET
+        # Write the pickle file
+        # TODO:  try/except the open
+        with open(rt_tuning_file, "wb") as f_write:
+          pickle.dump(rtt_params, f_write, -1)    # Dump to file with highest protocol (fastest)
+        # No need to update next time if we just wrote the file out...
+        last_mod_time = os.path.getmtime(rt_tuning_file)
+        #print('RTT Last_mod_time:  {0}'.format(last_mod_time))
+
+      # If file exists and has been updated since the last time we read it in
+      elif last_mod_time != mod_time:
+        print('Real-Time Tuning:  Reading in the modified tuning file.')
+        # Read in parameters from file
+        # TODO:  try/except the open
+        with open(rt_tuning_file, "rb") as f_read:
+          rtt_params = pickle.load(f_read)
+        # Sanity check the data before setting it.. format is [min, max, failsafe]
+        #   Failsafe is used if a value is not found or if the value sent is out of the range limits
+        rt_data_limits = {  'steerKpBP': [ 0.0 , 67.0, 0.0 ],
+                  'steerKpV': [ 0.0 , 1.0, 0.2 ],
+                  'steerKiBP': [ 0.0 , 67.0, 0.0 ],
+                  'steerKiV': [ 0.0 , 1.0, 0.05 ],
+                  'steerKf': [ 0.0, 0.001, 0.00005 ],
+                  'tireStiffnessFront': [ 20000, 1000000, 192150 ],
+                  'tireStiffnessRear': [ 20000, 1000000, 202500 ],
+                  'steerRatio': [ 8.0, 25.0, 14.0 ],
+                  'steerRateCost': [ 0.05, 1.0, 0.5 ],
+                  'latPidDeadzone': [ 0.0, 4.0, 0.0 ],
+                  'steerActuatorDelay': [ 0.0, 0.5, 0.1 ],
+                  'Camera Offset': [ -0.2, 0.2, 0.06 ]
+                  }
+        # Do the checks and set the values
+        for key in rt_data_limits:
+          rt_val = rtt_params.get(key)
+          if rt_val is None:
+            # If this key from data limits doesn't exist in our tuning data, then add it as the failsafe
+            # TODO:  Use CP value here instead of failsafe?
+            rtt_params[key] = rt_data_limits[key][2]
+            print('Real-Time Tuning:  Value did not exist in tuning file, replaced with failsafe.  Key: ' + key)
+            continue
+          # If it does exist, then check the values.  First see if it's a list
+          try:
+            # If it's an iterable list...
+            for i, val2 in enumerate(rt_val):
+              # Check each value in the list
+              if (val2 < rt_data_limits[key][0]) or (val2 > rt_data_limits[key][1]):
+                rt_val[i] = rt_data_limits[key][2]
+                print('Real-Time Tuning:  Invalid value replaced!  Key: ' + key)
+          except:
+            # Not interable, compare it and fix if necessary
+            if (rt_val < rt_data_limits[key][0]) or (rt_val > rt_data_limits[key][1]):
+              rt_val = rt_data_limits[key][2]
+              print('Real-Time Tuning:  Invalid value replaced!  Key: ' + key)
+          # Set it back so if anything was fixed we have the updated value
+          rtt_params[key] = rt_val
+
+        # Update CP with the new params
+        CP.steerKpBP = rtt_params['steerKpBP']
+        CP.steerKpV = rtt_params['steerKpV']
+        CP.steerKiBP = rtt_params['steerKiBP']
+        CP.steerKiV = rtt_params['steerKiV']
+        CP.steerKf = rtt_params['steerKf']
+        CP.tireStiffnessFront = rtt_params['tireStiffnessFront']
+        CP.tireStiffnessRear = rtt_params['tireStiffnessRear']
+        CP.steerRatio = rtt_params['steerRatio']
+        CP.steerActuatorDelay = rtt_params['steerActuatorDelay']
+        if CP.steerRateCost != rtt_params['steerRateCost']:
+          print(CP.steerRateCost)
+          print(rtt_params['steerRateCost'])
+          CP.steerRateCost = rtt_params['steerRateCost']
+          rt_mpc_flag = True
+          print('Real-Time Tuning:  CP.steerRateCost changed - Re-initializing lateral MPC.')
+        else:
+          rt_mpc_flag = False
+        # TODO:  try/except the open
+        # Write the pickle file back so if we fixed any data errors the revised values will show up on the client-side
+        with open(rt_tuning_file, "wb") as f_write:
+          pickle.dump(rtt_params, f_write, -1)    # Dump to file with highest protocol (fastest)
+          # Set the last modified time to this write.... we don't need to read back in what we just wrote out
+          # Only set this if we were able to successfully make the write (once the try/except is added)
+          last_mod_time = os.path.getmtime(rt_tuning_file)
+        # Make updates in latcontrol, etc.  I'm not sure if this is actually necessary, depends on if the objects are referenced or not.  Anyway, one less thing to debug atm.
+        VM.update_rt_params(CP)
+        LaC.update_rt_params(VM, rt_mpc_flag, deadzone=rtt_params['latPidDeadzone'])
+        PL.PP.update_rt_params(rtt_params['Camera Offset'])
+        #print('RTT Last_mod_time:  {0}'.format(last_mod_time))
+
+    ####### END OF REAL-TIME TUNING ADD-ON #######
 
     # *** run loop at fixed rate ***
     rk.keep_time()
