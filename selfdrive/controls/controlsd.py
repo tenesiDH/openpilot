@@ -545,6 +545,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
 
     ######################   Real-Time Tuning Add-on  ########################
     # TODO:  Move this into it's own function to clean things up
+    # TODO:  Need to delay until fingerprint, or is this after already?
     # Run this once per second... on frame 29, of course.
     if rk.frame % 100 == 29:
       # Get the last update time of our real-time tuning file
@@ -558,7 +559,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
         print('Real-Time Tuning:  RT_TUNING_FILE did not exist or was inaccessible.')
 
       # If rt_tuning_file doesn't exist, then create it from the current CarParams:
-      if not mod_time:
+      if mod_time is None:
         rtt_params['steerKpBP'] = list(CP.steerKpBP)      # Note that the Kp/Ki are lists!  But if you reference them directly they are <capnp list builder []>.. oops.
         rtt_params['steerKpV'] = list(CP.steerKpV)
         rtt_params['steerKiBP'] = list(CP.steerKiBP)
@@ -569,6 +570,9 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
         rtt_params['tireStiffnessRear'] = CP.tireStiffnessRear
         rtt_params['steerRatio'] = CP.steerRatio
         rtt_params['steerRateCost'] = CP.steerRateCost
+        rtt_params['latPidDeadzone'] = 0.0
+        rtt_params['steerActuatorDelay'] = CP.steerActuatorDelay
+        rtt_params['Camera Offset'] = PL.PP.CAMERA_OFFSET
         # Write the pickle file
         # TODO:  try/except the open
         with open(rt_tuning_file, "wb") as f_write:
@@ -594,16 +598,19 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
                   'tireStiffnessFront': [ 20000, 1000000, 192150 ],
                   'tireStiffnessRear': [ 20000, 1000000, 202500 ],
                   'steerRatio': [ 8.0, 25.0, 14.0 ],
-                  'steerRateCost': [ 0.05, 1.0, 0.5 ] 
+                  'steerRateCost': [ 0.05, 1.0, 0.5 ],
+                  'latPidDeadzone': [ 0.0, 4.0, 0.0 ],
+                  'steerActuatorDelay': [ 0.0, 0.5, 0.1 ],
+                  'Camera Offset': [ -0.2, 0.2, 0.06 ]
                   }
         # Do the checks and set the values
         for key in rt_data_limits:
           rt_val = rtt_params.get(key)
-          if not rt_val:
+          if rt_val is None:
             # If this key from data limits doesn't exist in our tuning data, then add it as the failsafe
             # TODO:  Use CP value here instead of failsafe?
             rtt_params[key] = rt_data_limits[key][2]
-            print('Real-Time Tuning:  Value did not exist.  Key: ' + key)
+            print('Real-Time Tuning:  Value did not exist in tuning file, replaced with failsafe.  Key: ' + key)
             continue
           # If it does exist, then check the values.  First see if it's a list
           try:
@@ -630,6 +637,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
         CP.tireStiffnessFront = rtt_params['tireStiffnessFront']
         CP.tireStiffnessRear = rtt_params['tireStiffnessRear']
         CP.steerRatio = rtt_params['steerRatio']
+        CP.steerActuatorDelay = rtt_params['steerActuatorDelay']
         if CP.steerRateCost != rtt_params['steerRateCost']:
           print(CP.steerRateCost)
           print(rtt_params['steerRateCost'])
@@ -647,7 +655,8 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
           last_mod_time = os.path.getmtime(rt_tuning_file)
         # Make updates in latcontrol, etc.  I'm not sure if this is actually necessary, depends on if the objects are referenced or not.  Anyway, one less thing to debug atm.
         VM.update_rt_params(CP)
-        LaC.update_rt_params(VM, rt_mpc_flag)
+        LaC.update_rt_params(VM, rt_mpc_flag, deadzone=rtt_params['latPidDeadzone'])
+        PL.PP.update_rt_params(rtt_params['Camera Offset'])
         #print('RTT Last_mod_time:  {0}'.format(last_mod_time))
 
     ####### END OF REAL-TIME TUNING ADD-ON #######

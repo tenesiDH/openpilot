@@ -29,13 +29,15 @@ class LatControl(object):
                             k_f=VM.CP.steerKf, pos_limit=1.0)
     self.last_cloudlog_t = 0.0
     self.setup_mpc(VM.CP.steerRateCost)
+    self.deadzone = 0.0
 
-  def update_rt_params(self, VM, rt_mpc_flag):
+  def update_rt_params(self, VM, rt_mpc_flag, deadzone=0.):
     # TODO:  Is this really necessary, or is the original reference preserved through the cap n' proto setup?
     # Real-time tuning:  Update these values from the CP if called from real-time tuning logic in controlsd
     self.pid._k_p = (VM.CP.steerKpBP, VM.CP.steerKpV)    # proportional gain
     self.pid._k_i = (VM.CP.steerKiBP, VM.CP.steerKiV)    # integral gain
     self.pid.k_f = VM.CP.steerKf                         # feedforward gain
+    self.deadzone = deadzone
     # Re-init the MPC with the new steerRateCost if it changed
     if rt_mpc_flag:
       self.rtt_reset_mpc = True
@@ -130,9 +132,9 @@ class LatControl(object):
       steer_feedforward = self.angle_steers_des   # feedforward desired angle
       if VM.CP.steerControlType == car.CarParams.SteerControlType.torque:
         steer_feedforward *= v_ego**2  # proportional to realigning tire momentum (~ lateral accel)
-      deadzone = 0.0
+      #deadzone = 0.0
       output_steer = self.pid.update(self.angle_steers_des, angle_steers, check_saturation=(v_ego > 10), override=steer_override,
-                                     feedforward=steer_feedforward, speed=v_ego, deadzone=deadzone)
+                                     feedforward=steer_feedforward, speed=v_ego, deadzone=self.deadzone)
 
     self.sat_flag = self.pid.saturated
     return output_steer, float(self.angle_steers_des)
