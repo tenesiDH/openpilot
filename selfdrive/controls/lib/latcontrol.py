@@ -29,6 +29,18 @@ class LatControl(object):
                             k_f=VM.CP.steerKf, pos_limit=1.0)
     self.last_cloudlog_t = 0.0
     self.setup_mpc(VM.CP.steerRateCost)
+    self.deadzone = 0.0
+
+  def update_rt_params(self, VM, rt_mpc_flag, deadzone=0.):
+    # TODO:  Is this really necessary, or is the original reference preserved through the cap n' proto setup?
+    # Real-time tuning:  Update these values from the CP if called from real-time tuning logic in controlsd
+    self.pid._k_p = (VM.CP.steerKpBP, VM.CP.steerKpV)    # proportional gain
+    self.pid._k_i = (VM.CP.steerKiBP, VM.CP.steerKiV)    # integral gain
+    self.pid.k_f = VM.CP.steerKf                         # feedforward gain
+    self.deadzone = deadzone
+    # Re-init the MPC with the new steerRateCost if it changed
+    if rt_mpc_flag:
+      self.rtt_reset_mpc = True
 
   def setup_mpc(self, steer_rate_cost):
     self.libmpc = libmpc_py.libmpc
@@ -48,6 +60,7 @@ class LatControl(object):
     self.angle_steers_des_mpc = 0.0
     self.angle_steers_des_prev = 0.0
     self.angle_steers_des_time = 0.0
+    self.rtt_reset_mpc = False
 
   def reset(self):
     self.pid.reset()
@@ -86,6 +99,13 @@ class LatControl(object):
       self.angle_steers_des_time = cur_time
       self.mpc_updated = True
 
+      # Real-Time Tuning:  Reset MPC if steerRateCost changed
+      # TODO:  Figure out if this is the best way to accomplish the real-time change to steerRateCost
+      if self.rtt_reset_mpc:
+        self.libmpc.init(MPC_COST_LAT.PATH, MPC_COST_LAT.LANE, MPC_COST_LAT.HEADING, VM.CP.steerRateCost)
+        self.cur_state[0].delta = math.radians(angle_steers) / VM.CP.steerRatio
+        self.rtt_reset_mpc = False
+
       #  Check for infeasable MPC solution
       self.mpc_nans = np.any(np.isnan(list(self.mpc_solution[0].delta)))
       t = sec_since_boot()
@@ -112,9 +132,9 @@ class LatControl(object):
       steer_feedforward = self.angle_steers_des   # feedforward desired angle
       if VM.CP.steerControlType == car.CarParams.SteerControlType.torque:
         steer_feedforward *= v_ego**2  # proportional to realigning tire momentum (~ lateral accel)
-      deadzone = 0.0
+      #deadzone = 0.0
       output_steer = self.pid.update(self.angle_steers_des, angle_steers, check_saturation=(v_ego > 10), override=steer_override,
-                                     feedforward=steer_feedforward, speed=v_ego, deadzone=deadzone)
+                                     feedforward=steer_feedforward, speed=v_ego, deadzone=self.deadzone)
 
     self.sat_flag = self.pid.saturated
     return output_steer, float(self.angle_steers_des)
