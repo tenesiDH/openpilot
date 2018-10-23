@@ -140,6 +140,14 @@ def get_camera_parser(CP):
 
 class CarState(object):
   def __init__(self, CP):
+    #labels for buttons
+    self.btns_init = [["alca","ALC",["MadMax","Normal","Wifey"]], \
+                      ["cam","CAM",[""]], \
+                      ["alwon","MAD",[""]], \
+                      ["sound","SND",[""]], \
+                      ["", "",[""]], \
+                      ["", "", [""]]]
+
     # ALCA PARAMS
     # max REAL delta angle for correction vs actuator
     self.CL_MAX_ANGLE_DELTA_BP = [10., 44.]
@@ -219,24 +227,6 @@ class CarState(object):
 
     #BB custom message counter
     self.custom_alert_counter = -1 #set to 100 for 1 second display; carcontroller will take down to zero
-
-  #BB init ui buttons
-  def init_ui_buttons(self):
-    btns = []
-    btns.append(UIButton("alca", "ALC", 0, "", 0))
-    btns.append(UIButton("cam", "CAM", 0, "", 1))
-    btns.append(UIButton("alwon", "MAD", 0, "", 2))
-    btns.append(UIButton("sound", "SND", 1, "", 3))
-    btns.append(UIButton("", "", 0, "", 4))
-    btns.append(UIButton("", "", 0, "", 5))
-    return btns
-
-  #BB update ui buttons
-  def update_ui_buttons(self,id,btn_status):
-    if self.cstm_btns.btns[id].btn_status > 0:
-        self.cstm_btns.btns[id].btn_status = btn_status * self.cstm_btns.btns[id].btn_status
-    else:
-        self.cstm_btns.btns[id].btn_status = btn_status
 
   def update(self, cp, cp_cam):
     # copy can_valid
