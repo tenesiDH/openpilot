@@ -573,7 +573,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
         rtt_params['steerRateCost'] = CP.steerRateCost
         rtt_params['latPidDeadzone'] = 0.0
         rtt_params['steerActuatorDelay'] = CP.steerActuatorDelay
-        rtt_params['Camera Offset'] = PL.PP.CAMERA_OFFSET
+        rtt_params['Camera Offset'] = PL.PP.cam_offset
         # Write the pickle file
         # TODO:  try/except the open
         with open(rt_tuning_file, "wb") as f_write:
