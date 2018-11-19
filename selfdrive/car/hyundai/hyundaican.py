@@ -11,7 +11,7 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
     use_stock = False
 
   values = {
-    "CF_Lkas_Icon": lkas11["CF_Lkas_Icon"] if use_stock else (3 if enabled else 0),
+    "CF_Lkas_Icon": lkas11["CF_Lkas_Icon"] if use_stock else (2 if enabled else 0),
     "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"] if use_stock else (3 if steer_req else 1),
     "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"] if use_stock else hud_alert,
     "CF_Lkas_LdwsLHWarning": lkas11["CF_Lkas_LdwsLHWarning"] if keep_stock else 0,
