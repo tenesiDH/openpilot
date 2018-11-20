@@ -30,7 +30,7 @@ class CarInterface(object):
     # *** init the major players ***
     self.CS = CarState(CP)
     self.cp = get_can_parser(CP)
-    self.cp_cam = get_camera_parser(CP)
+    self.cp_cam, self.cp_cam2 = get_camera_parser(CP)
 
     # sending if read only is False
     if sendcan is not None:
@@ -90,7 +90,7 @@ class CarInterface(object):
       ret.steerRatio = 16.5
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
       ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
-      ret.minSteerSpeed = 35 * CV.MPH_TO_MS
+      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS_2:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
@@ -99,7 +99,7 @@ class CarInterface(object):
       ret.steerRatio = 16.5
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
       ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
-      ret.minSteerSpeed = 35 * CV.MPH_TO_MS
+      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_SORENTO:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
@@ -202,7 +202,8 @@ class CarInterface(object):
     canMonoTimes = []
     self.cp.update(int(sec_since_boot() * 1e9), False)
     self.cp_cam.update(int(sec_since_boot() * 1e9), False)
-    self.CS.update(self.cp, self.cp_cam)
+    self.cp_cam2.update(int(sec_since_boot() * 1e9), False)
+    self.CS.update(self.cp, self.cp_cam, self.cp_cam2)
     # create message
     ret = car.CarState.new_message()
     # speeds

@@ -108,7 +108,7 @@ class CarController(object):
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), keep_stock=(not self.camera_disconnected)))
 
-    can_sends.append(create_mdps12(self.packer, self.mdps12_cnt, CS.mdps12, CS.lkas11))
+    can_sends.append(create_mdps12(self.packer, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
 
     if pcm_cancel_cmd and (not force_enable):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))
