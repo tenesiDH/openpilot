@@ -4,7 +4,7 @@ Community Port information
 This is the "Community Port" for Kia and Hyundai.
 
 The port was started by Andrew Frahn of Emmertex.  
-@ku7 on commaai Slack.  
+@ku7 on commaai Slack, and ku7 tech on youtube
 https://www.youtube.com/channel/UCXmUBvIuFLjLRuJ0mX298Ng
 
 Please support the port however you can!
@@ -15,11 +15,23 @@ The Community port must be safe, and drivable, but will contain many features no
 
 If you have changes which you think can be upstreamed to official comma, either do a PR direct to their github repo, or PR to hyundai-dev on emmertex repo.
 
+What is special about this port?
+------
+
+It's unfettered awesome with no corporate fears!
+
+- Do not disable when Accelerator is depressed
+- Disable auto-steering on blinker OR
+- Advanced Lane Change Assist (Thanks @BogGyver)
+- Panda auto-detects Camera Pinout
+- No need for giraffe switches, If no EON, then forwards stock camers (Thanks @JamesT)
+
+
 
 Welcome to openpilot
 ======
 
-[openpilot](http://github.com/commaai/openpilot) is an open source driving agent. Currently it performs the functions of Adaptive Cruise Control (ACC) and Lane Keeping Assist System (LKAS) for Hondas, Acuras, Toyotas, and a Chevy. It's about on par with Tesla Autopilot and GM Super Cruise, and better than [all other manufacturers](http://www.thedrive.com/tech/5707/the-war-for-autonomous-driving-part-iii-us-vs-germany-vs-japan).
+[openpilot](http://github.com/commaai/openpilot) is an open source driving agent. Currently it performs the functions of Adaptive Cruise Control (ACC) and Lane Keeping Assist System (LKAS) for selected Honda, Toyota, Acura, Lexus, Chevrolet, Hyundai, Kia. It's about on par with Tesla Autopilot and GM Super Cruise, and better than [all other manufacturers](http://www.thedrive.com/tech/5707/the-war-for-autonomous-driving-part-iii-us-vs-germany-vs-japan).
 
 The openpilot codebase has been written to be concise and enable rapid prototyping. We look forward to your contributions - improving real vehicle automation has never been easier.
 
@@ -30,7 +42,7 @@ openpilot is developed by [comma.ai](https://comma.ai/) and users like you.
 
 We have a [Twitter you should follow](https://twitter.com/comma_ai).
 
-Also, we have a 3500+ person [community on slack](https://slack.comma.ai).
+Also, we have a several thousand people community on [slack](https://slack.comma.ai).
 
 
 Hardware
@@ -107,8 +119,11 @@ Community Maintained Cars
 | Make          | Model                     | Supported Package    | Lateral | Longitudinal   | No Accel Below   | No Steer Below |
 | -------       | ----------------------    | -------------------- | ------- | ------------   | --------------   | -------------- |
 | Honda         | Fit 2018                  | Honda Sensing        | Yes     | Yes            | 25mph<sup>1</sup>| 12mph          |
+| Tesla         | Model S 2012              | All                  | Yes     | Not yet        | Not applicable   | 0mph           |
+| Tesla         | Model S 2013              | All                  | Yes     | Not yet        | Not applicable   | 0mph           |
 
 [[Honda Fit Pull Request]](https://github.com/commaai/openpilot/pull/266).
+[[Tesla Model S Pull Request]](https://github.com/commaai/openpilot/pull/246)
 
 Community Maintained Cars are not confirmed by comma.ai to meet our [safety model](https://github.com/commaai/openpilot/blob/devel/SAFETY.md). Be extra cautious using them.
 

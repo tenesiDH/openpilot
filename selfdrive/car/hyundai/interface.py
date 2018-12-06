@@ -30,7 +30,7 @@ class CarInterface(object):
     # *** init the major players ***
     self.CS = CarState(CP)
     self.cp = get_can_parser(CP)
-    self.cp_cam = get_camera_parser(CP)
+    self.cp_cam, self.cp_cam2 = get_camera_parser(CP)
 
     # sending if read only is False
     if sendcan is not None:
@@ -72,7 +72,57 @@ class CarInterface(object):
     ret.steerActuatorDelay = 0.1  # Default delay
     tire_stiffness_factor = 0.85  # Given all tested vehicle so far run better with this reduced below 0.85, this will becomes the default for now
 
-    if candidate == CAR.SANTA_FE:
+    if candidate == CAR.ELANTRA:
+      ret.steerKf = 0.00006
+      ret.steerRateCost = 0.5
+      ret.mass = 1275 + std_cargo
+      ret.wheelbase = 2.7
+      ret.steerRatio = 13.73        # Spec
+      tire_stiffness_factor = 0.385
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.1, 0.15, 0.25, 0.25], [0.02, 0.03, 0.05, 0.05]]
+      ret.minSteerSpeed = 32 * CV.MPH_TO_MS
+    elif candidate == CAR.GENESIS:
+      ret.steerKf = 0.00005
+      ret.steerRateCost = 0.5
+      ret.mass = 2060 + std_cargo
+      ret.wheelbase = 3.01
+      ret.steerRatio = 16.5
+      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
+      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
+      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+    elif candidate == CAR.GENESIS_2:
+      ret.steerKf = 0.00005
+      ret.steerRateCost = 0.5
+      ret.mass = 2060 + std_cargo
+      ret.wheelbase = 3.01
+      ret.steerRatio = 16.5
+      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
+      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
+      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+    elif candidate == CAR.KIA_SORENTO:
+      ret.steerKf = 0.00005
+      ret.steerRateCost = 0.5
+      ret.mass = 1985 + std_cargo
+      ret.wheelbase = 2.78
+      ret.steerRatio = 14.4         # Stock Value
+      tire_stiffness_factor = 0.75  # Based on testing
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.1, 0.2, 0.3, 0.3], [0.02, 0.02, 0.04, 0.04]]
+      ret.minSteerSpeed = 0.
+    elif candidate == CAR.KIA_STINGER:
+      ret.steerKf = 0.000025
+      ret.steerRateCost = 0.5
+      ret.mass = 3637 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.91
+      ret.steerRatio = 12.6
+      tire_stiffness_factor = 1.23
+      # Speed conversion:                0,  20,  45,  75 mph
+      ret.steerKpBP, ret.steerKiBP = [[  0.,  9., 20., 34.], [  0.,  9., 20., 34.]]          
+      ret.steerKpV, ret.steerKiV =   [[0.15,0.15,0.31,0.31], [0.03,0.03,0.05,0.05]]
+      ret.minSteerSpeed = 0.
+      ret.steerActuatorDelay = 0.125    
+    elif candidate == CAR.SANTA_FE:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
       ret.mass = 3982 * CV.LB_TO_KG + std_cargo
@@ -95,46 +145,8 @@ class CarInterface(object):
       ret.steerRatio = 16.55  # 13.8 is spec end-to-end
       tire_stiffness_factor = 0.82
 
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.30], [0.05]]
-      ret.minSteerSpeed = 0.
-    elif candidate == CAR.KIA_SORENTO:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 1985 + std_cargo
-      ret.wheelbase = 2.78
-      ret.steerRatio = 14.4         # Stock Value
-      tire_stiffness_factor = 0.75  # Based on testing
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.20], [0.05]]
-      ret.minSteerSpeed = 0.
-    elif candidate == CAR.ELANTRA:
-      ret.steerKf = 0.00006
-      ret.steerRateCost = 0.5
-      ret.mass = 1275 + std_cargo
-      ret.wheelbase = 2.7
-      ret.steerRatio = 13.73        # Spec
-      tire_stiffness_factor = 0.385
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.25], [0.05]]
-      ret.minSteerSpeed = 32 * CV.MPH_TO_MS
-    elif candidate == CAR.GENESIS:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 2060 + std_cargo
-      ret.wheelbase = 3.01
-      ret.steerRatio = 16.5
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
-      ret.minSteerSpeed = 35 * CV.MPH_TO_MS
-    elif candidate == CAR.KIA_STINGER:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 1825 + std_cargo
-      ret.wheelbase = 2.78
-      ret.steerRatio = 14.4 * 1.15   # 15% higher at the center seems reasonable
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.25], [0.05]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.15, 0.15, 0.25, 0.25], [0.02, 0.03, 0.05, 0.05]]
       ret.minSteerSpeed = 0.
 
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -190,7 +202,8 @@ class CarInterface(object):
     canMonoTimes = []
     self.cp.update(int(sec_since_boot() * 1e9), False)
     self.cp_cam.update(int(sec_since_boot() * 1e9), False)
-    self.CS.update(self.cp, self.cp_cam)
+    self.cp_cam2.update(int(sec_since_boot() * 1e9), False)
+    self.CS.update(self.cp, self.cp_cam, self.cp_cam2)
     # create message
     ret = car.CarState.new_message()
     # speeds

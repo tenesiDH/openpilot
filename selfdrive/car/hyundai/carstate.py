@@ -2,6 +2,9 @@ from selfdrive.car.hyundai.values import DBC
 from selfdrive.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
+from selfdrive.car.modules.UIBT_module import UIButtons,UIButton
+from selfdrive.car.modules.UIEV_module import UIEvents
+#from selfdrive.car.modules.OSM_module import OSM
 import numpy as np
 
 
@@ -63,17 +66,27 @@ def get_can_parser(CP):
     ("CR_Mdps_DrvTq", "MDPS11", 0),
 
     ("CR_Mdps_StrColTq", "MDPS12", 0),
+    ("CF_Mdps_Def", "MDPS12", 0),
     ("CF_Mdps_ToiActive", "MDPS12", 0),
     ("CF_Mdps_ToiUnavail", "MDPS12", 0),
+    ("CF_Mdps_MsgCount2", "MDPS12", 0),
+    ("CF_Mdps_Chksum2", "MDPS12", 0),
+    ("CF_Mdps_ToiFlt", "MDPS12", 0),
+    ("CF_Mdps_SErr", "MDPS12", 0),
+    ("CR_Mdps_StrTq", "MDPS12", 0),
     ("CF_Mdps_FailStat", "MDPS12", 0),
     ("CR_Mdps_OutTq", "MDPS12", 0),
 
     ("VSetDis", "SCC11", 0),
+    ("MainMode_ACC", "SCC11", 0),
     ("SCCInfoDisplay", "SCC11", 0),
     ("ACCMode", "SCC12", 1),
 
     ("SAS_Angle", "SAS11", 0),
     ("SAS_Speed", "SAS11", 0),
+
+    ("CF_Lca_IndLeft", "LCA11", 0),
+    ("CF_Lca_IndRight", "LCA11", 0),
   ]
 
   checks = [
@@ -99,6 +112,7 @@ def get_camera_parser(CP):
 
   signals = [
     # sig_name, sig_address, default
+    ("CF_Lkas_Icon", "LKAS11", 0),
     ("CF_Lkas_LdwsSysState", "LKAS11", 0),
     ("CF_Lkas_SysWarning", "LKAS11", 0),
     ("CF_Lkas_LdwsLHWarning", "LKAS11", 0),
@@ -113,15 +127,71 @@ def get_camera_parser(CP):
     ("CF_Lkas_FcwCollisionWarning", "LKAS11", 0),
     ("CF_Lkas_FusionState", "LKAS11", 0),
     ("CF_Lkas_FcwOpt_USM", "LKAS11", 0),
-    ("CF_Lkas_LdwsOpt_USM", "LKAS11", 0)
+    ("CF_Lkas_LdwsOpt_USM", "LKAS11", 0),
+    ("CF_Lkas_Unknown1", "LKAS11", 0),
+    ("CF_Lkas_Unknown2", "LKAS11", 0),
+    ("CF_Lkas_ActToi", "LKAS11", 0),
+    ("CR_Lkas_StrToqReq", "LKAS11", 0)
   ]
 
-  checks = []
-
-  return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 2)
+  checks = [("LKAS11", 100)]
+  return (CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 2)), \
+    (CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 1))
 
 class CarState(object):
   def __init__(self, CP):
+    #labels for buttons
+    self.btns_init = [["alca","ALC",["MadMax","Normal","Wifey"]], \
+                      ["cam","CAM",[""]], \
+                      ["alwon","MAD",[""]], \
+                      ["sound","SND",[""]], \
+                      ["", "",[""]], \
+                      ["", "", [""]]]
+
+    # ALCA PARAMS
+    # max REAL delta angle for correction vs actuator
+    self.CL_MAX_ANGLE_DELTA_BP = [10., 44.]
+    self.CL_MAX_ANGLE_DELTA = [2.4, .3]
+
+    # adjustment factor for merging steer angle to actuator; should be over 4; the higher the smoother
+    self.CL_ADJUST_FACTOR_BP = [10., 44.]
+    self.CL_ADJUST_FACTOR = [16. , 8.]
+
+
+    # reenrey angle when to let go
+    self.CL_REENTRY_ANGLE_BP = [10., 44.]
+    self.CL_REENTRY_ANGLE = [5. , 5.]
+
+    # a jump in angle above the CL_LANE_DETECT_FACTOR means we crossed the line
+    self.CL_LANE_DETECT_BP = [10., 44.]
+    self.CL_LANE_DETECT_FACTOR = [1.7, .75]
+
+    self.CL_LANE_PASS_BP = [10., 44.]
+    self.CL_LANE_PASS_TIME = [60., 3.] 
+
+    # change lane delta angles and other params
+    self.CL_MAXD_BP = [10., 32., 44.]
+    self.CL_MAXD_A = [.358, 0.084, 0.042] #delta angle based on speed; needs fine tune, based on Tesla steer ratio of 16.75
+
+    self.CL_MIN_V = 8.9 # do not turn if speed less than x m/2; 20 mph = 8.9 m/s
+
+    # do not turn if actuator wants more than x deg for going straight; this should be interp based on speed
+    self.CL_MAX_A_BP = [10., 44.]
+    self.CL_MAX_A = [10., 10.] 
+
+    # define limits for angle change every 0.1 s
+    # we need to force correction above 10 deg but less than 20
+    # anything more means we are going to steep or not enough in a turn
+    self.CL_MAX_ACTUATOR_DELTA = 2.
+    self.CL_MIN_ACTUATOR_DELTA = 0. 
+    self.CL_CORRECTION_FACTOR = 1.
+
+    #duration after we cross the line until we release is a factor of speed
+    self.CL_TIMEA_BP = [10., 32., 44.]
+    self.CL_TIMEA_T = [0.7 ,0.4, 0.20]
+
+    self.CL_WAIT_BEFORE_START = 1
+    #END OF ALCA PARAMS
 
     self.CP = CP
 
@@ -142,7 +212,23 @@ class CarState(object):
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
 
-  def update(self, cp, cp_cam):
+    # OSM
+    #self.OSM = OSM(self)
+    #self.OSM.getlocal()
+
+    #BB UIEvents
+    self.UE = UIEvents(self)
+
+    #BB variable for custom buttons
+    self.cstm_btns = UIButtons(self,"Hyundai","hyundai")
+
+    #BB pid holder for ALCA
+    self.pid = None
+
+    #BB custom message counter
+    self.custom_alert_counter = -1 #set to 100 for 1 second display; carcontroller will take down to zero
+
+  def update(self, cp, cp_cam, cp_cam2):
     # copy can_valid
     self.can_valid = cp.can_valid
 
@@ -153,12 +239,13 @@ class CarState(object):
     self.door_all_closed = True
     self.seatbelt = cp.vl["CGW1"]['CF_Gway_DrvSeatBeltSw']
 
-    self.brake_pressed = cp.vl["TCS13"]['DriverBraking']
+    self.brake_pressed = cp.vl["TCS13"]['DriverBraking'] if not self.cstm_btns.get_button_status("alwon") else 0 # I'm Bad
     self.esp_disabled = cp.vl["TCS15"]['ESC_Off_Step']
 
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
     self.main_on = True
-    self.acc_active = cp.vl["SCC12"]['ACCMode'] != 0
+    self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
+      (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
     self.pcm_acc_status = int(self.acc_active)
 
     # calc best v_ego estimate, by averaging two opposite corners
@@ -201,7 +288,6 @@ class CarState(object):
 
     self.user_brake = 0
 
-    self.brake_pressed = cp.vl["TCS13"]['DriverBraking']
     self.brake_lights = bool(self.brake_pressed)
     if (cp.vl["TCS13"]["DriverOverride"] == 0 and cp.vl["TCS13"]['ACC_REQ'] == 1):
       self.pedal_gas = 0
@@ -234,6 +320,18 @@ class CarState(object):
     else:
       self.gear_shifter_cluster = "unknown"
 
-    # save the entire LKAS11 and CLU11
-    self.lkas11 = cp_cam.vl["LKAS11"]
+    # save the entire LKAS11, CLU11 and MDPS12
+    #print cp_cam.can_valid, cp_cam2.can_valid
+    if cp_cam.can_valid == True:
+      self.lkas11 = cp_cam.vl["LKAS11"]
+      self.camcan = 2
+    else:
+      self.lkas11 = cp_cam2.vl["LKAS11"]
+      self.camcan = 1
+
     self.clu11 = cp.vl["CLU11"]
+    self.mdps12 = cp.vl["MDPS12"]
+
+    # Lane Change Assist Messages
+    self.lca_left = cp.vl["LCA11"]["CF_Lca_IndLeft"]
+    self.lca_right = cp.vl["LCA11"]["CF_Lca_IndRight"]
