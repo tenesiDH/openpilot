@@ -17,7 +17,7 @@ dashcam_element lock_button;
 
 int captureState = CAPTURE_STATE_NOT_CAPTURING;
 int captureNum = 0;
-int start_time = 0;
+int start_time = 0; 
 int elapsed_time = 0; // Time of current recording
 char filenames[RECORD_FILES][50]; // Track the filenames so they can be deleted when rotating
 
@@ -200,13 +200,13 @@ static void rotate_video() {
 
 void draw_lock_button(UIState *s) {
   int btn_w = 150;
-  int btn_h = 150;
+  int btn_h = 150; 
   int btn_x = 1920 - btn_w - 150;
   int btn_y = 1080 - btn_h;
   int imgw, imgh;
 
   float alpha = 0.3f;
-
+  
   if (!lock_image) {
     // Load the lock icon
     lock_image = nvgCreateImage(s->vg, "../assets/lock_icon.png", 1);
@@ -308,4 +308,3 @@ void dashcam( UIState *s, int touch_x, int touch_y ) {
     stop_capture();
   }
 }
->>>>>>> bog/tesla_pedal

@@ -78,7 +78,7 @@ def fingerprint(logcan, timeout):
     # bail if no cars left or we've been waiting too long
     elif len(candidate_cars) == 0 or (timeout and (ts - st_passive) > timeout):
       #return None, finger
-      print "Fingerprinting Failed: Returning Kia Sorento (based on branch)"
+      print "Fingerprinting Failed: Returning Kia Sorento (based on branch) Thanks Tesla"
       return "KIA SORENTO GT LINE 2018", finger
 
     time.sleep(0.01)

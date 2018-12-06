@@ -638,7 +638,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
           last_mod_time = os.path.getmtime(rt_tuning_file)
         # Make updates in latcontrol, etc.  I'm not sure if this is actually necessary, depends on if the objects are referenced or not.  Anyway, one less thing to debug atm.
         VM.update_rt_params(CP)
-        LaC.update_rt_params(VM, rt_mpc_flag, deadzone=rtt_params['latPidDeadzone'])
+        LaC.update_rt_params(rt_mpc_flag, deadzone=rtt_params['latPidDeadzone'])
         PL.PP.update_rt_params(rtt_params['Camera Offset'])
         #print('RTT Last_mod_time:  {0}'.format(last_mod_time))
 

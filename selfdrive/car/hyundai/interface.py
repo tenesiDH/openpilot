@@ -82,7 +82,7 @@ class CarInterface(object):
       ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
       ret.steerKpV, ret.steerKiV = [[0.1, 0.15, 0.25, 0.25], [0.02, 0.03, 0.05, 0.05]]
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
-    elif candidate == CAR.GENESIS:
+  elif candidate == CAR.GENESIS or candidate == CAR.GENESIS_3:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
       ret.mass = 2060 + std_cargo
@@ -118,10 +118,10 @@ class CarInterface(object):
       ret.steerRatio = 12.6
       tire_stiffness_factor = 1.23
       # Speed conversion:                0,  20,  45,  75 mph
-      ret.steerKpBP, ret.steerKiBP = [[  0.,  9., 20., 34.], [  0.,  9., 20., 34.]]          
+      ret.steerKpBP, ret.steerKiBP = [[  0.,  9., 20., 34.], [  0.,  9., 20., 34.]]
       ret.steerKpV, ret.steerKiV =   [[0.15,0.15,0.31,0.31], [0.03,0.03,0.05,0.05]]
       ret.minSteerSpeed = 0.
-      ret.steerActuatorDelay = 0.125    
+      ret.steerActuatorDelay = 0.125
     elif candidate == CAR.SANTA_FE:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5

@@ -247,6 +247,7 @@ typedef struct UIState {
 } UIState;
 
 
+
 static int last_brightness = -1;
 static void set_brightness(UIState *s, int brightness) {
   if (last_brightness != brightness && (s->awake || brightness == 0)) {
@@ -730,7 +731,7 @@ static void ui_draw_lane(UIState *s, const PathData path, NVGcolor color) {
   if (s->b.tri_state_switch >= 2) {
     color = nvgRGBA(66, 220, 244,250);
   }
-  //BB end
+  //BB end  
   ui_draw_lane_line(s, path.points, 0.025*path.prob, color, false);
   float var = min(path.std, 0.7);
   color.a /= 4;
@@ -878,7 +879,7 @@ static void draw_frame(UIState *s) {
       glBindTexture(GL_TEXTURE_2D, s->frame_texs[s->cur_vision_idx]);
     }
   }
-  //BB end
+  //BB end  
 
   glUseProgram(s->frame_program);
 
@@ -1254,7 +1255,7 @@ static void ui_draw_vision_alert(UIState *s, int va_size, int va_color,
     nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
     nvgTextBox(s->vg, alr_x, alr_h-(longAlert1?300:360), alr_w-60, va_text2, NULL);
   }
-
+  
 }
 
 
@@ -1508,7 +1509,7 @@ static void ui_update(UIState *s) {
       // awake on any (old) activity if tri-state in 1 or 2 position
       if(s->b.tri_state_switch < 3) {
         set_awake(s, true);
-      }
+      } 
     }
 
     if (s->vision_connected && polls[9].revents) {
