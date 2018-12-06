@@ -7,24 +7,30 @@ The port was started by Andrew Frahn of Emmertex.
 @ku7 on commaai Slack, and ku7 tech on youtube
 https://www.youtube.com/channel/UCXmUBvIuFLjLRuJ0mX298Ng
 
-Please support the port however you can!
-
-
-
-The Community port must be safe, and drivable, but will contain many features not in line with Comma policies.
-
-If you have changes which you think can be upstreamed to official comma, either do a PR direct to their github repo, or PR to hyundai-dev on emmertex repo.
-
 What is special about this port?
 ------
 
 It's unfettered awesome with no corporate fears!
+Where non standard features were made by someone other than me @ku7, they are credited with there Slack Username
 
-- Do not disable when Accelerator is depressed
-- Disable auto-steering on blinker OR
-- Advanced Lane Change Assist (Thanks @BogGyver)
+- Do not disable when Accelerator is depressed (MAD button)
+- Disable auto-steering on blinker, but leave OP engaged
+- - Disabled on first blink, and stays disabled until 1 second of no blinking.
+- Sounds! (Thanks @Sid and @BogGyver and #Tesla in general) (SND button)
+- Tesla UI (Thanks everyone in #Tesla)
+- - 3 Switch positions change the display, you probably want it far left.
+- Advanced Lane Change Assist (Thanks @BogGyver) (ALCA button)
+- - And with Blind Spot Detection for any Kia/Hyundai with it
 - Panda auto-detects Camera Pinout
-- No need for giraffe switches, If no EON, then forwards stock camers (Thanks @JamesT)
+- - And now so does OP!  LKAS on CAN 2 or CAN 3, it doesn't matter!
+- No need for giraffe switches, If no EON, then forwards stock camera (Thanks @JamesT)
+- Dashcam Recorder (Thanks @pjlao307)
+- Full Time Stock LKAS passthrough
+- - Including High Beam Assist and Automatic Emergency Braking, Blind Spot, Traffic Sign Detection, and more.
+- - This includes Land Departure Warning, but stock LKAS must be enabled for this.
+- Optional Dynamic Stock and OP Steering.  The moment OP isn't steering, it switched back to Stock (LKAS button)
+- CLI Based Real Time Tuning (Thanks @JamesT)
+- Probably other things I have forgotten
 
 
 
