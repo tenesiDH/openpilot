@@ -78,7 +78,7 @@ class CarController(object):
       self.ALCA.set_pid(CS)
     self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
-    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators, turning_signal)
+    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
     if force_enable and not CS.acc_active:
       apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     else:
