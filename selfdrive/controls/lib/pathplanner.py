@@ -64,4 +64,3 @@ class PathPlanner(object):
 
       self.p_poly = p_poly
       self.p_prob = p_prob
-

@@ -3,7 +3,7 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
                                              create_clu11, create_mdps12
-from selfdrive.car.hyundai.values import Buttons
+from selfdrive.car.hyundai.values import Buttons, CAR
 from selfdrive.can.packer import CANPacker
 from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
@@ -45,6 +45,10 @@ class CarController(object):
       enabled = True
       force_enable = True
 
+    if self.car_fingerprint == CAR.GENESIS_3 and CS.v_wheel < 16.8:
+        enabled = False
+        force_enable = False
+        
 
     # Fix for Kia and Hyundai Blinkers.  Where "bliner" is stalk position, and does not activate when momentary (7 flash)
     #   and "flash" is the actual lights, so comes on and off.
@@ -74,7 +78,7 @@ class CarController(object):
       self.ALCA.set_pid(CS)
     self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
-    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators, turning_signal)
+    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
     if force_enable and not CS.acc_active:
       apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     else:

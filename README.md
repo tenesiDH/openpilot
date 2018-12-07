@@ -7,33 +7,56 @@ The port was started by Andrew Frahn of Emmertex.
 @ku7 on commaai Slack, and ku7 tech on youtube
 https://www.youtube.com/channel/UCXmUBvIuFLjLRuJ0mX298Ng
 
-Please support the port however you can!
-
-
-
-The Community port must be safe, and drivable, but will contain many features not in line with Comma policies.
-
-If you have changes which you think can be upstreamed to official comma, either do a PR direct to their github repo, or PR to hyundai-dev on emmertex repo.
-
 What is special about this port?
 ------
 
 It's unfettered awesome with no corporate fears!
+Where non standard features were made by someone other than me @ku7, they are credited with there Slack Username
 
-- Do not disable when Accelerator is depressed
-- Disable auto-steering on blinker OR
-- Advanced Lane Change Assist (Thanks @BogGyver)
+- Do not disable when Accelerator is depressed (MAD button)
+- Disable auto-steering on blinker, but leave OP engaged
+- - Disabled on first blink, and stays disabled until 1 second of no blinking.
+- Sounds! (Thanks @Sid and @BogGyver and #Tesla in general) (SND button)
+- Tesla UI (Thanks everyone in #Tesla)
+- - 3 Switch positions change the display, you probably want it far left.
+- Advanced Lane Change Assist (Thanks @BogGyver) (ALCA button)
+- - And with Blind Spot Detection for any Kia/Hyundai with it
 - Panda auto-detects Camera Pinout
-- No need for giraffe switches, If no EON, then forwards stock camers (Thanks @JamesT)
+- - And now so does OP!  LKAS on CAN 2 or CAN 3, it doesn't matter!
+- No need for giraffe switches, If no EON, then forwards stock camera (Thanks @JamesT)
+- Dashcam Recorder (Thanks @pjlao307)
+- Full Time Stock LKAS passthrough
+- - Including High Beam Assist and Automatic Emergency Braking, Blind Spot, Traffic Sign Detection, and more.
+- - This includes Land Departure Warning, but stock LKAS must be enabled for this.
+- Optional Dynamic Stock and OP Steering.  The moment OP isn't steering, it switched back to Stock (LKAS button)
+- CLI Based Real Time Tuning (Thanks @JamesT)
+- Probably other things I have forgotten
 
 
 
 Welcome to openpilot
 ======
 
-[openpilot](http://github.com/commaai/openpilot) is an open source driving agent. Currently it performs the functions of Adaptive Cruise Control (ACC) and Lane Keeping Assist System (LKAS) for selected Honda, Toyota, Acura, Lexus, Chevrolet, Hyundai, Kia. It's about on par with Tesla Autopilot and GM Super Cruise, and better than [all other manufacturers](http://www.thedrive.com/tech/5707/the-war-for-autonomous-driving-part-iii-us-vs-germany-vs-japan).
+[openpilot](http://github.com/commaai/openpilot) is an open source driving agent. Currently, it performs the functions of Adaptive Cruise Control (ACC) and Lane Keeping Assist System (LKAS) for selected Honda, Toyota, Acura, Lexus, Chevrolet, Hyundai, Kia. It's about on par with Tesla Autopilot and GM Super Cruise, and better than [all other manufacturers](http://www.thedrive.com/tech/5707/the-war-for-autonomous-driving-part-iii-us-vs-germany-vs-japan).
 
-The openpilot codebase has been written to be concise and enable rapid prototyping. We look forward to your contributions - improving real vehicle automation has never been easier.
+The openpilot codebase has been written to be concise and to enable rapid prototyping. We look forward to your contributions - improving real vehicle automation has never been easier.
+
+Table of Contents
+=======================
+
+* [Community](#community)
+* [Hardware](#hardware)
+* [Supported Cars](#supported-cars)
+* [Community Maintained Cars](#community-maintained-cars)
+* [In Progress Cars](#in-progress-cars)
+* [How can I add support for my car?](#how-can-i-add-support-for-my-car-)
+* [Directory structure](#directory-structure)
+* [User Data / chffr Account / Crash Reporting](#user-data-chffr-account-crash-reporting)
+* [Testing on PC](#testing-on-pc)
+* [Contributing](#contributing)
+* [Licensing](#licensing)
+
+---
 
 Community
 ------
@@ -108,22 +131,24 @@ Please note, this is the HYUNDAI AND KIA Community Build, while others are suppo
 
 <sup>1</sup>[Comma Pedal](https://community.comma.ai/wiki/index.php/Comma_Pedal) is used to provide stop-and-go capability to some of the openpilot-supported cars that don't currently support stop-and-go. Here is how to [build a Comma Pedal](https://medium.com/@jfrux/comma-pedal-building-with-macrofab-6328bea791e8). ***NOTE: The Comma Pedal is not officially supported by [comma.ai](https://comma.ai)***  
 <sup>2</sup>When disconnecting the Driver Support Unit (DSU), otherwise longitudinal control is stock ACC. For DSU locations, see [Toyota Wiki page](https://community.comma.ai/wiki/index.php/Toyota)  
-<sup>3</sup>[GM installation guide](https://www.zoneos.com/volt.htm)  
+<sup>3</sup>[GM installation guide](https://zoneos.com/volt/).  
 <sup>4</sup>It needs an extra 120Ohm resistor ([pic1](https://i.imgur.com/CmdKtTP.jpg), [pic2](https://i.imgur.com/s2etUo6.jpg)) on bus 3 and giraffe switches set to 01X1 (11X1 for stock LKAS), where X depends on if you have the [comma power](https://comma.ai/shop/products/power/).  
 <sup>5</sup>28mph for Camry 4CYL L, 4CYL LE and 4CYL SE which don't have Full-Speed Range Dynamic Radar Cruise Control.  
-<sup>6</sup>Giraffe is under development: architecture similar to Toyota giraffe, with an extra 120Ohm resistor on bus 3.
+<sup>6</sup>Open sourced [Hyundai Giraffe](https://github.com/commaai/neo/tree/master/giraffe/hyundai) is designed ofor the 2019 Sante Fe; pinout may differ for other Hyundais. <br />
+<sup>7</sup>Community built Giraffe, find more information here, [GM Giraffe](https://zoneos.com/shop/) <br />
 
 Community Maintained Cars
 ------
 
-| Make          | Model                     | Supported Package    | Lateral | Longitudinal   | No Accel Below   | No Steer Below |
-| -------       | ----------------------    | -------------------- | ------- | ------------   | --------------   | -------------- |
-| Honda         | Fit 2018                  | Honda Sensing        | Yes     | Yes            | 25mph<sup>1</sup>| 12mph          |
-| Tesla         | Model S 2012              | All                  | Yes     | Not yet        | Not applicable   | 0mph           |
-| Tesla         | Model S 2013              | All                  | Yes     | Not yet        | Not applicable   | 0mph           |
+| Make          | Model                     | Supported Package    | Lateral | Longitudinal   | No Accel Below   | No Steer Below | Giraffe           |
+| -------       | ----------------------    | -------------------- | ------- | ------------   | --------------   | -------------- | ------------------|
+| Honda         | Fit 2018                  | Honda Sensing        | Yes     | Yes            | 25mph<sup>1</sup>| 12mph          | Inverted Nidec    |
+| Tesla         | Model S 2012              | All                  | Yes     | Not yet        | Not applicable   | 0mph           | Custom<sup>8</sup>|
+| Tesla         | Model S 2013              | All                  | Yes     | Not yet        | Not applicable   | 0mph           | Custom<sup>8</sup>|
 
-[[Honda Fit Pull Request]](https://github.com/commaai/openpilot/pull/266).
-[[Tesla Model S Pull Request]](https://github.com/commaai/openpilot/pull/246)
+[[Honda Fit Pull Request]](https://github.com/commaai/openpilot/pull/266). <br />
+[[Tesla Model S Pull Request]](https://github.com/commaai/openpilot/pull/246) <br />
+<sup>8</sup>Community built Giraffe, find more information here [Community Tesla Giraffe](https://github.com/jeankalud/neo/tree/tesla_giraffe/giraffe/tesla) <br />
 
 Community Maintained Cars are not confirmed by comma.ai to meet our [safety model](https://github.com/commaai/openpilot/blob/devel/SAFETY.md). Be extra cautious using them.
 
@@ -132,6 +157,7 @@ In Progress Cars
 - All TSS-P Toyota with Steering Assist.
   - 'Full Speed Range Dynamic Radar Cruise Control' is required to enable stop-and-go. Only the Prius, Camry and C-HR have this option.
   - Even though the Tundra, Sequoia and the Land Cruiser have TSS-P, they don't have Steering Assist and are not supported.
+  - Only remaining Toyota cars with no port yet are the Avalon and the Sienna.
 - All LSS-P Lexus with Steering Assist or Lane Keep Assist.
   - 'All-Speed Range Dynamic Radar Cruise Control' is required to enable stop-and-go. Only the GS, GSH, F, RX, RXH, LX, NX, NXH, LC, LCH, LS, LSH have this option.
   - Even though the LX have TSS-P, it does not have Steering Assist and is not supported.
@@ -147,7 +173,7 @@ We've written guides for [Brand](https://medium.com/@comma_ai/how-to-write-a-car
 
 - BMW, Audi, Volvo, and Mercedes all use [FlexRay](https://en.wikipedia.org/wiki/FlexRay) and are unlikely to be supported any time soon.
 - We put time into a Ford port, but the steering has a 10 second cutout limitation that makes it unusable.
-- The 2016-2017 Honda Accord use a custom signaling protocol for steering that's unlikely to ever be upstreamed.
+- The 2016-2017 Honda Accord uses a custom signaling protocol for steering that's unlikely to ever be upstreamed.
 
 Directory structure
 ------
@@ -182,7 +208,7 @@ To understand how the services interact, see `selfdrive/service_list.yaml`
 User Data / chffr Account / Crash Reporting
 ------
 
-By default openpilot creates an account and includes a client for chffr, our dashcam app. We use your data to train better models and improve openpilot for everyone.
+By default, openpilot creates an account and includes a client for chffr, our dashcam app. We use your data to train better models and improve openpilot for everyone.
 
 It's open source software, so you are free to disable it if you wish.
 
@@ -206,6 +232,7 @@ The resulting plots are displayed in `selfdrive/test/tests/plant/out/longitudina
 
 More extensive testing infrastructure and simulation environments are coming soon.
 
+
 Contributing
 ------
 
@@ -224,3 +251,7 @@ Any user of this software shall indemnify and hold harmless Comma.ai, Inc. and i
 **THIS IS ALPHA QUALITY SOFTWARE FOR RESEARCH PURPOSES ONLY. THIS IS NOT A PRODUCT.
 YOU ARE RESPONSIBLE FOR COMPLYING WITH LOCAL LAWS AND REGULATIONS.
 NO WARRANTY EXPRESSED OR IMPLIED.**
+
+---
+
+<img src="https://d1qb2nb5cznatu.cloudfront.net/startups/i/1061157-bc7e9bf3b246ece7322e6ffe653f6af8-medium_jpg.jpg?buster=1458363130" width="75"></img> <img src="https://cdn-images-1.medium.com/max/1600/1*C87EjxGeMPrkTuVRVWVg4w.png" width="225"></img>

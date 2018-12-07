@@ -3,8 +3,8 @@
 #define CAPTURE_STATE_NONE 0
 #define CAPTURE_STATE_CAPTURING 1
 #define CAPTURE_STATE_NOT_CAPTURING 2
-#define RECORD_INTERVAL 180 // Time in seconds to rotate recordings; Max for screenrecord is 3 minutes
-#define RECORD_FILES 10 // Number of files to create before looping over
+#define RECORD_INTERVAL 180 // Time in seconds to rotate recordings
+#define RECORD_FILES 20 // Number of files to create before looping over
 
 typedef struct dashcam_element {
   int pos_x;
@@ -21,7 +21,7 @@ int start_time = 0;
 int elapsed_time = 0; // Time of current recording
 char filenames[RECORD_FILES][50]; // Track the filenames so they can be deleted when rotating
 
-bool lock_current_video = false; // If true save the current video before rotating
+bool lock_current_video = true; // If true save the current video before rotating
 bool locked_files[RECORD_FILES]; // Track which files are locked
 int lock_image; // Stores reference to the PNG
 int files_created = 0;
@@ -204,8 +204,9 @@ void draw_lock_button(UIState *s) {
   int btn_x = 1920 - btn_w - 150;
   int btn_y = 1080 - btn_h;
   int imgw, imgh;
-  float alpha = 0.3f;
 
+  float alpha = 0.3f;
+  
   if (!lock_image) {
     // Load the lock icon
     lock_image = nvgCreateImage(s->vg, "../assets/lock_icon.png", 1);
