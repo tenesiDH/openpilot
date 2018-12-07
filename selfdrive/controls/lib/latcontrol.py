@@ -31,7 +31,7 @@ class LatControl(object):
     self.setup_mpc(CP.steerRateCost)
     self.deadzone = 0.0
 
-  def update_rt_params(CP, self, rt_mpc_flag, deadzone=0.):
+  def update_rt_params(self, CP, rt_mpc_flag, deadzone=0.):
     # TODO:  Is this really necessary, or is the original reference preserved through the cap n' proto setup?
     # Real-time tuning:  Update these values from the CP if called from real-time tuning logic in controlsd
     self.pid._k_p = (CP.steerKpBP, CP.steerKpV)    # proportional gain
