@@ -69,7 +69,7 @@ class CarInterface(object):
     tireStiffnessFront_civic = 192150
     tireStiffnessRear_civic = 202500
 
-    ret.steerActuatorDelay = 0.1  # Default delay
+    ret.steerActuatorDelay = 0.09  # Default delay
     tire_stiffness_factor = 0.85  # Given all tested vehicle so far run better with this reduced below 0.85, this will becomes the default for now
 
     if candidate == CAR.ELANTRA:
@@ -82,7 +82,7 @@ class CarInterface(object):
       ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
       ret.steerKpV, ret.steerKiV = [[0.1, 0.15, 0.25, 0.25], [0.02, 0.03, 0.05, 0.05]]
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
-    elif candidate == CAR.GENESIS or candidate == CAR.GENESIS_3:
+    elif candidate == CAR.GENESIS:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
       ret.mass = 2060 + std_cargo
@@ -105,10 +105,10 @@ class CarInterface(object):
       ret.steerRateCost = 0.5
       ret.mass = 1985 + std_cargo
       ret.wheelbase = 2.78
-      ret.steerRatio = 14.4         # Stock Value
+      ret.steerRatio = 14.8         # Stock Value
       tire_stiffness_factor = 0.75  # Based on testing
       ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
-      ret.steerKpV, ret.steerKiV = [[0.1, 0.2, 0.3, 0.3], [0.02, 0.02, 0.04, 0.04]]
+      ret.steerKpV, ret.steerKiV = [[0.08, 0.18, 0.25, 0.3], [0.02, 0.02, 0.04, 0.04]]
       ret.minSteerSpeed = 0.
     elif candidate == CAR.KIA_STINGER:
       ret.steerKf = 0.000025

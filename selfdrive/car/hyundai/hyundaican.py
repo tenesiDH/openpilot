@@ -1,5 +1,5 @@
 import crcmod
-from selfdrive.car.hyundai.values import CHECKSUM
+from selfdrive.car.hyundai.values import LKAS_FEATURES
 
 hyundai_checksum = crcmod.mkCrcFun(0x11D, initCrc=0xFD, rev=False, xorOut=0xdf)
 
@@ -11,7 +11,8 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
     use_stock = False
 
   values = {
-    "CF_Lkas_Icon": lkas11["CF_Lkas_Icon"] if use_stock else (2 if enabled else 0),
+    "CF_Lkas_Icon": 2 if (car_fingerprint in LKAS_FEATURES["icon_basic"]) else \
+        (lkas11["CF_Lkas_Icon"] if use_stock else (2 if enabled else 0)),
     "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"] if use_stock else 3,
     "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"] if use_stock else hud_alert,
     "CF_Lkas_LdwsLHWarning": lkas11["CF_Lkas_LdwsLHWarning"] if keep_stock else 0,
@@ -37,15 +38,15 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
 
   dat = packer.make_can_msg("LKAS11", 0, values)[2]
 
-  if car_fingerprint in CHECKSUM["crc8"]:
+  if car_fingerprint in LKAS_FEATURES["crc8"]:
     # CRC Checksum as seen on 2019 Hyundai Santa Fe
     dat = dat[:6] + dat[7]
     checksum = hyundai_checksum(dat)
-  elif car_fingerprint in CHECKSUM["6B"]:
+  elif car_fingerprint in LKAS_FEATURES["6B"]:
     # Checksum of first 6 Bytes, as seen on 2018 Kia Sorento
     dat = [ord(i) for i in dat]
     checksum = sum(dat[:6]) % 256
-  elif car_fingerprint in CHECKSUM["7B"]:
+  elif car_fingerprint in LKAS_FEATURES["7B"]:
     # Checksum of first 6 Bytes and last Byte as seen on 2018 Kia Stinger
     dat = [ord(i) for i in dat]
     checksum = (sum(dat[:6]) + dat[7]) % 256
