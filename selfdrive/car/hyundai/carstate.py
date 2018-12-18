@@ -4,7 +4,6 @@ from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
 from selfdrive.car.modules.UIBT_module import UIButtons,UIButton
 from selfdrive.car.modules.UIEV_module import UIEvents
-#from selfdrive.car.modules.OSM_module import OSM
 import numpy as np
 
 
@@ -141,12 +140,12 @@ def get_camera_parser(CP):
 class CarState(object):
   def __init__(self, CP):
     #labels for buttons
-    self.btns_init = [["alca","ALC",["MadMax","Normal","Wifey"]], \
+    self.btns_init = [["","",["","",""]], \
+                      ["","",[""]], \
+                      ["alca","ALC",["MadMax", "Normal", "Wifey"]], \
                       ["cam","CAM",[""]], \
-                      ["alwon","MAD",[""]], \
-                      ["sound","SND",[""]], \
-                      ["", "",[""]], \
-                      ["", "", [""]]]
+                      ["alwon", "MAD",[""]], \
+                      ["sound", "SND", [""]]]
 
     # ALCA PARAMS
     # max REAL delta angle for correction vs actuator
@@ -246,6 +245,7 @@ class CarState(object):
     self.main_on = True
     self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
       (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
+    self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
     self.pcm_acc_status = int(self.acc_active)
 
     # calc best v_ego estimate, by averaging two opposite corners
@@ -253,7 +253,7 @@ class CarState(object):
     self.v_wheel_fr = cp.vl["WHL_SPD11"]['WHL_SPD_FR'] * CV.KPH_TO_MS
     self.v_wheel_rl = cp.vl["WHL_SPD11"]['WHL_SPD_RL'] * CV.KPH_TO_MS
     self.v_wheel_rr = cp.vl["WHL_SPD11"]['WHL_SPD_RR'] * CV.KPH_TO_MS
-    self.v_wheel = (self.v_wheel_fl + self.v_wheel_fr + self.v_wheel_rl + self.v_wheel_rr) / 4.
+    self.v_wheel = 1.035 * (self.v_wheel_fl + self.v_wheel_fr + self.v_wheel_rl + self.v_wheel_rr) / 4.
 
     self.low_speed_lockout = self.v_wheel < 1.0
 
@@ -274,18 +274,10 @@ class CarState(object):
     self.angle_steers_rate = cp.vl["SAS11"]['SAS_Speed']
     self.yaw_rate = cp.vl["ESP12"]['YAW_RATE']
     self.main_on = True
-    if (cp.vl["CGW1"]['CF_Gway_TSigLHSw'] or cp.vl["CGW1"]['CF_Gway_TurnSigLh']):
-        self.left_blinker_on = True
-        self.left_blinker_flash = True
-    else:
-        self.left_blinker_on = False
-        self.left_blinker_flash = False
-    if (cp.vl["CGW1"]['CF_Gway_TSigRHSw'] or cp.vl["CGW1"]['CF_Gway_TurnSigRh']):
-        self.right_blinker_on = TrueS
-        self.right_blinker_flash = True
-    else:
-        self.right_blinker_on = False
-        self.right_blinker_flash = False
+    self.left_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigLHSw']
+    self.left_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigLh']
+    self.right_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigRHSw']
+    self.right_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigRh']
     self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > 1.0
     self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_error = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
