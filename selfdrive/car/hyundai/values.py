@@ -57,7 +57,7 @@ LKAS_FEATURES = {
   "7B": [CAR.KIA_STINGER, CAR.ELANTRA],			# 7 Bytes used in Checksum
   "crc8": [CAR.SANTA_FE, CAR.SANTA_FE_2],		# CRC Checksum
   "icon_basic": [CAR.GENESIS, CAR.GENESIS_2],		# Anything but 2 for LKAS_Icon causes MDPS Fault
-  "soft_disable": [CAR.GENESIS_2],			# Any steer message sent below 16.5m/s faults MDPS
+  "soft_disable": [CAR.GENESIS, CAR.GENESIS_2],			# Any steer message sent below 16.5m/s faults MDPS
 }
 
 DBC = {
