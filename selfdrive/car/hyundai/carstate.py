@@ -281,12 +281,12 @@ class CarState(object):
         self.left_blinker_on = False
         self.left_blinker_flash = False
     if (cp.vl["CGW1"]['CF_Gway_TSigRHSw'] or cp.vl["CGW1"]['CF_Gway_TurnSigRh']):
-        self.right_blinker_on = True
+        self.right_blinker_on = TrueS
         self.right_blinker_flash = True
     else:
         self.right_blinker_on = False
         self.right_blinker_flash = False
-    self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > 1.0.
+    self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > 1.0
     self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_error = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
     self.brake_error = 0
