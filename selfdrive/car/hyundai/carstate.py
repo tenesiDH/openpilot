@@ -167,7 +167,7 @@ class CarState(object):
     self.CL_LANE_DETECT_FACTOR = [1.7, .75]
 
     self.CL_LANE_PASS_BP = [10., 44.]
-    self.CL_LANE_PASS_TIME = [60., 3.] 
+    self.CL_LANE_PASS_TIME = [60., 3.]
 
     # change lane delta angles and other params
     self.CL_MAXD_BP = [10., 32., 44.]
@@ -177,13 +177,13 @@ class CarState(object):
 
     # do not turn if actuator wants more than x deg for going straight; this should be interp based on speed
     self.CL_MAX_A_BP = [10., 44.]
-    self.CL_MAX_A = [10., 10.] 
+    self.CL_MAX_A = [10., 10.]
 
     # define limits for angle change every 0.1 s
     # we need to force correction above 10 deg but less than 20
     # anything more means we are going to steep or not enough in a turn
     self.CL_MAX_ACTUATOR_DELTA = 2.
-    self.CL_MIN_ACTUATOR_DELTA = 0. 
+    self.CL_MIN_ACTUATOR_DELTA = 0.
     self.CL_CORRECTION_FACTOR = 1.
 
     #duration after we cross the line until we release is a factor of speed
@@ -274,15 +274,15 @@ class CarState(object):
     self.angle_steers_rate = cp.vl["SAS11"]['SAS_Speed']
     self.yaw_rate = cp.vl["ESP12"]['YAW_RATE']
     self.main_on = True
-    self.left_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigLHSw']
-    self.left_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigLh']
-    self.right_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigRHSw']
-    self.right_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigRh']
-    self.steer_override = abs(cp.vl["MDPS11"]['CR_Mdps_DrvTq']) > 100.
+    self.left_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigLHSw'] or cp.vl["CGW1"]['CF_Gway_TurnSigLh']
+    self.left_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigLh'] or cp.vl["CGW1"]['CF_Gway_TSigLHSw']
+    self.right_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigRHSw'] or cp.vl["CGW1"]['CF_Gway_TurnSigRh']
+    self.right_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigRh'] or cp.vl["CGW1"]['CF_Gway_TSigRHSw']
+    self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > 1.0.
     self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_error = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
     self.brake_error = 0
-    self.steer_torque_driver = cp.vl["MDPS11"]['CR_Mdps_DrvTq']
+    self.steer_torque_driver = cp.vl["MDPS12"]['CR_Mdps_StrColTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
     self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4.
 
