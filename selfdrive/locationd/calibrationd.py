@@ -3,6 +3,7 @@ import os
 import zmq
 import cv2
 import copy
+import math
 import json
 import numpy as np
 import selfdrive.messaging as messaging
@@ -17,6 +18,8 @@ from common.transformations.camera import view_frame_from_device_frame, get_view
                                           eon_intrinsics, get_calib_from_vp, normalize, denormalize, H, W
 
 
+MIN_SPEED_FILTER = 7 # m/s  (~15.5mph)
+MAX_YAW_RATE_FILTER = math.radians(3) # per second
 FRAMES_NEEDED = 120  # allow to update VP every so many frames
 VP_CYCLES_NEEDED = 2
 CALIBRATION_CYCLES_NEEDED = FRAMES_NEEDED * VP_CYCLES_NEEDED
