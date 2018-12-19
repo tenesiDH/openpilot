@@ -37,6 +37,7 @@ Based on OpenPilot 0.5.7 from comma.ai
 - ** Temporarily removed ** CLI Based Real Time Tuning (Thanks @JamesT)
 - Unsupported cars default to Kia Sorento.  This should work for most cars.
 - Cruise Setpoint set from OSM Speed Limit*
+- Compress when not uploading (https://github.com/commaai/openpilot/pull/471)
 - Probably other things I have forgotten
 
 * Has known issues
