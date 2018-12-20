@@ -65,15 +65,6 @@ class CarController(object):
     if (CS.left_blinker_on == 1 or CS.right_blinker_on == 1):
       self.turning_signal_timer = 100  # Disable for 1.0 Seconds after blinker turned off
 
-    if alca_enabled:
-      self.turning_signal_timer = 0
-
-    if self.turning_signal_timer > 0:
-      self.turning_signal_timer = self.turning_signal_timer - 1
-      turning_signal = 1
-    else:
-      turning_signal = 0
-
     #update custom UI buttons and alerts
     CS.UE.update_custom_ui()
     if (self.cnt % 100 == 0):
@@ -102,6 +93,15 @@ class CarController(object):
     # If ALCA is disabled, and turning indicators are turned on, we do not want OP to steer,
     if not enabled or (turning_signal and not alca_enabled):
       apply_steer = 0
+
+    if alca_enabled:
+      self.turning_signal_timer = 0
+
+    if self.turning_signal_timer > 0:
+      self.turning_signal_timer = self.turning_signal_timer - 1
+      turning_signal = 1
+    else:
+      turning_signal = 0
 
     steer_req = 1 if enabled else 0
 
