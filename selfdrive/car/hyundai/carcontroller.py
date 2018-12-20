@@ -127,10 +127,10 @@ class CarController(object):
     can_sends.append(create_mdps12(self.packer, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
 
     if pcm_cancel_cmd and (not force_enable):
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))
+      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, 0))
     elif CS.stopped and (self.cnt - self.last_resume_cnt) > 5:
       self.last_resume_cnt = self.cnt
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL))
+      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0))
 
 
     # Speed Limit Related Stuff  Lot's of comments for others to understand!
@@ -170,9 +170,9 @@ class CarController(object):
     if CS.acc_active_real and not self.speed_adjusted and self.map_speed > (8.5 * self.speed_conv) and (self.cnt % 9 == 0 or self.cnt % 9 == 1):
         # Use some tolerance because of Floats being what they are...
         if (CS.cruise_set_speed * self.speed_conv) > (self.map_speed * 1.005):
-            can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.SET_DECEL))
+            can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.SET_DECEL, (1 if self.cnt % 9 == 1 else 0)))
         elif (CS.cruise_set_speed * self.speed_conv) < (self.map_speed / 1.005):
-            can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL))
+            can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, (1 if self.cnt % 9 == 1 else 0)))
         # If nothing needed adjusting, then the speed has been set, which will lock out this control
         else:
             self.speed_adjusted = True
