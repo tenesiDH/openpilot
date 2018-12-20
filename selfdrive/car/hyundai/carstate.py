@@ -18,8 +18,6 @@ def get_can_parser(CP):
 
     ("YAW_RATE", "ESP12", 0),
 
-    ("CF_Gway_DrvSeatBeltInd", "CGW4", 1),
-
     ("CF_Gway_DrvSeatBeltSw", "CGW1", 0),
     ("CF_Gway_TSigLHSw", "CGW1", 0),
     ("CF_Gway_TurnSigLh", "CGW1", 0),
@@ -62,8 +60,6 @@ def get_can_parser(CP):
 
     ("CF_Lvr_GearInf", "LVR11", 0),        #Transmission Gear (0 = N or P, 1-8 = Fwd, 14 = Rev)
 
-    ("CR_Mdps_DrvTq", "MDPS11", 0),
-
     ("CR_Mdps_StrColTq", "MDPS12", 0),
     ("CF_Mdps_Def", "MDPS12", 0),
     ("CF_Mdps_ToiActive", "MDPS12", 0),
@@ -91,14 +87,12 @@ def get_can_parser(CP):
   checks = [
     # address, frequency
     ("MDPS12", 50),
-    ("MDPS11", 100),
     ("TCS15", 10),
     ("TCS13", 50),
     ("CLU11", 50),
     ("ESP12", 100),
     ("EMS12", 100),
     ("CGW1", 10),
-    ("CGW4", 5),
     ("WHL_SPD11", 50),
     ("SCC11", 50),
     ("SCC12", 50),
