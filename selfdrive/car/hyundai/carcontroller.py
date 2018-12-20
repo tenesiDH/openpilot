@@ -18,7 +18,7 @@ from selfdrive.config import Conversions as CV
 class SteerLimitParams:
   STEER_MAX = 250   # 409 is the max
   STEER_DELTA_UP = 3
-  STEER_DELTA_DOWN = 4
+  STEER_DELTA_DOWN = 3
 
 class CarController(object):
 
@@ -62,11 +62,11 @@ class CarController(object):
         force_enable = False
 
 
-    # Fix for Kia and Hyundai Blinkers.  Where "bliner" is stalk position, and does not activate when momentary (7 flash)
-    #   and "flash" is the actual lights, so comes on and off.
-    if (CS.left_blinker_on == 1 or CS.right_blinker_on == 1 or \
-      CS.left_blinker_flash == 1 or CS.right_blinker_flash == 1):
+    if (CS.left_blinker_on == 1 or CS.right_blinker_on == 1):
       self.turning_signal_timer = 100  # Disable for 1.0 Seconds after blinker turned off
+
+    if alca_enabled:
+      self.turning_signal_timer = 0
 
     if self.turning_signal_timer > 0:
       self.turning_signal_timer = self.turning_signal_timer - 1
