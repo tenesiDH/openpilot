@@ -136,7 +136,7 @@ class CarState(object):
     #labels for buttons
     self.btns_init = [["","",["","",""]], \
                       ["","",[""]], \
-                      ["alca","ALC",["MadMax", "Normal", "Wifey"]], \
+                      ["","",[""]], \ #["alca","ALC",["MadMax", "Normal", "Wifey"]], \
                       ["cam","CAM",[""]], \
                       ["alwon", "MAD",[""]], \
                       ["sound", "SND", [""]]]

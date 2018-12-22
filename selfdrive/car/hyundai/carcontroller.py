@@ -5,7 +5,7 @@ from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_clu11, create_mdps12
 from selfdrive.car.hyundai.values import Buttons, CAR, LKAS_FEATURES
 from selfdrive.can.packer import CANPacker
-from selfdrive.car.modules.ALCA_module import ALCAController
+#from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
 import zmq
 from selfdrive.services import service_list
@@ -42,7 +42,7 @@ class CarController(object):
     self.speed_conv = 3.6
     self.speed_adjusted = False
 
-    self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
+    #self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
 
   def update(self, sendcan, enabled, CS, actuators, pcm_cancel_cmd, hud_alert):
@@ -73,25 +73,25 @@ class CarController(object):
 
     # Get the angle from ALCA.
     alca_enabled = False
-    alca_steer = 0.
-    alca_angle = 0.
-    turn_signal_needed = 0
+    #alca_steer = 0.
+    #alca_angle = 0.
+    #turn_signal_needed = 0
     # Update ALCA status and custom button every 0.1 sec.
-    if self.ALCA.pid == None:
-      self.ALCA.set_pid(CS)
-    self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
+    #if self.ALCA.pid == None:
+    #  self.ALCA.set_pid(CS)
+    #self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
-    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
-    if force_enable and not CS.acc_active:
-      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
-    else:
-      apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
+    #alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
+    #if force_enable and not CS.acc_active:
+    apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
+    #else:
+    #  apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
 
     # Limit steer rate for safety
     apply_steer = limit_steer_rate(apply_steer, self.apply_steer_last, SteerLimitParams)
 
-    if alca_enabled:
-      self.turning_signal_timer = 0
+    #if alca_enabled:
+    #  self.turning_signal_timer = 0
 
     if self.turning_signal_timer > 0:
       self.turning_signal_timer = self.turning_signal_timer - 1
