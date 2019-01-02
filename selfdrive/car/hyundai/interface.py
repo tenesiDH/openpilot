@@ -79,8 +79,8 @@ class CarInterface(object):
       ret.wheelbase = 2.7
       ret.steerRatio = 13.73        # Spec
       tire_stiffness_factor = 0.385
-      ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
-      ret.steerKpV, ret.steerKiV = [[0.1, 0.15, 0.25, 0.25], [0.02, 0.03, 0.05, 0.05]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 18., 34.], [0., 9., 18., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS:
       ret.steerKf = 0.00005
@@ -88,8 +88,8 @@ class CarInterface(object):
       ret.mass = 2060 + std_cargo
       ret.wheelbase = 3.01
       ret.steerRatio = 16.5
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 18., 34.], [0., 9., 18., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS_2:
       ret.steerKf = 0.00005
@@ -97,8 +97,8 @@ class CarInterface(object):
       ret.mass = 2060 + std_cargo
       ret.wheelbase = 3.01
       ret.steerRatio = 16.5
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 18., 34.], [0., 9., 18., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_SORENTO:
       ret.steerKf = 0.00005
@@ -117,8 +117,7 @@ class CarInterface(object):
       ret.wheelbase = 2.91
       ret.steerRatio = 12.6
       tire_stiffness_factor = 1.23
-      # Speed conversion:                0,  20,  45,  75 mph
-      ret.steerKpBP, ret.steerKiBP = [[  0.,  9., 20., 34.], [  0.,  9., 20., 34.]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 18., 34.], [0., 9., 18., 34.]]
       ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 0.
       ret.steerActuatorDelay = 0.125
@@ -127,26 +126,20 @@ class CarInterface(object):
       ret.steerRateCost = 0.5
       ret.mass = 3982 * CV.LB_TO_KG + std_cargo
       ret.wheelbase = 2.766
-
-      # Values from optimizer
       ret.steerRatio = 16.55  # 13.8 is spec end-to-end
       tire_stiffness_factor = 0.82
-
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.37], [0.1]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 18., 34.], [0., 9., 18., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 0.
     elif candidate == CAR.SANTA_FE_2:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
       ret.mass = 3982 * CV.LB_TO_KG + std_cargo
       ret.wheelbase = 2.766
-
-      # Values from optimizer
       ret.steerRatio = 16.55  # 13.8 is spec end-to-end
       tire_stiffness_factor = 0.82
-
-      ret.steerKiBP, ret.steerKpBP = [[0., 9., 20., 34.], [0., 9., 20., 34.]]
-      ret.steerKpV, ret.steerKiV = [[0.15, 0.25, 0.30, 0.35], [0.02, 0.03, 0.05, 0.05]]
+      ret.steerKiBP, ret.steerKpBP = [[0., 9., 18., 34.], [0., 9., 18., 34.]]
+      ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 0.
 
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
