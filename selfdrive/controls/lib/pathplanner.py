@@ -25,12 +25,12 @@ class PathPlanner(object):
       r_poly = model_polyfit(md.model.rightLane.points, self._path_pinv)  # right line
 
       try:
-        if LaC is not None and LaC.angle_steers_des_mpc != 0.0:
-          angle_error = LaC.angle_steers_des_mpc - (0.05 * LaC.avg_angle_steers + LaC.steerActuatorDelay * LaC.projected_angle_steers) / (LaC.steerActuatorDelay + 0.05)
+        if LaC is not None and LaC.angle_steers_des != 0.0:
+          angle_error = LaC.angle_steers_des - (0.05 * LaC.avg_angle_steers + LaC.steerActuatorDelay * LaC.projected_angle_steers) / (LaC.steerActuatorDelay + 0.05)
         else:
           angle_error = 0.0
         if angle_error != 0.0:
-          LaC.lateral_error = np.clip(v_ego * (LaC.steerActuatorDelay + 0.05) * math.tan(math.radians(angle_error)), -1.2, 1.2)
+          lateral_error = 1.0 * np.clip(v_ego * (LaC.steerActuatorDelay + 0.05) * math.tan(math.radians(angle_error)), -0.2, 0.2)
           lateral_error = LaC.lateral_error
         else:
           lateral_error = 0.0
