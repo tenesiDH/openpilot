@@ -101,14 +101,14 @@ class CarInterface(object):
       ret.steerKpV, ret.steerKiV = [[0.03, 0.05, 0.08, 0.10], [0.02, 0.02, 0.06, 0.08]]
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_SORENTO:
-      ret.steerKf = 0.000075
+      ret.steerKf = 0.00006
       ret.steerRateCost = 0.45
       ret.mass = 1985 + std_cargo
       ret.wheelbase = 2.78
       ret.steerRatio = 14.5         # Stock Value
       tire_stiffness_factor = 0.75  # Based on testing
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.08], [0.11]]
+      ret.steerKpV, ret.steerKiV = [[0.09], [0.11]]
       ret.minSteerSpeed = 0.
     elif candidate == CAR.KIA_STINGER:
       ret.steerKf = 0.000025
