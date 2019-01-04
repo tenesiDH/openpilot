@@ -52,14 +52,17 @@ FINGERPRINTS = {
 CAMERA_MSGS = [832, 1156, 1191, 1342]
 
 # Lane Keep Assist related Features and Limitations
-LKAS_FEATURES = {
-  "6B": [CAR.KIA_SORENTO, CAR.GENESIS, CAR.GENESIS_2],  # 6 Bytes used in Checksum
-  "7B": [CAR.KIA_STINGER, CAR.ELANTRA],			# 7 Bytes used in Checksum
-  "crc8": [CAR.SANTA_FE, CAR.SANTA_FE_2],		# CRC Checksum
-  "icon_basic": [CAR.GENESIS, CAR.GENESIS_2],		# Anything but 2 for LKAS_Icon causes MDPS Fault
-  "soft_disable": [CAR.GENESIS, CAR.GENESIS_2],			# Any steer message sent below 16.5m/s faults MDPS
+CHECKSUM = {
+  "6B": [CAR.KIA_SORENTO, CAR.GENESIS],         # 6 Bytes used in Checksum
+  "7B": [CAR.KIA_STINGER, CAR.ELANTRA],         # 7 Bytes used in Checksum
+  "crc8": [CAR.SANTA_FE],                       # CRC Checksum
 }
-
+FEATURES = {
+  "icon_basic": [CAR.GENESIS],                  # Anything but 2 for LKAS_Icon causes MDPS Fault
+  "soft_disable": [CAR.GENESIS],                # Any steer message sent below 16.5m/s faults MDPS
+  "use_cluster_gears": [CAR.ELANTRA, CAR.KIA_SORENTO],  # Use Cluster for Gear Selection, rather than Transmission
+  "dnf_mdps": [CAR.SANTA_FE, CAR.SANTA_FE_2],   # Do not forward a modified MDPS message.. different checksum
+}
 DBC = {
   CAR.ELANTRA: dbc_dict('hyundai_kia_generic', None),
   CAR.GENESIS: dbc_dict('hyundai_kia_generic', None),

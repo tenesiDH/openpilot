@@ -3,7 +3,7 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
                                              create_clu11, create_mdps12
-from selfdrive.car.hyundai.values import Buttons, CAR, LKAS_FEATURES
+from selfdrive.car.hyundai.values import Buttons, CAR, FEATURES
 from selfdrive.can.packer import CANPacker
 #from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
@@ -57,7 +57,7 @@ class CarController(object):
       enabled = True
       force_enable = True
 
-    if self.car_fingerprint in LKAS_FEATURES["soft_disable"] and CS.v_wheel < 16.8:
+    if self.car_fingerprint in FEATURES["soft_disable"] and CS.v_wheel < 16.8:
         enabled = False
         force_enable = False
 

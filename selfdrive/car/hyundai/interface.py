@@ -153,7 +153,7 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if self.CP.carFingerprint == CAR.ELANTRA or self.CP.carFingerprint == CAR.KIA_SORENTO:
+    if (car_fingerprint in FEATURES["use_cluster_gears"]):
       ret.gearShifter = self.CS.gear_shifter_cluster
     else:
       ret.gearShifter = self.CS.gear_shifter
