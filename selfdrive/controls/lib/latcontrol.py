@@ -35,18 +35,25 @@ def apply_deadzone(angle, deadzone):
 
 class LatControl(object):
   def __init__(self, CP):
-    self.pid = PIController((CP.steerKpBP, CP.steerKpV),
-                            (CP.steerKiBP, CP.steerKiV),
-                            k_f=CP.steerKf, pos_limit=1.0)
+
+    _ADJUST_REACTANCE = 0.7
+    _ADJUST_INDUCTANCE = 1.0
+    _ADJUST_RESISTANCE = 1.0
+
+    KpV = [np.interp(25.0, CP.steerKpBP, CP.steerKpV) * _ADJUST_REACTANCE]
+    KiV = [np.interp(25.0, CP.steerKiBP, CP.steerKiV) * _ADJUST_REACTANCE]
+    Kf = CP.steerKf * _ADJUST_INDUCTANCE
+    print(KpV, KiV, Kf)
+    self.pid = PIController(([0.], KpV),
+                            ([0.], KiV),
+                            k_f=Kf, pos_limit=1.0)
     self.last_cloudlog_t = 0.0
     self.setup_mpc(CP.steerRateCost)
-    self.smooth_factor = 2.0 * CP.steerActuatorDelay / _DT      # Multiplier for inductive component (feed forward)
-    self.projection_factor = 5.0 * _DT      #  Mutiplier for reactive component (PI)
-    self.accel_limit = 2.0                                 # Desired acceleration limit to prevent "whip steer" (resistive component)
-    self.ff_angle_factor = 0.5         # Kf multiplier for angle-based feed forward
-    self.ff_rate_factor = 5.0         # Kf multiplier for rate-based feed forward
-    self.ratioDelayExp = 2.0           # Exponential coefficient for variable steering rate (delay)
-    self.ratioDelayScale = 0.0          # Multiplier for variable steering rate (delay)
+    self.smooth_factor = _ADJUST_INDUCTANCE * 2.0 * CP.steerActuatorDelay / _DT    # Multiplier for inductive component (feed forward)
+    self.projection_factor = _ADJUST_REACTANCE * 5.0 * _DT                         #  Mutiplier for reactive component (PI)
+    self.accel_limit = 2.0 / _ADJUST_RESISTANCE                                    # Desired acceleration limit to prevent "whip steer" (resistive component)
+    self.ff_angle_factor = 0.5                                                     # Kf multiplier for angle-based feed forward
+    self.ff_rate_factor = 5.0                                                      # Kf multiplier for rate-based feed forward
     self.prev_angle_rate = 0
     self.feed_forward = 0.0
     self.steerActuatorDelay = CP.steerActuatorDelay
