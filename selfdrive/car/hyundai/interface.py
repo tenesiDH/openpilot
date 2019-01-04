@@ -78,9 +78,9 @@ class CarInterface(object):
       ret.mass = 1275 + std_cargo
       ret.wheelbase = 2.7
       ret.steerRatio = 14.0        # Spec
-      tire_stiffness_factor = 0.55
+      tire_stiffness_factor = 0.68
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.27], [0.04]]
+      ret.steerKpV, ret.steerKiV = [[0.27], [0.035]]
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS:
       ret.steerKf = 0.00005
