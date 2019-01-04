@@ -269,18 +269,13 @@ static void set_brightness(UIState *s, int brightness) {
 static void set_awake(UIState *s, bool awake) {
   if (awake) {
     // 30 second timeout at 30 fps
-    if (s->b.tri_state_switch < 3) {
-      s->awake_timeout = 30*30;
-    } else {
-      s->awake_timeout = 3*30;
-    }
+    s->awake_timeout = 30*30;
   }
   if (s->awake != awake) {
     s->awake = awake;
 
     if (awake) {
       LOG("awake normal");
-      set_brightness(s, 150);
       framebuffer_set_power(s->fb, HWC_POWER_MODE_NORMAL);
     } else {
       LOG("awake off");
@@ -667,10 +662,6 @@ static void draw_chevron(UIState *s, float x_in, float y_in, float sz,
   float g_xo = sz/5;
   float g_yo = sz/10;
   //BB added for printing the car
-  //if position is 3 do nothing
-  if (s->b.tri_state_switch == 3) {
-    return;
-  }
   if (s->b.tri_state_switch == 2) {
     nvgRestore(s->vg);
     bb_ui_draw_car(s);
@@ -751,10 +742,10 @@ static void ui_draw_lane_line(UIState *s, const float *points, float off,
 
 static void ui_draw_lane(UIState *s, const PathData path, NVGcolor color) {
   //BB added to make the line blue
-  if (s->b.tri_state_switch >= 2) {
+  if (s->b.tri_state_switch == 2) {
     color = nvgRGBA(66, 220, 244,250);
   }
-  //BB end
+  //BB end  
   ui_draw_lane_line(s, path.points, 0.025*path.prob, color, false);
   float var = min(path.std, 0.7);
   color.a /= 4;
@@ -895,14 +886,14 @@ static void draw_frame(UIState *s) {
 
   glActiveTexture(GL_TEXTURE0);
   //BB added to suppress video printing
-  if (s->b.tri_state_switch == 1) {
+  if (s->b.tri_state_switch != 2) {
     if (s->scene.frontview && s->cur_vision_front_idx >= 0) {
       glBindTexture(GL_TEXTURE_2D, s->frame_front_texs[s->cur_vision_front_idx]);
     } else if (!scene->frontview && s->cur_vision_idx >= 0) {
       glBindTexture(GL_TEXTURE_2D, s->frame_texs[s->cur_vision_idx]);
     }
   }
-  //BB end
+  //BB end  
 
   glUseProgram(s->frame_program);
 
@@ -923,10 +914,6 @@ static void draw_frame(UIState *s) {
 
 static void ui_draw_vision_lanes(UIState *s) {
   const UIScene *scene = &s->scene;
-  //draw nothing if position is 3
-  if (s->b.tri_state_switch == 3) {
-    return;
-  }
   //BB add to draw our lanes
   if (s->b.tri_state_switch == 2) {
     bb_draw_lane_fill(s);
@@ -1583,10 +1570,8 @@ static void ui_update(UIState *s) {
     if (polls[0].revents || polls[1].revents || polls[2].revents ||
         polls[3].revents || polls[4].revents || polls[6].revents ||
         polls[7].revents || polls[8].revents) {
-      // awake on any (old) activity if tri-state in 1 or 2 position
-      if(s->b.tri_state_switch < 3) {
-        set_awake(s, true);
-      }
+      // awake on any (old) activity
+      set_awake(s, true);
     }
 
     if (s->vision_connected && polls[9].revents) {
@@ -2121,7 +2106,7 @@ int main() {
     bb_ui_poll_update(s);
     // awake on any touch
     int touch_x = -1, touch_y = -1;
-    int touched = touch_poll(&touch, &touch_x, &touch_y, s->awake ? 0 : 100);
+    int touched = touch_poll(&touch, &touch_x, &touch_y, s->awake ? 0 : 500);
     if (touched == 1) {
       // touch event will still happen :(
       set_awake(s, true);
