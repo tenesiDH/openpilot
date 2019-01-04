@@ -57,7 +57,8 @@ class CarController(object):
       enabled = True
       force_enable = True
 
-    if self.car_fingerprint in FEATURES["soft_disable"] and CS.v_wheel < 16.8:
+    if (self.car_fingerprint in FEATURES["soft_disable_168"] and CS.v_wheel < 16.8) or \
+            self.car_fingerprint in FEATURES["soft_disable_137"] and CS.v_wheel < 13.7):
         enabled = False
         force_enable = False
 

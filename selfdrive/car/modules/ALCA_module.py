@@ -55,7 +55,7 @@ CL_ADJUST_FACTOR_BP = [10., 44.]
 CL_ADJUST_FACTOR = [16. , 16.]
 
 
-# reenrey angle when to let go
+# re-entry angle when to let go
 CL_REENTRY_ANGLE_BP = [10., 44.]
 CL_REENTRY_ANGLE = [5. , 5.]
 
@@ -71,15 +71,12 @@ CL_MAXD_BP = [10., 32., 44.]
 CL_MAXD_A = [.358, 0.084, 0.042] #delta angle based on speed; needs fine tune, based on Tesla steer ratio of 16.75
 
 CL_MIN_V = 8.9 # do not turn if speed less than x m/2; 20 mph = 8.9 m/s
-
-# do not turn if actuator wants more than x deg for going straight; this should be interp based on speed
-CL_MAX_A_BP = [10., 44.]
-CL_MAX_A = [10., 10.] 
+CL_MAX_A = 10. # do not turn if actuator wants more than x deg for going straight; this should be interp based on speed
 
 # define limits for angle change every 0.1 s
 # we need to force correction above 10 deg but less than 20
 # anything more means we are going to steep or not enough in a turn
-CL_MAX_ACTUATOR_DELTA = 2.
+MCL_MAX_ACTUATOR_DELTA = 2.
 CL_MIN_ACTUATOR_DELTA = 0. 
 CL_CORRECTION_FACTOR = 1.
 
@@ -115,18 +112,19 @@ class ALCAController(object):
     self.laneChange_avg_count = 0. # used if we do average entry angle over x frames
     self.laneChange_enabled = 1 # set to zero for no lane change
     self.laneChange_counter = 0 # used to count frames during lane change
-    self.laneChange_min_duration = 2. # min time to wait before looking for next lane
-    self.laneChange_duration = 5.6 # how many max seconds to actually do the move; if lane not found after this then send error
+    self.laneChange_min_duration = 1. # min time to wait before looking for next lane
+    self.laneChange_duration = 5 # how many max seconds to actually do the move; if lane not found after this then send error
     self.laneChange_after_lane_duration_mult = 1.  # multiplier for time after we cross the line before we let OP take over; multiplied with CL_TIMEA_T 
-    self.laneChange_wait = 1 # how many seconds to wait before it starts the change
-    self.laneChange_lw = 3.7 # lane width in meters
+    self.laneChange_wait = 2 # how many seconds to wait before it starts the change
+    self.laneChange_lw = 3.0 # lane width in meters
     self.laneChange_angle = 0. # saves the last angle from actuators before lane change starts
     self.laneChange_angled = 0. # angle delta
-    self.laneChange_steerr = 15.75 # steer ratio for lane change starting with the Tesla one
+    self.laneChange_steerr = 16.00 # steer ratio for lane change
     self.laneChange_direction = 0 # direction of the lane change 
     self.prev_right_blinker_on = False # local variable for prev position
     self.prev_left_blinker_on = False # local variable for prev position
     self.keep_angle = False #local variable to keep certain angle delta vs. actuator
+    #self.blindspot_blink_counter = 0
     self.pid = None
     self.last10delta = []
     self.laneChange_cancelled = False
@@ -168,20 +166,27 @@ class ALCAController(object):
                             k_f=CS.CP.steerKf, pos_limit=1.0)
 
   def update_angle(self,enabled,CS,frame,actuators):
-    alcaMode = CS.cstm_btns.get_button_label2_index("alca")
-    #parameters that define the speed/aggressiveness of lane change modes
-    alca_m1 = [1., .9, .8]
-    alca_m2 = [1., 1., 1.7]
-    alca_m3 = [1., 0.5, 0.5]
+    alca_m1 = 1.
+    alca_m2 = 1.
+    alca_m3 = 1.
+    if CS.alcaMode == 1:
+      alca_m1 = 0.95
+      alca_m2 = 1.
+      alca_m3 = 0.5
+    if CS.alcaMode == 2:
+      alca_m1 = 0.9
+      alca_m2 = 1.7
+      alca_m3 = 0.5
     # speed variable parameters
-    cl_max_angle_delta = interp(CS.v_ego,CS.CL_MAX_ANGLE_DELTA_BP,CS.CL_MAX_ANGLE_DELTA) * alca_m1[alcaMode]
-    cl_maxd_a =  interp(CS.v_ego, CS.CL_MAXD_BP, CS.CL_MAXD_A) * alca_m3[alcaMode]
-    cl_lane_pass_time = interp(CS.v_ego,CS.CL_LANE_PASS_BP,CS.CL_LANE_PASS_TIME) * alca_m2[alcaMode]
-    cl_timea_t = interp(CS.v_ego,CS.CL_TIMEA_BP,CS.CL_TIMEA_T) * alca_m2[alcaMode]
+    cl_max_angle_delta = interp(CS.v_ego,CS.CL_MAX_ANGLE_DELTA_BP,CS.CL_MAX_ANGLE_DELTA) * alca_m1
+    cl_maxd_a =  interp(CS.v_ego, CS.CL_MAXD_BP, CS.CL_MAXD_A) * alca_m3
+    cl_lane_pass_time = interp(CS.v_ego,CS.CL_LANE_PASS_BP,CS.CL_LANE_PASS_TIME) * alca_m2
+    cl_timea_t = interp(CS.v_ego,CS.CL_TIMEA_BP,CS.CL_TIMEA_T) * alca_m2
     cl_lane_detect_factor = interp(CS.v_ego, CS.CL_LANE_DETECT_BP, CS.CL_LANE_DETECT_FACTOR)
     cl_max_a = interp(CS.v_ego, CS.CL_MAX_A_BP, CS.CL_MAX_A)
     cl_adjust_factor = interp(CS.v_ego, CS.CL_ADJUST_FACTOR_BP, CS.CL_ADJUST_FACTOR)
     cl_reentry_angle = interp(CS.v_ego, CS.CL_REENTRY_ANGLE_BP, CS.CL_REENTRY_ANGLE)
+    cl_correction_factor = interp(CS.v_ego, CS.CL_CORRECTION_FACTOR_BP, CS.CL_CORRECTION_FACTOR)
     cl_min_v = CS.CL_MIN_V
     self.laneChange_wait = CS.CL_WAIT_BEFORE_START
 
@@ -254,7 +259,7 @@ class ALCAController(object):
         self.laneChange_direction = laneChange_direction
         self.laneChange_avg_angle = 0.
         self.laneChange_avg_count = 0.
-        self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr *  cl_maxd_a
+        self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr * cl_maxd_a
         self.laneChange_last_actuator_angle = 0.
         self.laneChange_last_actuator_delta = 0.
         self.laneChange_over_the_line = 0 
@@ -355,6 +360,7 @@ class ALCAController(object):
           #steering more than what we wanted, need to adjust
           self.keep_angle = True
           self.laneChange_angle  = -actuators.steerAngle + self.laneChange_direction * cl_max_angle_delta * self.laneChange_steerr - laneChange_angle
+          self.laneChange_angle  = self.laneChange_angle * (1 - self.laneChange_direction * (1 - cl_correction_factor))
         if self.laneChange_counter >  (self.laneChange_duration) * 100:
           self.laneChange_enabled = 1
           self.laneChange_counter = 0
@@ -374,6 +380,7 @@ class ALCAController(object):
       if self.laneChange_enabled == 4:
         if self.laneChange_counter == 1:
           self.laneChange_angle = -actuators.steerAngle
+          CS.UE.custom_alert_message(2,"Auto Lane Change Engaged! (3)",100)
           self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr * cl_maxd_a
           # if angle more than max angle allowed cancel; last chance to cancel on road curvature
         if self.laneChange_counter == 2:
@@ -386,6 +393,7 @@ class ALCAController(object):
             self.laneChange_counter = 0
             self.laneChange_direction = 0
             CS.cstm_btns.set_button_status("alca",1)
+        laneChange_angle = self.laneChange_strStartFactor * self.laneChange_angled *  self.laneChange_counter / 50
         self.laneChange_counter += 1
         #laneChange_angle = self.laneChange_strStartFactor * self.laneChange_angled *  self.laneChange_counter / 50
         #delta_change = abs(self.laneChange_angle+ laneChange_angle + actuators.steerAngle) - self.laneChange_strStartMultiplier * abs(self.laneChange_angled)
@@ -447,7 +455,7 @@ class ALCAController(object):
     else:
       apply_angle = -actuators.steerAngle
     self.laneChange_last_sent_angle = apply_angle
-    return [-apply_angle-self.angle_offset,alca_enabled,turn_signal_needed]
+    return [-apply_angle,alca_enabled,turn_signal_needed]
 
 
 
@@ -463,6 +471,7 @@ class ALCAController(object):
           self.last_time_enabled = sec_since_boot()
         output_steer = 0.
         if new_ALCA_Enabled and (self.laneChange_enabled < 5 ) and not self.laneChange_steerByAngle:
+          #self.angle_steers_des = self.angle_steers_des_mpc # not declared
           steers_max = interp(CS.v_ego, CS.CP.steerMaxBP, CS.CP.steerMaxV)
           self.pid.pos_limit = steers_max
           self.pid.neg_limit = -steers_max
