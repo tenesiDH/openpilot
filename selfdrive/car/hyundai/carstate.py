@@ -204,6 +204,9 @@ class CarState(object):
     self.left_blinker_flash = 0
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
+    self.angle_steers_rate = 0
+    self.angle_steers = 0
+    self.steer_counter = 1
 
     # OSM
     #self.OSM = OSM(self)
@@ -264,8 +267,17 @@ class CarState(object):
     self.cruise_set_speed = cp.vl["SCC11"]['VSetDis'] * speed_conv
     self.standstill = not self.v_wheel > 0.1
 
+    self.prev_angle_steers = self.angle_steers
     self.angle_steers = cp.vl["SAS11"]['SAS_Angle']
-    self.angle_steers_rate = cp.vl["SAS11"]['SAS_Speed']
+
+    # SAS Speed is always positive and has been eliminated
+    #   ==-----> self.angle_steers_rate = cp.vl["SAS11"]['SAS_Speed']
+    # calculate steer rate
+    if self.angle_steers != self.prev_angle_steers:
+      self.angle_steers_rate = (self.angle_steers - self.prev_angle_steers)*(100.0/self.steer_counter)
+      self.steer_counter = 0.0
+    self.steer_counter += 1.0
+
     self.yaw_rate = cp.vl["ESP12"]['YAW_RATE']
     self.main_on = True
     self.left_blinker_on = True if (cp.vl["CGW1"]['CF_Gway_TSigLHSw'] == True) or (cp.vl["CGW1"]['CF_Gway_TurnSigLh'] == True) else False

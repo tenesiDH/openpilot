@@ -80,7 +80,7 @@ class CarInterface(object):
     ret.steerRatio = 14.5         # Stock Value
     tire_stiffness_factor = 0.75  # Based on testing
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.09], [0.11]]
+    ret.steerKpV, ret.steerKiV = [[0.11], [0.11]]
     ret.minSteerSpeed = 0.
 
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -153,7 +153,7 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if (car_fingerprint in FEATURES["use_cluster_gears"]):
+    if (True):
       ret.gearShifter = self.CS.gear_shifter_cluster
     else:
       ret.gearShifter = self.CS.gear_shifter

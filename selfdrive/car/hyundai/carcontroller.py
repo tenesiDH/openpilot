@@ -58,7 +58,7 @@ class CarController(object):
       force_enable = True
 
     if (self.car_fingerprint in FEATURES["soft_disable_168"] and CS.v_wheel < 16.8) or \
-            self.car_fingerprint in FEATURES["soft_disable_137"] and CS.v_wheel < 13.7):
+            (self.car_fingerprint in FEATURES["soft_disable_137"] and CS.v_wheel < 13.7):
         enabled = False
         force_enable = False
 
@@ -125,7 +125,7 @@ class CarController(object):
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), keep_stock=(not self.camera_disconnected)))
 
-    can_sends.append(create_mdps12(self.packer, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
+    can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
 
     if pcm_cancel_cmd and (not force_enable):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, 0))
