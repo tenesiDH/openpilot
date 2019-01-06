@@ -69,19 +69,46 @@ class CarInterface(object):
     tireStiffnessFront_civic = 192150
     tireStiffnessRear_civic = 202500
 
-    ret.steerActuatorDelay = 0.10  # Default delay
-    tire_stiffness_factor = 0.85  # Given all tested vehicle so far run better with this reduced below 0.85, this will becomes the default for now
-
-
+    ret.steerActuatorDelay = 0.10
     ret.steerKf = 0.00006
-    ret.steerRateCost = 0.45
-    ret.mass = 1985 + std_cargo
-    ret.wheelbase = 2.78
-    ret.steerRatio = 14.5         # Stock Value
-    tire_stiffness_factor = 0.75  # Based on testing
+    ret.steerRateCost = 0.50
+    tire_stiffness_factor = 0.75
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.11], [0.11]]
+    ret.steerKpV, ret.steerKiV = [[0.13], [0.08]]
     ret.minSteerSpeed = 0.
+
+    if candidate == CAR.ELANTRA:
+      ret.mass = 1275 + std_cargo
+      ret.wheelbase = 2.7
+      ret.steerRatio = 13.45
+      ret.minSteerSpeed = 32 * CV.MPH_TO_MS
+    elif candidate == CAR.GENESIS:
+      ret.mass = 2060 + std_cargo
+      ret.wheelbase = 3.01
+      ret.steerRatio = 16.5
+      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+    elif candidate == CAR.GENESIS_2:
+      ret.mass = 2060 + std_cargo
+      ret.wheelbase = 3.01
+      ret.steerRatio = 16.5
+      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+    elif candidate == CAR.KIA_SORENTO:
+      ret.mass = 1985 + std_cargo
+      ret.wheelbase = 2.78
+      ret.steerRatio = 14.5
+    elif candidate == CAR.KIA_STINGER:
+      ret.mass = 3637 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.91
+      ret.steerRatio = 12.6
+    elif candidate == CAR.SANTA_FE:
+      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.766
+      ret.steerRatio = 16.55
+    elif candidate == CAR.SANTA_FE_2:
+      ret.steerKf = 0.00005
+      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.wheelbase = 2.766
+      ret.steerRatio = 16.55
 
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
     ret.longitudinalKpBP = [0.]
