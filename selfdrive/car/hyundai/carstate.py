@@ -207,9 +207,11 @@ class CarState(object):
     self.steer_counter = 1.0
     self.steer_counter_prev = 0.0
     self.angle_steers = 0.0
+    self.prev_angle_steers = 0.0
     self.angle_steers_rate = 0.0
     self.rough_steers_rate = 0.0
     self.rough_steers_rate_increment = 0.0
+    self.rough_steers_rate_prev = 0.0
 
     # OSM
     #self.OSM = OSM(self)
@@ -276,11 +278,11 @@ class CarState(object):
     # SAS Speed is always positive and has been eliminated
     #   ==-----> self.angle_steers_rate = cp.vl["SAS11"]['SAS_Speed']
     # calculate steer rate
-    if self.angle_steers != prev_angle_steers:
-      rough_steers_rate_prev = self.angle_steers_rate
+    if self.angle_steers != self.prev_angle_steers:
+      self.rough_steers_rate_prev = self.angle_steers_rate
       self.steer_counter_prev = self.steer_counter
-      rough_steers_rate = 100.0 * (self.angle_steers - prev_angle_steers) / self.steer_counter_prev
-      self.rough_steers_rate_increment = (rough_steers_rate - rough_steers_rate_prev) / self.steer_counter_prev
+      self.rough_steers_rate = 100.0 * (self.angle_steers - self.prev_angle_steers) / self.steer_counter_prev
+      self.rough_steers_rate_increment = (self.rough_steers_rate - self.rough_steers_rate_prev) / self.steer_counter_prev
       self.steer_counter = 0.0
     self.steer_counter += 1.0
 
