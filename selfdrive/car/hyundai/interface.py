@@ -73,15 +73,16 @@ class CarInterface(object):
     tire_stiffness_factor = 0.85  # Given all tested vehicle so far run better with this reduced below 0.85, this will becomes the default for now
 
     if candidate == CAR.ELANTRA:
-      ret.steerKf = 0.00005
+      ret.steerKf = 0.00006
       ret.steerRateCost = 0.5
       ret.mass = 1275 + std_cargo
-      ret.wheelbase = 2.7
-      ret.steerRatio = 14.0        # Spec
-      tire_stiffness_factor = 0.68
+      ret.wheelbase = 2.70002            # Spec
+      ret.steerRatio = 13.1805556        # Calculated
+      tire_stiffness_factor = 0.934      
       ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.27], [0.035]]
+      ret.steerKpV, ret.steerKiV = [[0.16], [0.06]]
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
+      ret.steerActuatorDelay = 0.1
     elif candidate == CAR.GENESIS:
       ret.steerKf = 0.00005
       ret.steerRateCost = 0.5
