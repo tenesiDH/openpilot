@@ -14,9 +14,9 @@ class PathPlanner(object):
     self.lead_dist, self.lead_prob, self.lead_var = 0, 0, 1
     self._path_pinv = compute_path_pinv()
 
-    self.lane_width_estimate = 3.2
+    self.lane_width_estimate = 3.1
     self.lane_width_certainty = 1.0
-    self.lane_width = 3.2
+    self.lane_width = 3.1
 
   def update(self, v_ego, md, LaC=None):
     if md is not None:
@@ -30,7 +30,7 @@ class PathPlanner(object):
         else:
           angle_error = 0.0
         if angle_error != 0.0:
-          lateral_error = 0.0 * np.clip(v_ego * (LaC.steerActuatorDelay + 0.05) * math.tan(math.radians(angle_error)), -0.2, 0.2)
+          lateral_error = 1.0 * np.clip(v_ego * (LaC.steerActuatorDelay + 0.05) * math.tan(math.radians(angle_error)), -0.2, 0.2)
           lateral_error = LaC.lateral_error
         else:
           lateral_error = 0.0

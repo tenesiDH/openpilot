@@ -69,47 +69,48 @@ class CarInterface(object):
     tireStiffnessFront_civic = 192150
     tireStiffnessRear_civic = 202500
 
-    ret.steerActuatorDelay = 0.10
-    ret.steerKf = 0.00006
+    ret.steerActuatorDelay = 0.11
+    ret.steerKf = 0.000055
     ret.steerRateCost = 0.50
     tire_stiffness_factor = 0.75
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.13], [0.08]]
+    ret.steerKpV, ret.steerKiV = [[0.11], [0.04]]
     ret.minSteerSpeed = 0.
 
     if candidate == CAR.ELANTRA:
-      ret.mass = 1275 + std_cargo
+      ret.mass = 1275
       ret.wheelbase = 2.7
-      ret.steerRatio = 13.45
+      ret.steerRatio = 13.45 # fact
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS:
-      ret.mass = 2060 + std_cargo
+      ret.mass = 2060
       ret.wheelbase = 3.01
-      ret.steerRatio = 16.5
+      ret.steerRatio = 14.0 # guess
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS_2:
-      ret.mass = 2060 + std_cargo
+      ret.mass = 2060
       ret.wheelbase = 3.01
-      ret.steerRatio = 16.5
+      ret.steerRatio = 14.0 # guess
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_SORENTO:
-      ret.mass = 1985 + std_cargo
+      ret.mass = 1985
       ret.wheelbase = 2.78
-      ret.steerRatio = 14.5
+      ret.steerRatio = 13.76 # fact
     elif candidate == CAR.KIA_STINGER:
-      ret.mass = 3637 * CV.LB_TO_KG + std_cargo
+      ret.mass = 3637 * CV.LB_TO_KG
       ret.wheelbase = 2.91
-      ret.steerRatio = 12.6
+      ret.steerRatio = 13.6 # most likely... wheel 72.84 2WD, 69.84 4WD
     elif candidate == CAR.SANTA_FE:
-      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
-      ret.steerRatio = 16.55
+      ret.steerRatio = 13.76 # assume same as Sorento
     elif candidate == CAR.SANTA_FE_2:
       ret.steerKf = 0.00005
-      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
-      ret.steerRatio = 16.55
+      ret.steerRatio = 13.76 # assume same as Sorento
 
+    ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
     ret.longitudinalKpBP = [0.]
     ret.longitudinalKpV = [0.]
