@@ -118,7 +118,7 @@ class LatControl(object):
     if angle_rate == 0.0 and self.calculate_rate:
       if angle_steers != self.prev_angle_steers:
         self.steer_counter_prev = self.steer_counter
-        self.rough_steers_rate = 100.0 * (angle_steers - self.prev_angle_steers) / self.steer_counter_prev
+        self.rough_steers_rate = (self.rough_steers_rate + 100.0 * (angle_steers - self.prev_angle_steers) / self.steer_counter_prev) / 2.0
         self.steer_counter = 0.0
       self.steer_counter += 1.0
 
