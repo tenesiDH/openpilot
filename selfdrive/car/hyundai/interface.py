@@ -70,11 +70,11 @@ class CarInterface(object):
     tireStiffnessRear_civic = 202500
 
     ret.steerActuatorDelay = 0.11
-    ret.steerKf = 0.000055
-    ret.steerRateCost = 0.50
-    tire_stiffness_factor = 0.75
+    ret.steerKf = 0.00006
+    ret.steerRateCost = 0.70
+    tire_stiffness_factor = 0.90
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.11], [0.04]]
+    ret.steerKpV, ret.steerKiV = [[0.10], [0.05]]
     ret.minSteerSpeed = 0.
 
     if candidate == CAR.ELANTRA:
