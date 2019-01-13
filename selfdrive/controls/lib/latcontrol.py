@@ -228,6 +228,7 @@ class LatControl(object):
           ff_type = "r"
           self.feed_forward = (((self.smooth_factor - 1.) * self.feed_forward) + self.ff_rate_factor * v_ego**2 * float(restricted_steer_rate)) / self.smooth_factor
         elif abs(self.angle_steers_des - float(angle_offset)) > 0.5:
+          ff_type = "a"
           self.feed_forward = (((self.smooth_factor - 1.) * self.feed_forward) + self.ff_angle_factor * v_ego**2 \
                               * float(apply_deadzone(float(self.angle_steers_des) - float(angle_offset), 0.5))) / self.smooth_factor
         else:
