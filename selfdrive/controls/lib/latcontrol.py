@@ -157,7 +157,7 @@ class LatControl(object):
 
       v_ego_mpc = max(v_ego, 5.0)  # avoid mpc roughness due to low speed
       self.libmpc.run_mpc(self.cur_state, self.mpc_solution,
-                          l_poly, r_poly, p_poly,
+                          self.l_poly, self.r_poly, self.p_poly,
                           PL.PP.l_prob, PL.PP.r_prob, PL.PP.p_prob, curvature_factor, v_ego_mpc, PL.PP.lane_width)
 
       self.mpc_updated = True
