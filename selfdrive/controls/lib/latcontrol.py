@@ -263,8 +263,8 @@ class LatControl(object):
         self.mpc_solution[0].delta[15], self.mpc_solution[0].delta[16], self.mpc_solution[0].delta[17], self.mpc_solution[0].delta[18], self.mpc_solution[0].delta[19], self.mpc_solution[0].delta[20], \
         self.accel_limit, float(restricted_steer_rate), float(driver_torque), self.angle_rate_desired, self.projected_angle_steers, float(angle_rate), \
         angle_steers, self.angle_steers_des, self.mpc_angles[1], projected_angle_steers_des, self.observed_ratio, PL.PP.l_prob, PL.PP.r_prob, PL.PP.c_prob, PL.PP.p_prob, \
-        self.l_poly[0], self.l_poly[1], self.l_poly[2], self.l_poly[3], self.r_poly[0], self.r_poly[1], self.r_poly[2], self.r_poly[3], \
-        self.p_poly[0], self.p_poly[1], self.p_poly[2], self.p_poly[3], PL.PP.c_poly[0], PL.PP.c_poly[1], PL.PP.c_poly[2], PL.PP.c_poly[3], \
+        l_poly[0], l_poly[1], l_poly[2], l_poly[3], r_poly[0], r_poly[1], r_poly[2], r_poly[3], \
+        p_poly[0], p_poly[1], p_poly[2], p_poly[3], PL.PP.c_poly[0], PL.PP.c_poly[1], PL.PP.c_poly[2], PL.PP.c_poly[3], \
         PL.PP.d_poly[0], PL.PP.d_poly[1], PL.PP.d_poly[2], PL.PP.lane_width, PL.PP.lane_width_estimate, PL.PP.lane_width_certainty, v_ego, \
         self.pid.p, self.pid.i, self.pid.f, int(time.time() * 100) * 10000000))
 
