@@ -83,8 +83,8 @@ class CarInterface(object):
 
     if candidate == CAR.ELANTRA:
       ret.mass = 1275
-      ret.wheelbase = 2.7
-      ret.steerRatio = 13.45 # fact
+      ret.wheelbase = 2.70002
+      ret.steerRatio = 13.4472222222 # fact
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS:
       ret.mass = 2060
@@ -101,9 +101,9 @@ class CarInterface(object):
       ret.wheelbase = 2.78
       ret.steerRatio = 13.76 # fact
     elif candidate == CAR.KIA_STINGER:
-      ret.mass = 3637 * CV.LB_TO_KG
-      ret.wheelbase = 2.91
-      ret.steerRatio = 13.6 # most likely... wheel 72.84 2WD, 69.84 4WD
+      ret.mass = 4000 * CV.LB_TO_KG
+      ret.wheelbase = 2.90576 #SPEC
+      ret.steerRatio = 11.4509409568 # SPEC AWD
     elif candidate == CAR.SANTA_FE:
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
