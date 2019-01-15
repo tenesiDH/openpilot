@@ -123,15 +123,16 @@ class Uploader(object):
       total_size += os.stat(fn).st_size
     return dict(name_counts), total_size
 
-  def next_file_to_upload(self, with_video):
-    # try to upload compressed log files first
-    for name, key, fn in self.gen_upload_files():
-      if name == "rlog.bz2":
-        return (key, fn, 0)
-
-    # then do those which are yet to be compressed
+  def next_file_to_compress(self):
     for name, key, fn in self.gen_upload_files():
       if name == "rlog":
+        return (key, fn, 0)
+    return None
+
+  def next_file_to_upload(self, with_video):
+    # try to upload log files first
+    for name, key, fn in self.gen_upload_files():
+      if name  == "rlog.bz2":
         return (key, fn, 0)
 
     if with_video:
@@ -214,11 +215,10 @@ class Uploader(object):
       # assuming file is named properly
       key += ext
       fn += ext
-     
+
     return (key, fn)
 
   def upload(self, key, fn):
-
     try:
       sz = os.path.getsize(fn)
     except OSError:
@@ -271,19 +271,22 @@ def uploader_fn(exit_event):
     if exit_event.is_set():
       return
 
+    d = uploader.next_file_to_compress()
+    if d is not None:
+      key, fn, _ = d
+      uploader.compress(key, fn)
+      continue
+
+    if not should_upload:
+      time.sleep(5)
+      continue
+
     d = uploader.next_file_to_upload(with_video=True)
-    
     if d is None:
       time.sleep(5)
       continue
 
     key, fn, _ = d
-    if _ == 0:
-      key, fn = uploader.compress(key, fn)
-
-    if not should_upload:
-      time.sleep(5)
-      continue
 
     cloudlog.info("to upload %r", d)
     success = uploader.upload(key, fn)
@@ -300,4 +303,3 @@ def main(gctx=None):
 
 if __name__ == "__main__":
   main()
-
