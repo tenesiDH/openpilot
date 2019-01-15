@@ -63,22 +63,22 @@ class CarInterface(object):
     # scale unknown params for other cars
     mass_civic = 2923 * CV.LB_TO_KG + std_cargo
     wheelbase_civic = 2.70
-    centerToFront_civic = wheelbase_civic * 0.4
+    centerToFront_civic = wheelbase_civic * 0.45
     centerToRear_civic = wheelbase_civic - centerToFront_civic
     rotationalInertia_civic = 2500
     tireStiffnessFront_civic = 192150
     tireStiffnessRear_civic = 202500
 
-    ret.steerReactance = 0.7
+    ret.steerReactance = 1.0
     ret.steerInductance = 1.0
     ret.steerResistance = 1.0
     ret.eonToFront = 0.5
-    ret.steerActuatorDelay = 0.11
+    ret.steerActuatorDelay = 0.10
     ret.steerKf = 0.00006
-    ret.steerRateCost = 0.70
+    ret.steerRateCost = 0.50
     tire_stiffness_factor = 0.90
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.10], [0.05]]
+    ret.steerKpV, ret.steerKiV = [[0.12], [0.06]]
     ret.minSteerSpeed = 0.
 
     if candidate == CAR.ELANTRA:
@@ -96,6 +96,10 @@ class CarInterface(object):
       ret.wheelbase = 3.01
       ret.steerRatio = 14.0 # guess
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+    elif candidate == CAR.KIA_OPTIMA:
+      ret.mass = 3558 * CV.LB_TO_KG
+      ret.wheelbase = 2.80
+      ret.steerRatio = 13.75 # fact
     elif candidate == CAR.KIA_SORENTO:
       ret.mass = 1985
       ret.wheelbase = 2.78
@@ -113,14 +117,6 @@ class CarInterface(object):
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
       ret.steerRatio = 13.76 # assume same as Sorento
-    elif candidate == CAR.OPTIMA:
-      ret.mass = 3558 * CV.LB_TO_KG
-      ret.wheelbase = 2.80
-      ret.steerRatio = 13.75 # fact
-      ret.steerActuatorDelay = 0.10
-      ret.steerRateCost = 0.50
-      tire_stiffness_factor = 0.93
-      ret.steerKpV, ret.steerKiV = [[0.10], [0.06]]
 
     ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -129,7 +125,7 @@ class CarInterface(object):
     ret.longitudinalKiBP = [0.]
     ret.longitudinalKiV = [0.]
 
-    ret.centerToFront = ret.wheelbase * 0.4
+    ret.centerToFront = ret.wheelbase * 0.45
 
     centerToRear = ret.wheelbase - ret.centerToFront
 
@@ -260,8 +256,8 @@ class CarInterface(object):
         events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
-    # if not ret.gearShifter == 'drive':
-    #  events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
+    if not ret.gearShifter == 'drive':
+      events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.seatbeltUnlatched:
