@@ -21,7 +21,7 @@ Based on OpenPilot 0.5.7 from comma.ai
 - Do not disable when Accelerator is depressed (MAD button*)
 - Disable auto-steering on blinker, but leave OP engaged
 - - Disabled on first blink, and stays disabled until 1 second of no blinking.
-- Sounds! (Thanks @Sid and @BogGyver and #Tesla in general) (SND button*)
+- Sounds! (Thanks Sid and @BogGyver and #Tesla in general) (SND button*)
 - Tesla UI (Thanks everyone in #Tesla)
 - - 3 Switch positions change the display, you probably want it far left.*
 - Advanced Lane Change Assist (Thanks @BogGyver) (ALCA button*)*
@@ -37,7 +37,7 @@ Based on OpenPilot 0.5.7 from comma.ai
 - ** Temporarily removed ** CLI Based Real Time Tuning (Thanks @JamesT)
 - Unsupported cars default to Kia Sorento.  This should work for most cars.
 - Cruise Setpoint set from OSM Speed Limit*
-- Compress when not uploading (https://github.com/commaai/openpilot/pull/471)
+- Compress when not uploading
 - Probably other things I have forgotten
 
 * Has known issues
