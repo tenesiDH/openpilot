@@ -55,7 +55,7 @@ CL_ADJUST_FACTOR_BP = [10., 44.]
 CL_ADJUST_FACTOR = [16. , 16.]
 
 
-# reenrey angle when to let go
+# re-entry angle when to let go
 CL_REENTRY_ANGLE_BP = [10., 44.]
 CL_REENTRY_ANGLE = [5. , 5.]
 
@@ -127,6 +127,7 @@ class ALCAController(object):
     self.prev_right_blinker_on = False # local variable for prev position
     self.prev_left_blinker_on = False # local variable for prev position
     self.keep_angle = False #local variable to keep certain angle delta vs. actuator
+    #self.blindspot_blink_counter = 0
     self.pid = None
     self.last10delta = []
     self.laneChange_cancelled = False
@@ -254,7 +255,7 @@ class ALCAController(object):
         self.laneChange_direction = laneChange_direction
         self.laneChange_avg_angle = 0.
         self.laneChange_avg_count = 0.
-        self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr *  cl_maxd_a
+        self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr * cl_maxd_a
         self.laneChange_last_actuator_angle = 0.
         self.laneChange_last_actuator_delta = 0.
         self.laneChange_over_the_line = 0 
@@ -374,6 +375,7 @@ class ALCAController(object):
       if self.laneChange_enabled == 4:
         if self.laneChange_counter == 1:
           self.laneChange_angle = -actuators.steerAngle
+          CS.UE.custom_alert_message(2,"Auto Lane Change Engaged! (3)",100)
           self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr * cl_maxd_a
           # if angle more than max angle allowed cancel; last chance to cancel on road curvature
         if self.laneChange_counter == 2:

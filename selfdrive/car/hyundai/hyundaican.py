@@ -1,5 +1,5 @@
 import crcmod
-from selfdrive.car.hyundai.values import LKAS_FEATURES
+from selfdrive.car.hyundai.values import CHECKSUM, FEATURES
 
 hyundai_checksum = crcmod.mkCrcFun(0x11D, initCrc=0xFD, rev=False, xorOut=0xdf)
 
@@ -11,7 +11,7 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
     use_stock = False
 
   values = {
-    "CF_Lkas_Icon": 2 if (car_fingerprint in LKAS_FEATURES["icon_basic"]) else \
+    "CF_Lkas_Icon": 2 if (car_fingerprint in FEATURES["icon_basic"]) else \
         (lkas11["CF_Lkas_Icon"] if use_stock else (2 if enabled else 0)),
     "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"] if use_stock else 3,
     "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"] if use_stock else hud_alert,
@@ -38,16 +38,16 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
 
   dat = packer.make_can_msg("LKAS11", 0, values)[2]
 
-  if car_fingerprint in LKAS_FEATURES["crc8"]:
+  if car_fingerprint in CHECKSUM["crc8"]:
     # CRC Checksum as seen on 2019 Hyundai Santa Fe
     dat = dat[:6] + dat[7]
     checksum = hyundai_checksum(dat)
-  elif car_fingerprint in LKAS_FEATURES["6B"]:
+  elif car_fingerprint in CHECKSUM["6B"]:
     # Checksum of first 6 Bytes, as seen on 2018 Kia Sorento
     dat = [ord(i) for i in dat]
     checksum = sum(dat[:6]) % 256
-  elif car_fingerprint in LKAS_FEATURES["7B"]:
-    # Checksum of first 6 Bytes and last Byte as seen on 2018 Kia Stinger
+  elif car_fingerprint in CHECKSUM["7B"]:
+    # Checksum of first 6 Bytes and last Byte as seen on 2018 Kia Stinger and 2019 Kia Optima
     dat = [ord(i) for i in dat]
     checksum = (sum(dat[:6]) + dat[7]) % 256
 
@@ -84,25 +84,25 @@ def create_clu11(packer, clu11, button, cnt):
 
   return packer.make_can_msg("CLU11", 0, values)
 
-def create_mdps12(packer, cnt, mdps12, lkas11, camcan):
+def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11, camcan):
   values = {
     "CR_Mdps_StrColTq": mdps12["CR_Mdps_StrColTq"],
     "CF_Mdps_Def": mdps12["CF_Mdps_Def"],
-    "CF_Mdps_ToiActive": lkas11["CF_Lkas_ActToi"],
+    "CF_Mdps_ToiActive": mdps12["CF_Mdps_ToiActive"] if (car_fingerprint in FEATURES["dnf_mdps"]) else lkas11["CF_Lkas_ActToi"],
     "CF_Mdps_ToiUnavail": mdps12["CF_Mdps_ToiUnavail"],
-    "CF_Mdps_MsgCount2": cnt,
-    "CF_Mdps_Chksum2": 0,
-    "CF_Mdps_ToiFlt": 0,
+    "CF_Mdps_MsgCount2": mdps12["CF_Mdps_MsgCount2"] if (car_fingerprint in FEATURES["dnf_mdps"]) else cnt,
+    "CF_Mdps_Chksum2": mdps12["CF_Mdps_Chksum2"],
+    "CF_Mdps_ToiFlt": mdps12["CF_Mdps_ToiFlt"] if (car_fingerprint in FEATURES["dnf_mdps"]) else 0,
     "CF_Mdps_SErr": mdps12["CF_Mdps_SErr"],
     "CR_Mdps_StrTq": mdps12["CR_Mdps_StrTq"],
     "CF_Mdps_FailStat": mdps12["CF_Mdps_FailStat"],
     "CR_Mdps_OutTq": mdps12["CR_Mdps_OutTq"],
   }
 
-  dat = packer.make_can_msg("MDPS12", camcan, values)[2]
-
-  dat = [ord(i) for i in dat]
-  checksum = (dat[0] + dat[1] + dat[2] + dat[4] + dat[5] + dat[6] + dat[7]) % 256
-  values["CF_Mdps_Chksum2"] = checksum
+  if not (car_fingerprint in FEATURES["dnf_mdps"]):
+    dat = packer.make_can_msg("MDPS12", camcan, values)[2]
+    dat = [ord(i) for i in dat]
+    checksum = (dat[0] + dat[1] + dat[2] + dat[4] + dat[5] + dat[6] + dat[7]) % 256
+    values["CF_Mdps_Chksum2"] = checksum
 
   return packer.make_can_msg("MDPS12", camcan, values)

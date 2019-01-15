@@ -205,10 +205,6 @@ class CarState(object):
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
 
-    # OSM
-    #self.OSM = OSM(self)
-    #self.OSM.getlocal()
-
     #BB UIEvents
     self.UE = UIEvents(self)
 

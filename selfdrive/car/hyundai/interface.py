@@ -63,100 +63,70 @@ class CarInterface(object):
     # scale unknown params for other cars
     mass_civic = 2923 * CV.LB_TO_KG + std_cargo
     wheelbase_civic = 2.70
-    centerToFront_civic = wheelbase_civic * 0.4
+    centerToFront_civic = wheelbase_civic * 0.45
     centerToRear_civic = wheelbase_civic - centerToFront_civic
     rotationalInertia_civic = 2500
     tireStiffnessFront_civic = 192150
     tireStiffnessRear_civic = 202500
 
-    ret.steerActuatorDelay = 0.09  # Default delay
-    tire_stiffness_factor = 0.85  # Given all tested vehicle so far run better with this reduced below 0.85, this will becomes the default for now
+    ret.steerReactance = 1.2
+    ret.steerInductance = 1.0
+    ret.steerResistance = 1.0
+    ret.eonToFront = 0.8
+    ret.steerActuatorDelay = 0.10
+    ret.steerKf = 0.000055
+    ret.steerRateCost = 0.50
+    tire_stiffness_factor = 0.85
+    ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
+    ret.steerKpV, ret.steerKiV = [[0.11], [0.06]]
+    ret.minSteerSpeed = 0.
 
     if candidate == CAR.ELANTRA:
-      ret.steerKf = 0.00006
-      ret.steerRateCost = 0.5
-      ret.mass = 1275 + std_cargo
-      ret.wheelbase = 2.70002            # Spec
-      ret.steerRatio = 13.1805556        # Calculated
-      tire_stiffness_factor = 0.934      
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.16], [0.06]]
+      ret.mass = 1275 #SPEC
+      ret.wheelbase = 2.70002 #SPEC
+      ret.steerRatio = 13.4472222222 # SPEC
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
       ret.steerActuatorDelay = 0.1
     elif candidate == CAR.GENESIS:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 2060 + std_cargo
+      ret.mass = 2060
       ret.wheelbase = 3.01
-      ret.steerRatio = 16.5
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
+      ret.steerRatio = 12.0694941236 # SPEC
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS_2:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 2060 + std_cargo
+      ret.mass = 2060
       ret.wheelbase = 3.01
-      ret.steerRatio = 16.5
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.16], [0.01]]
+      ret.steerRatio = 12.0694941236 # SPEC
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+    elif candidate == CAR.KIA_OPTIMA:
+      ret.mass = 3558 * CV.LB_TO_KG
+      ret.wheelbase = 2.80
+      ret.steerRatio = 13.75 # fact
     elif candidate == CAR.KIA_SORENTO:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 1985 + std_cargo
+      ret.mass = 1985
       ret.wheelbase = 2.78
-      ret.steerRatio = 14.5         # Stock Value
-      tire_stiffness_factor = 0.75  # Based on testing
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.25], [0.03]]
-      ret.minSteerSpeed = 0.
+      ret.steerRatio = 13.76 # fact
     elif candidate == CAR.KIA_STINGER:
-      ret.steerKf = 0.000025
-      ret.steerRateCost = 0.5
-      ret.mass = 3637 * CV.LB_TO_KG + std_cargo
-      ret.wheelbase = 2.91
-      ret.steerRatio = 12.6
-      tire_stiffness_factor = 1.23
-      # Speed conversion:                0,  20,  45,  75 mph
-      ret.steerKpBP, ret.steerKiBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV =   [[0.3], [0.05]]
-      ret.minSteerSpeed = 0.
-      ret.steerActuatorDelay = 0.125
+      ret.mass = 1814 #SPEC AVG
+      ret.wheelbase = 2.90576 #SPEC
+      ret.steerRatio = 11.4509409568 # SPEC AWD
     elif candidate == CAR.SANTA_FE:
-      ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
-
-      # Values from optimizer
-      ret.steerRatio = 16.55  # 13.8 is spec end-to-end
-      tire_stiffness_factor = 0.82
-
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.37], [0.1]]
-      ret.minSteerSpeed = 0.
+      ret.steerRatio = 13.76 # assume same as Sorento
     elif candidate == CAR.SANTA_FE_2:
       ret.steerKf = 0.00005
-      ret.steerRateCost = 0.5
-      ret.mass = 3982 * CV.LB_TO_KG + std_cargo
+      ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
+      ret.steerRatio = 13.76 # assume same as Sorento
 
-      # Values from optimizer
-      ret.steerRatio = 16.55  # 13.8 is spec end-to-end
-      tire_stiffness_factor = 0.82
-
-      ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-      ret.steerKpV, ret.steerKiV = [[0.25], [0.04]]
-      ret.minSteerSpeed = 0.
-
+    ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
     ret.longitudinalKpBP = [0.]
     ret.longitudinalKpV = [0.]
     ret.longitudinalKiBP = [0.]
     ret.longitudinalKiV = [0.]
 
-    ret.centerToFront = ret.wheelbase * 0.4
+    ret.centerToFront = ret.wheelbase * 0.45
 
     centerToRear = ret.wheelbase - ret.centerToFront
 
@@ -220,7 +190,7 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if self.CP.carFingerprint == CAR.ELANTRA or self.CP.carFingerprint == CAR.KIA_SORENTO:
+    if (True):
       ret.gearShifter = self.CS.gear_shifter_cluster
     else:
       ret.gearShifter = self.CS.gear_shifter

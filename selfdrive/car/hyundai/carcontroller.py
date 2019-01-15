@@ -3,7 +3,7 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
                                              create_clu11, create_mdps12
-from selfdrive.car.hyundai.values import Buttons, CAR, LKAS_FEATURES
+from selfdrive.car.hyundai.values import Buttons, CAR, FEATURES
 from selfdrive.can.packer import CANPacker
 #from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
@@ -16,9 +16,9 @@ from selfdrive.config import Conversions as CV
 # Steer torque limits
 
 class SteerLimitParams:
-  STEER_MAX = 250   # 409 is the max
-  STEER_DELTA_UP = 3
-  STEER_DELTA_DOWN = 3
+  STEER_MAX = 300   # 409 is the max
+  STEER_DELTA_UP = 4
+  STEER_DELTA_DOWN = 5
 
 class CarController(object):
 
@@ -57,7 +57,8 @@ class CarController(object):
       enabled = True
       force_enable = True
 
-    if self.car_fingerprint in LKAS_FEATURES["soft_disable"] and CS.v_wheel < 16.8:
+    if (self.car_fingerprint in FEATURES["soft_disable_168"] and CS.v_wheel < 16.8) or \
+            (self.car_fingerprint in FEATURES["soft_disable_137"] and CS.v_wheel < 13.7):
         enabled = False
         force_enable = False
 
@@ -124,7 +125,7 @@ class CarController(object):
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), keep_stock=(not self.camera_disconnected)))
 
-    can_sends.append(create_mdps12(self.packer, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
+    can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
 
     if pcm_cancel_cmd and (not force_enable):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, 0))

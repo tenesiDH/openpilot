@@ -5,7 +5,7 @@ from datetime import datetime
 from selfdrive.config import Conversions as CV
 from common.transformations.coordinates import LocalCoord, geodetic2ecef
 
-LOOKAHEAD_TIME = 10.
+LOOKAHEAD_TIME = 30.
 MAPS_LOOKAHEAD_DISTANCE = 50 * LOOKAHEAD_TIME
 
 
