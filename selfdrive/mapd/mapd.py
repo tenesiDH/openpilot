@@ -95,10 +95,10 @@ def query_thread():
         cur_ecef = geodetic2ecef((last_gps.latitude, last_gps.longitude, last_gps.altitude))
         prev_ecef = geodetic2ecef((last_query_pos.latitude, last_query_pos.longitude, last_query_pos.altitude))
         dist = np.linalg.norm(cur_ecef - prev_ecef)
-        if dist < 1500:
+        if dist < 1000:
           continue
 
-      q = build_way_query(last_gps.latitude, last_gps.longitude, radius=3000)
+      q = build_way_query(last_gps.latitude, last_gps.longitude, radius=2000)
       try:
         new_result = api.query(q)
 

@@ -82,33 +82,32 @@ class CarInterface(object):
     ret.minSteerSpeed = 0.
 
     if candidate == CAR.ELANTRA:
-      ret.mass = 1275 #SPEC
-      ret.wheelbase = 2.70002 #SPEC
-      ret.steerRatio = 13.4472222222 # SPEC
+      ret.mass = 1275
+      ret.wheelbase = 2.7
+      ret.steerRatio = 13.447
       ret.minSteerSpeed = 32 * CV.MPH_TO_MS
-      ret.steerActuatorDelay = 0.1
     elif candidate == CAR.GENESIS:
       ret.mass = 2060
       ret.wheelbase = 3.01
-      ret.steerRatio = 12.0694941236 # SPEC
+      ret.steerRatio = 12.069
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.GENESIS_2:
       ret.mass = 2060
       ret.wheelbase = 3.01
-      ret.steerRatio = 12.0694941236 # SPEC
+      ret.steerRatio = 12.069
       ret.minSteerSpeed = 38 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_OPTIMA:
       ret.mass = 3558 * CV.LB_TO_KG
       ret.wheelbase = 2.80
-      ret.steerRatio = 13.75 # fact
+      ret.steerRatio = 13.75
     elif candidate == CAR.KIA_SORENTO:
       ret.mass = 1985
       ret.wheelbase = 2.78
-      ret.steerRatio = 13.76 # fact
-    elif candidate == CAR.KIA_STINGER:
-      ret.mass = 1814 #SPEC AVG
-      ret.wheelbase = 2.90576 #SPEC
-      ret.steerRatio = 11.4509409568 # SPEC AWD
+      ret.steerRatio = 13.76
+    elif candidate == CAR.KIA_STINGER:  #AWD
+      ret.mass = 1814
+      ret.wheelbase = 2.906
+      ret.steerRatio = 11.451
     elif candidate == CAR.SANTA_FE:
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
