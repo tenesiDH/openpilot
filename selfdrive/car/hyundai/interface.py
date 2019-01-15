@@ -72,13 +72,13 @@ class CarInterface(object):
     ret.steerReactance = 1.0
     ret.steerInductance = 1.0
     ret.steerResistance = 1.0
-    ret.eonToFront = 0.8
+    ret.eonToFront = 0.5
     ret.steerActuatorDelay = 0.10
-    ret.steerKf = 0.000055
+    ret.steerKf = 0.00006
     ret.steerRateCost = 0.50
-    tire_stiffness_factor = 0.85
+    tire_stiffness_factor = 0.90
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.11], [0.06]]
+    ret.steerKpV, ret.steerKiV = [[0.12], [0.06]]
     ret.minSteerSpeed = 0.
 
     if candidate == CAR.ELANTRA:
