@@ -113,6 +113,14 @@ class CarInterface(object):
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
       ret.steerRatio = 13.76 # assume same as Sorento
+    elif candidate == CAR.OPTIMA:
+      ret.mass = 3558 * CV.LB_TO_KG
+      ret.wheelbase = 2.80
+      ret.steerRatio = 13.75 # fact
+      ret.steerActuatorDelay = 0.10
+      ret.steerRateCost = 0.50
+      tire_stiffness_factor = 0.93
+      ret.steerKpV, ret.steerKiV = [[0.10], [0.06]]
 
     ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -252,8 +260,8 @@ class CarInterface(object):
         events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
-    if not ret.gearShifter == 'drive':
-      events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
+    # if not ret.gearShifter == 'drive':
+    #  events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.seatbeltUnlatched:
