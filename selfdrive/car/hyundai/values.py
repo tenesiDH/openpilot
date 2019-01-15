@@ -58,7 +58,7 @@ CAMERA_MSGS = [832, 1156, 1191, 1342]
 # Checksum Types
 CHECKSUM = {
   "6B": [CAR.KIA_SORENTO, CAR.GENESIS],                 # 6 Bytes used in Checksum
-  "7B": [CAR.KIA_STINGER, CAR.ELANTRA, CAR.OPTIMA],     # 7 Bytes used in Checksum
+  "7B": [CAR.KIA_STINGER, CAR.ELANTRA, CAR.KIA_OPTIMA], # 7 Bytes used in Checksum
   "crc8": [CAR.SANTA_FE],                               # CRC Checksum
 }
 
