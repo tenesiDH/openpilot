@@ -5,7 +5,7 @@ from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.car.hyundai.carstate import CarState, get_can_parser, get_camera_parser
-from selfdrive.car.hyundai.values import CAMERA_MSGS, CAR, get_hud_alerts
+from selfdrive.car.hyundai.values import CAMERA_MSGS, CAR, get_hud_alerts, FEATURES
 
 try:
   from selfdrive.car.hyundai.carcontroller import CarController
@@ -50,6 +50,7 @@ class CarInterface(object):
 
     # kg of standard extra cargo to count for drive, gas, etc...
     std_cargo = 200 # Comma use 136kg  ..  Fuel = 60kg, Driver = 80kg (assuming 70kg and not naked), Cargo = 20kg .. This is the minimum.. assume 50% of the time there is a passenger also 70kg and not naked, so 40kg.
+    weight_dist_rear = 0.45
 
     ret = car.CarParams.new_message()
 
@@ -63,7 +64,7 @@ class CarInterface(object):
     # scale unknown params for other cars
     mass_civic = 2923 * CV.LB_TO_KG + std_cargo
     wheelbase_civic = 2.70
-    centerToFront_civic = wheelbase_civic * 0.45
+    centerToFront_civic = wheelbase_civic * weight_dist_rear
     centerToRear_civic = wheelbase_civic - centerToFront_civic
     rotationalInertia_civic = 2500
     tireStiffnessFront_civic = 192150
@@ -90,12 +91,7 @@ class CarInterface(object):
       ret.mass = 2060
       ret.wheelbase = 3.01
       ret.steerRatio = 12.069
-      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
-    elif candidate == CAR.GENESIS_2:
-      ret.mass = 2060
-      ret.wheelbase = 3.01
-      ret.steerRatio = 12.069
-      ret.minSteerSpeed = 38 * CV.MPH_TO_MS
+      # ret.minSteerSpeed = 38 * CV.MPH_TO_MS - Using Soft Disable
     elif candidate == CAR.KIA_OPTIMA:
       ret.mass = 3558 * CV.LB_TO_KG
       ret.wheelbase = 2.80
@@ -112,11 +108,6 @@ class CarInterface(object):
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
       ret.steerRatio = 13.76 # assume same as Sorento
-    elif candidate == CAR.SANTA_FE_2:
-      ret.steerKf = 0.00005
-      ret.mass = 3982 * CV.LB_TO_KG
-      ret.wheelbase = 2.766
-      ret.steerRatio = 13.76 # assume same as Sorento
 
     ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -125,7 +116,7 @@ class CarInterface(object):
     ret.longitudinalKiBP = [0.]
     ret.longitudinalKiV = [0.]
 
-    ret.centerToFront = ret.wheelbase * 0.45
+    ret.centerToFront = ret.wheelbase * weight_dist_rear
 
     centerToRear = ret.wheelbase - ret.centerToFront
 
@@ -189,8 +180,10 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if (True):
+    if self.CP.carFingerprint in FEATURES["use_cluster_gears"]:
       ret.gearShifter = self.CS.gear_shifter_cluster
+    elif self.CP.carFingerprint in FEATURES["use_tcu_gears"]:
+      ret.gearShifter = self.CS.gear_tcu
     else:
       ret.gearShifter = self.CS.gear_shifter
 
@@ -256,7 +249,7 @@ class CarInterface(object):
         events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
-    if (not ret.gearShifter == 'drive') and (self.CP.carFingerprint != CAR.KIA_OPTIMA):
+    if ret.gearShifter != 'drive':
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
@@ -271,7 +264,6 @@ class CarInterface(object):
     if self.CS.steer_error:
       events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
 
-    # enable request in prius is simple, as we activate when Toyota is active (rising edge)
     if ret.cruiseState.enabled and not self.cruise_enabled_prev:
       events.append(create_event('pcmEnable', [ET.ENABLE]))
     elif not ret.cruiseState.enabled:

@@ -16,8 +16,8 @@ from selfdrive.config import Conversions as CV
 # Steer torque limits
 
 class SteerLimitParams:
-  STEER_MAX = 300   # 409 is the max
-  STEER_DELTA_UP = 2
+  STEER_MAX = 255   # >255 results in frozen torque, >409 results in no torque
+  STEER_DELTA_UP = 3
   STEER_DELTA_DOWN = 5
 
 class CarController(object):
@@ -57,8 +57,7 @@ class CarController(object):
       enabled = True
       force_enable = True
 
-    if (self.car_fingerprint in FEATURES["soft_disable_168"] and CS.v_wheel < 16.8) or \
-            (self.car_fingerprint in FEATURES["soft_disable_137"] and CS.v_wheel < 13.7):
+    if (self.car_fingerprint in FEATURES["soft_disable_168"] and CS.v_wheel < 16.8):
         enabled = False
         force_enable = False
 
