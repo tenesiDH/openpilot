@@ -108,6 +108,10 @@ class CarInterface(object):
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
       ret.steerRatio = 13.76 # assume same as Sorento
+    elif candidate == CAR.UNKNOWN:
+      ret.mass = 1800        # non-critical value
+      ret.wheelbase = 2.8    # semi-critical value
+      ret.steerRatio = 13.0  # super-critical value
 
     ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -152,7 +156,7 @@ class CarInterface(object):
     ret.enableCamera = not any(x for x in CAMERA_MSGS if x in fingerprint)
     ret.openpilotLongitudinalControl = True
 
-    ret.steerLimitAlert = False
+    ret.steerLimitAlert = True
     ret.stoppingControl = False
     ret.startAccel = 0.0
 
@@ -180,12 +184,7 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if self.CP.carFingerprint in FEATURES["use_cluster_gears"]:
-      ret.gearShifter = self.CS.gear_shifter_cluster
-    elif self.CP.carFingerprint in FEATURES["use_tcu_gears"]:
-      ret.gearShifter = self.CS.gear_tcu
-    else:
-      ret.gearShifter = self.CS.gear_shifter
+    ret.gearShifter = self.CS.gear_shifter_cluster
 
     # gas pedal
     ret.gas = self.CS.car_gas
@@ -249,7 +248,8 @@ class CarInterface(object):
         events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
-    if ret.gearShifter != 'drive':
+    # Try all 3 gear selector locations, as some cars miss one or 2 of them inconsistently
+    if (ret.gearShifter != 'drive') and (self.CS.gear_tcu != 'drive') and (self.CS.gear_shifter_cluster != 'drive'):
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))

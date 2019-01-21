@@ -140,7 +140,7 @@ class CarState(object):
                       ["","",[""]], \
                       ["cam","CAM",[""]], \
                       ["alwon", "MAD",[""]], \
-                      ["sound", "SND", [""]]]
+                      ["", "", [""]]]
 
     # ALCA PARAMS
     # max REAL delta angle for correction vs actuator
@@ -323,7 +323,6 @@ class CarState(object):
         self.gear_tcu = "unknown"
 
     # save the entire LKAS11, CLU11 and MDPS12
-    #print cp_cam.can_valid, cp_cam2.can_valid
     if cp_cam.can_valid == True:
       self.lkas11 = cp_cam.vl["LKAS11"]
       self.camcan = 2

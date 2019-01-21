@@ -6,7 +6,8 @@ hyundai_checksum = crcmod.mkCrcFun(0x11D, initCrc=0xFD, rev=False, xorOut=0xdf)
 def make_can_msg(addr, dat, alt):
   return [addr, 0, dat, alt]
 
-def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled, lkas11, hud_alert, use_stock, keep_stock=False):
+def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, \
+        enabled, lkas11, hud_alert, use_stock, keep_stock=False, checksum):
   if enabled:
     use_stock = False
 
@@ -38,33 +39,19 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
 
   dat = packer.make_can_msg("LKAS11", 0, values)[2]
 
-  if car_fingerprint in CHECKSUM["crc8"]:
-    # CRC Checksum as seen on 2019 Hyundai Santa Fe
+  if checksum == "crc8":
     dat = dat[:6] + dat[7]
     checksum = hyundai_checksum(dat)
-  elif car_fingerprint in CHECKSUM["6B"]:
-    # Checksum of first 6 Bytes, as seen on 2018 Kia Sorento
+  elif checksum == "6B":
     dat = [ord(i) for i in dat]
     checksum = sum(dat[:6]) % 256
-  elif car_fingerprint in CHECKSUM["7B"]:
-    # Checksum of first 6 Bytes and last Byte as seen on 2018 Kia Stinger and 2019 Kia Optima
+  elif checksum == "7B":
     dat = [ord(i) for i in dat]
     checksum = (sum(dat[:6]) + dat[7]) % 256
 
   values["CF_Lkas_Chksum"] = checksum
 
   return packer.make_can_msg("LKAS11", 0, values)
-
-def create_lkas12():
-  return make_can_msg(1342, "\x00\x00\x00\x00\x60\x05", 0)
-
-
-def create_1191():
-  return make_can_msg(1191, "\x01\x00", 0)
-
-
-def create_1156():
-  return make_can_msg(1156, "\x08\x20\xfe\x3f\x00\xe0\xfd\x3f", 0)
 
 def create_clu11(packer, clu11, button, cnt):
   values = {
@@ -84,25 +71,70 @@ def create_clu11(packer, clu11, button, cnt):
 
   return packer.make_can_msg("CLU11", 0, values)
 
-def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11, camcan):
+def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11, camcan, checksum):
   values = {
     "CR_Mdps_StrColTq": mdps12["CR_Mdps_StrColTq"],
     "CF_Mdps_Def": mdps12["CF_Mdps_Def"],
-    "CF_Mdps_ToiActive": mdps12["CF_Mdps_ToiActive"] if (car_fingerprint in FEATURES["dnf_mdps"]) else lkas11["CF_Lkas_ActToi"],
+    "CF_Mdps_ToiActive": mdps12["CF_Mdps_ToiActive"] if (checksum == "crc8") else lkas11["CF_Lkas_ActToi"],
     "CF_Mdps_ToiUnavail": mdps12["CF_Mdps_ToiUnavail"],
-    "CF_Mdps_MsgCount2": mdps12["CF_Mdps_MsgCount2"] if (car_fingerprint in FEATURES["dnf_mdps"]) else cnt,
+    "CF_Mdps_MsgCount2": mdps12["CF_Mdps_MsgCount2"] if (checksum == "crc8") else cnt,
     "CF_Mdps_Chksum2": mdps12["CF_Mdps_Chksum2"],
-    "CF_Mdps_ToiFlt": mdps12["CF_Mdps_ToiFlt"] if (car_fingerprint in FEATURES["dnf_mdps"]) else 0,
+    "CF_Mdps_ToiFlt": mdps12["CF_Mdps_ToiFlt"] if (checksum == "crc8") else 0,
     "CF_Mdps_SErr": mdps12["CF_Mdps_SErr"],
     "CR_Mdps_StrTq": mdps12["CR_Mdps_StrTq"],
     "CF_Mdps_FailStat": mdps12["CF_Mdps_FailStat"],
     "CR_Mdps_OutTq": mdps12["CR_Mdps_OutTq"],
   }
 
-  if not (car_fingerprint in FEATURES["dnf_mdps"]):
+  if not (checksum == "crc8"):
     dat = packer.make_can_msg("MDPS12", camcan, values)[2]
     dat = [ord(i) for i in dat]
     checksum = (dat[0] + dat[1] + dat[2] + dat[4] + dat[5] + dat[6] + dat[7]) % 256
     values["CF_Mdps_Chksum2"] = checksum
 
   return packer.make_can_msg("MDPS12", camcan, values)
+
+def learn_checksum(packer, lkas11):
+    # Learn checksum used
+    values = {
+        "CF_Lkas_Icon": lkas11["CF_Lkas_Icon"],
+        "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"],
+        "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"],
+        "CF_Lkas_LdwsLHWarning": lkas11["CF_Lkas_LdwsLHWarning"],
+        "CF_Lkas_LdwsRHWarning": lkas11["CF_Lkas_LdwsRHWarning"],
+        "CF_Lkas_HbaLamp": lkas11["CF_Lkas_HbaLamp"],
+        "CF_Lkas_FcwBasReq": lkas11["CF_Lkas_FcwBasReq"],
+        "CR_Lkas_StrToqReq": lkas11["CR_Lkas_StrToqReq"],
+        "CF_Lkas_ActToi": lkas11["CF_Lkas_ActToi"],
+        "CF_Lkas_ToiFlt": lkas11["CF_Lkas_ToiFlt"],
+        "CF_Lkas_HbaSysState": lkas11["CF_Lkas_HbaSysState"],
+        "CF_Lkas_FcwOpt": lkas11["CF_Lkas_FcwOpt"],
+        "CF_Lkas_HbaOpt": lkas11["CF_Lkas_HbaOpt"],
+        "CF_Lkas_MsgCount": lkas11["CF_Lkas_MsgCount"],
+        "CF_Lkas_FcwSysState": lkas11["CF_Lkas_FcwSysState"],
+        "CF_Lkas_FcwCollisionWarning": lkas11["CF_Lkas_FcwCollisionWarning"],
+        "CF_Lkas_FusionState": lkas11["CF_Lkas_FusionState"],
+        "CF_Lkas_Chksum": lkas11["CF_Lkas_Chksum"],
+        "CF_Lkas_FcwOpt_USM": lkas11["CF_Lkas_FcwOpt_USM"],
+        "CF_Lkas_LdwsOpt_USM": lkas11["CF_Lkas_LdwsOpt_USM"],
+        "CF_Lkas_Unknown1": lkas11["CF_Lkas_Unknown1"],
+        "CF_Lkas_Unknown2": lkas11["CF_Lkas_Unknown2"],
+    }
+
+    dat = packer.make_can_msg("LKAS11", 0, values)[2]
+
+    # CRC Checksum
+    if hyundai_checksum(dat[:6] + dat[7]) == lkas11["CF_Lkas_Chksum"]:
+        return "crc8"
+
+    # Checksum of first 6 Bytes
+    dat = [ord(i) for i in dat]
+    if (sum(dat[:6]) % 256) == lkas11["CF_Lkas_Chksum"]:
+        return "6B"
+
+    # Checksum of first 6 Bytes and last Byte
+    dat = [ord(i) for i in dat]
+    if ((sum(dat[:6]) + dat[7]) % 256) == lkas11["CF_Lkas_Chksum"]:
+        return "7B"
+
+    return "NONE"

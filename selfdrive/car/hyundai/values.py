@@ -17,12 +17,14 @@ class CAR:
   KIA_SORENTO = "KIA SORENTO GT LINE 2018"            # First User @ku7       <-- Ported by @ku7 (First Kia in World)
   KIA_STINGER = "KIA STINGER GT2 2018"                # First User @killian   <-- Ported by @ku7 (Third)
   SANTA_FE = "HYUNDAI SANTA FE LIMITED 2019"          # First User @rickbias  <-- Ported by @rickbias
+  UNKNOWN = "UNKNOWN CAR ON EMMERTEX FORK"            # Unsupported Car
 
 class Buttons:
   NONE = 0
   RES_ACCEL = 1
   SET_DECEL = 2
   CANCEL = 4
+
 
 FINGERPRINTS = {
   CAR.ELANTRA: [{
@@ -47,20 +49,10 @@ CAR.GENESIS: [{
 
 CAMERA_MSGS = [832, 1156, 1191, 1342]
 
-# Checksum Types
-CHECKSUM = {
-  "6B": [CAR.KIA_SORENTO, CAR.GENESIS],                 # 6 Bytes used in Checksum
-  "7B": [CAR.KIA_STINGER, CAR.ELANTRA, CAR.KIA_OPTIMA], # 7 Bytes used in Checksum
-  "crc8": [CAR.SANTA_FE],                               # CRC Checksum
-}
-
 # Lane Keep Assist related Features and Limitations
 FEATURES = {
   "icon_basic": [CAR.GENESIS],                          # Anything but 2 for LKAS_Icon causes MDPS Fault
   "soft_disable": [CAR.GENESIS],                        # Any steer message below 16.5m/s faults MDPS
-  "use_cluster_gears": [CAR.ELANTRA, CAR.KIA_SORENTO],  # Use Cluster for Gear Selection, rather than Transmission
-  "use_tcu_gears": [CAR.KIA_OPTIMA],                    # Use TCU Message for Gear Selection
-  "dnf_mdps": [CAR.SANTA_FE],                           # Do not forward a modified MDPS message.. different checksum
 }
 
 DBC = {
@@ -70,4 +62,5 @@ DBC = {
   CAR.KIA_SORENTO: dbc_dict('hyundai_kia_generic', None),
   CAR.KIA_STINGER: dbc_dict('hyundai_kia_generic', None),
   CAR.SANTA_FE: dbc_dict('hyundai_kia_generic', None),
+  CAR.UNKNOWN: dbc_dict('hyundai_kia_generic', None),
 }
