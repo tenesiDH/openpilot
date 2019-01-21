@@ -106,6 +106,9 @@ class VehicleModel(object):
     self.cR = CP.tireStiffnessRear
     self.sR = CP.steerRatio
     self.chi = CP.steerRatioRear
+    self.gsfc = 0.
+    self.curvf = 0.
+    self.sf = 0.
 
   def steady_state_sol(self, sa, u):
     """Returns the steady state solution.
@@ -147,8 +150,9 @@ class VehicleModel(object):
     Returns:
       Curvature factor [1/m]
     """
-    sf = calc_slip_factor(self)
-    return (1. - self.chi) / (1. - sf * u**2) / self.l
+    self.sf = calc_slip_factor(self)
+    self.curvf (1. - self.chi) / (1. - sf * u**2) / self.l
+    return self.curvf
 
   def get_steer_from_curvature(self, curv, u):
     """Calculates the required steering wheel angle for a given curvature
@@ -161,7 +165,8 @@ class VehicleModel(object):
       Steering wheel angle [rad]
     """
 
-    return curv * self.sR * 1.0 / self.curvature_factor(u)
+    self.gsfc = curv * self.sR * 1.0 / self.curvature_factor(u)
+    return self.gsfc
 
   def yaw_rate(self, sa, u):
     """Calculate yaw rate
