@@ -255,7 +255,7 @@ class LatControl(object):
       capture_all = True
       if self.mpc_updated or capture_all:
         self.frames += 1
-        self.steerdata += ("%d,%s,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d|" % (1, \
+        self.steerdata += ("%d,%s,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d|" % (1, \
         ff_type, 1 if ff_type == "a" else 0, 1 if ff_type == "r" else 0, steer_status, steering_control_active, steer_stock_torque, steer_stock_torque_request, \
         cur_time - self.mpc_times[0], CAN_RATE, self.left_change, self.path_change, self.right_change, self.mpc_solution[0].delta[0], self.mpc_solution[0].delta[1], self.mpc_solution[0].delta[2], self.mpc_solution[0].delta[3], self.mpc_solution[0].delta[4], \
         self.mpc_solution[0].delta[5], self.mpc_solution[0].delta[6], self.mpc_solution[0].delta[7], self.mpc_solution[0].delta[8], self.mpc_solution[0].delta[9], \
