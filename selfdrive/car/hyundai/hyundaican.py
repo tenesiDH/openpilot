@@ -7,7 +7,7 @@ def make_can_msg(addr, dat, alt):
   return [addr, 0, dat, alt]
 
 def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, \
-        enabled, lkas11, hud_alert, use_stock, keep_stock=False, checksum):
+        enabled, lkas11, hud_alert, use_stock, keep_stock, checksum):
   if enabled:
     use_stock = False
 
