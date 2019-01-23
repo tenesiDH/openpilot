@@ -126,7 +126,8 @@ def get_camera_parser(CP):
     ("CF_Lkas_Unknown1", "LKAS11", 0),
     ("CF_Lkas_Unknown2", "LKAS11", 0),
     ("CF_Lkas_ActToi", "LKAS11", 0),
-    ("CR_Lkas_StrToqReq", "LKAS11", 0)
+    ("CR_Lkas_StrToqReq", "LKAS11", 0),
+    ("CF_Lkas_MsgCount", "LKAS11", 0)
   ]
 
   checks = [("LKAS11", 100)]
