@@ -152,7 +152,7 @@ class LatControl(object):
       self.last_mpc_ts = PL.last_md_ts
       cur_time = sec_since_boot()
       mpc_time = float(self.last_mpc_ts / 1000000000.0)
-      curvature_factor = VM.curvature_factor(v_ego)
+      self.curvature_factor = VM.curvature_factor(v_ego)
 
       # Determine future angle steers using steer rate
       projected_angle_steers = float(angle_steers) + CP.steerActuatorDelay * float(accelerated_angle_rate)
@@ -166,13 +166,13 @@ class LatControl(object):
       self.p_poly = libmpc_py.ffi.new("double[4]", list(PL.PP.p_poly))
 
       # account for actuation delay and the age of the plan
-      self.cur_state = calc_states_after_delay(self.cur_state, v_ego, projected_angle_steers, curvature_factor,
+      self.cur_state = calc_states_after_delay(self.cur_state, v_ego, projected_angle_steers, self.curvature_factor,
                                                       CP.steerRatio, total_delay, CP.eonToFront)
 
       v_ego_mpc = max(v_ego, 5.0)  # avoid mpc roughness due to low speed
       self.libmpc.run_mpc(self.cur_state, self.mpc_solution,
                           self.l_poly, self.r_poly, self.p_poly,
-                          PL.PP.l_prob, PL.PP.r_prob, PL.PP.p_prob, curvature_factor, v_ego_mpc, PL.PP.lane_width)
+                          PL.PP.l_prob, PL.PP.r_prob, PL.PP.p_prob, self.curvature_factor, v_ego_mpc, PL.PP.lane_width)
 
       self.mpc_updated = True
 
