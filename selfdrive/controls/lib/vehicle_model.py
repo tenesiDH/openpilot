@@ -151,7 +151,7 @@ class VehicleModel(object):
       Curvature factor [1/m]
     """
     self.sf = calc_slip_factor(self)
-    self.curvf (1. - self.chi) / (1. - sf * u**2) / self.l
+    self.curvf = (1. - self.chi) / (1. - sf * u**2) / self.l
     return self.curvf
 
   def get_steer_from_curvature(self, curv, u):
