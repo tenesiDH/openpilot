@@ -1,7 +1,6 @@
 from selfdrive.car import limit_steer_rate
 from selfdrive.boardd.boardd import can_list_to_can_capnp
-from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
-                                             create_1191, create_1156, \
+from selfdrive.car.hyundai.hyundaican import create_lkas11, \
                                              create_clu11, create_mdps12, \
                                              learn_checksum
 from selfdrive.car.hyundai.values import Buttons, CAR, FEATURES
