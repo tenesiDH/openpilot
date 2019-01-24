@@ -133,7 +133,6 @@ def learn_checksum(packer, lkas11):
         return "6B"
 
     # Checksum of first 6 Bytes and last Byte
-    dat = [ord(i) for i in dat]
     if ((sum(dat[:6]) + dat[7]) % 256) == lkas11["CF_Lkas_Chksum"]:
         return "7B"
 
