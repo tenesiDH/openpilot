@@ -127,6 +127,7 @@ def learn_checksum(packer, lkas11):
     if hyundai_checksum(dat[:6] + dat[7]) == lkas11["CF_Lkas_Chksum"]:
         return "crc8"
 
+    dat = [ord(i) for i in dat]
     # Checksum of first 6 Bytes
     if (sum(dat[:6]) % 256) == lkas11["CF_Lkas_Chksum"]:
         return "6B"
