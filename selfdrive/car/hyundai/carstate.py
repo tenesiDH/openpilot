@@ -208,6 +208,7 @@ class CarState(object):
     self.left_blinker_flash = 0
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
+    self.has_scc = False
 
     #BB UIEvents
     self.UE = UIEvents(self)
@@ -225,6 +226,9 @@ class CarState(object):
     # copy can_valid
     self.can_valid = cp.can_valid
 
+    if (cp.vl["SCC11"]['TauGapSet'] > 0):
+        self.has_scc = True
+
     # update prevs, update must run once per Loop
     self.prev_left_blinker_on = self.left_blinker_on
     self.prev_right_blinker_on = self.right_blinker_on
@@ -237,13 +241,13 @@ class CarState(object):
 
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
     self.main_on = True
-    if cp.vl["SCC11"]["TauGapSet"] > 0:
+    if self.has_scc:
         self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
             (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
         self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
     else:
-        self.acc_active = (cp.vl["LVR12"]["CF_Lvr_CruiseSet"] > 2)
-        self.acc_active_real = (cp.vl["LVR12"]["CF_Lvr_CruiseSet"] > 2)
+        self.acc_active = (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0)
+        self.acc_active_real = self.acc_active
     self.pcm_acc_status = int(self.acc_active)
 
     # calc best v_ego estimate, by averaging two opposite corners
@@ -263,10 +267,10 @@ class CarState(object):
     v_ego_x = self.v_ego_kf.update(self.v_wheel)
     self.v_ego = float(v_ego_x[0])
     self.a_ego = float(v_ego_x[1])
-    is_set_speed_in_mph = int(cp.vl["CLU11"]["CF_Clu_SPEED_UNIT"])
+    is_set_speed_in_mph = int(cp.vl["CLU11"]['CF_Clu_SPEED_UNIT'])
     speed_conv = CV.MPH_TO_MS if is_set_speed_in_mph else CV.KPH_TO_MS
 
-    self.cruise_set_speed = (cp.vl["SCC11"]['VSetDis'] * speed_conv) if (cp.vl["SCC11"]["TauGapSet"] > 0) else (cp.vl["LVR12"]["CF_Lvr_CruiseSet"] * speed_conv)
+    self.cruise_set_speed = (cp.vl["SCC11"]['VSetDis'] * speed_conv) if self.has_scc else (cp.vl["LVR12"]["CF_Lvr_CruiseSet"] * speed_conv)
     self.standstill = not self.v_wheel > 0.1
 
     self.angle_steers = cp.vl["SAS11"]['SAS_Angle']
@@ -283,7 +287,7 @@ class CarState(object):
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["MDPS12"]['CR_Mdps_StrColTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
-    self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if (cp.vl["SCC11"]["TauGapSet"] > 0) else False
+    self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if self.has_scc else False
 
     self.user_brake = 0
 
