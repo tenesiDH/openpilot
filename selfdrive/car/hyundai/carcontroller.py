@@ -121,7 +121,7 @@ class CarController(object):
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
-                                   (not self.camera_disconnected), self.checksum))
+                                   True, self.checksum))
 
     can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, \
                                     CS.camcan, self.checksum))
