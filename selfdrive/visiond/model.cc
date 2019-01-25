@@ -93,4 +93,3 @@ void model_free(ModelState* s) {
   model_input_free(&s->in);
   delete s->m;
 }
-
