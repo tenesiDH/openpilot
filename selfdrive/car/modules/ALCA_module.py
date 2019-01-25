@@ -38,11 +38,11 @@ v3.3 - re-entry logic changed for smoothness
 v3.2 - angle adjustment to compesate for road curvature change
 v3.1 - new angle logic for a smoother re-entry
 v3.0 - better lane dettection logic
-v2.0 - detection of lane crossing 
+v2.0 - detection of lane crossing
 v1.0 - fixed angle move
 
 ########################################################
-The following parameters need to be added to carstate.py 
+The following parameters need to be added to carstate.py
 and based on each model you want to define
 ########################################################
 
@@ -64,7 +64,7 @@ CL_LANE_DETECT_BP = [10., 44.]
 CL_LANE_DETECT_FACTOR = [1.5, .75]
 
 CL_LANE_PASS_BP = [10., 44.]
-CL_LANE_PASS_TIME = [100., 5.] 
+CL_LANE_PASS_TIME = [100., 5.]
 
 # change lane delta angles and other params
 CL_MAXD_BP = [10., 32., 44.]
@@ -74,13 +74,13 @@ CL_MIN_V = 8.9 # do not turn if speed less than x m/2; 20 mph = 8.9 m/s
 
 # do not turn if actuator wants more than x deg for going straight; this should be interp based on speed
 CL_MAX_A_BP = [10., 44.]
-CL_MAX_A = [10., 10.] 
+CL_MAX_A = [10., 10.]
 
 # define limits for angle change every 0.1 s
 # we need to force correction above 10 deg but less than 20
 # anything more means we are going to steep or not enough in a turn
 CL_MAX_ACTUATOR_DELTA = 2.
-CL_MIN_ACTUATOR_DELTA = 0. 
+CL_MIN_ACTUATOR_DELTA = 0.
 CL_CORRECTION_FACTOR = 1.
 
 #duration after we cross the line until we release is a factor of speed
@@ -117,13 +117,13 @@ class ALCAController(object):
     self.laneChange_counter = 0 # used to count frames during lane change
     self.laneChange_min_duration = 2. # min time to wait before looking for next lane
     self.laneChange_duration = 5.6 # how many max seconds to actually do the move; if lane not found after this then send error
-    self.laneChange_after_lane_duration_mult = 1.  # multiplier for time after we cross the line before we let OP take over; multiplied with CL_TIMEA_T 
+    self.laneChange_after_lane_duration_mult = 1.  # multiplier for time after we cross the line before we let OP take over; multiplied with CL_TIMEA_T
     self.laneChange_wait = 1 # how many seconds to wait before it starts the change
-    self.laneChange_lw = 3.7 # lane width in meters
+    self.laneChange_lw = 3.4 # lane width in meters
     self.laneChange_angle = 0. # saves the last angle from actuators before lane change starts
     self.laneChange_angled = 0. # angle delta
-    self.laneChange_steerr = 15.75 # steer ratio for lane change starting with the Tesla one
-    self.laneChange_direction = 0 # direction of the lane change 
+    self.laneChange_steerr = 13.7 # steer ratio for lane change
+    self.laneChange_direction = 0 # direction of the lane change
     self.prev_right_blinker_on = False # local variable for prev position
     self.prev_left_blinker_on = False # local variable for prev position
     self.keep_angle = False #local variable to keep certain angle delta vs. actuator
@@ -133,7 +133,7 @@ class ALCAController(object):
     self.laneChange_cancelled = False
     self.laneChange_cancelled_counter = 0
     self.last_time_enabled = 0
-  
+
 
   def last10delta_reset(self):
     self.last10delta = []
@@ -202,7 +202,7 @@ class ALCAController(object):
         self.laneChange_counter =0
         self.laneChange_direction =0
         CS.UE.custom_alert_message(-1,"",0)
-    
+
     if (not CS.right_blinker_on) and (not CS.left_blinker_on) and \
       (self.laneChange_enabled > 1):
       # no blinkers on but we are still changing lane, so we need to send blinker command
@@ -216,7 +216,7 @@ class ALCAController(object):
 
     if (CS.cstm_btns.get_button_status("alca") > 0) and self.alcaEnabled and (self.laneChange_enabled == 1):
       if ((CS.v_ego < cl_min_v) or (abs(actuators.steerAngle) >= cl_max_a) or \
-      (abs(CS.angle_steers)>= cl_max_a)  or (not enabled)): 
+      (abs(CS.angle_steers)>= cl_max_a)  or (not enabled)):
         CS.cstm_btns.set_button_status("alca",9)
       else:
         CS.cstm_btns.set_button_status("alca",1)
@@ -258,7 +258,7 @@ class ALCAController(object):
         self.laneChange_angled = self.laneChange_direction * self.laneChange_steerr * cl_maxd_a
         self.laneChange_last_actuator_angle = 0.
         self.laneChange_last_actuator_delta = 0.
-        self.laneChange_over_the_line = 0 
+        self.laneChange_over_the_line = 0
         CS.cstm_btns.set_button_status("alca",2)
         # reset PID for torque
         self.pid.reset()
@@ -294,7 +294,7 @@ class ALCAController(object):
         previous_delta = abs(self.laneChange_last_sent_angle  - self.laneChange_last_actuator_angle)
         if (self.laneChange_counter > cl_lane_pass_time):
           # continue to half the angle between our angle and actuator
-          delta_angle = (-actuators.steerAngle - self.laneChange_angle - self.laneChange_angled)/cl_adjust_factor 
+          delta_angle = (-actuators.steerAngle - self.laneChange_angle - self.laneChange_angled)/cl_adjust_factor
           self.laneChange_angle += delta_angle
         # wait 0.05 sec before starting to check if angle increases or if we are within X deg of actuator.angleSteer
         if ((current_delta > previous_delta) or  (current_delta <= cl_reentry_angle)) and (self.laneChange_counter > cl_lane_pass_time):
@@ -334,7 +334,7 @@ class ALCAController(object):
           self.laneChange_over_the_line = 1
           self.laneChange_enabled = 2
           self.laneChange_counter = 1
- 
+
         # didn't change the lane yet, check that we are not eversteering or understeering based on road curvature
 
         """
@@ -345,7 +345,7 @@ class ALCAController(object):
           a = 0.00001
         if (abs(a) < CL_MIN_ACTUATOR_DELTA) and (self.keep_angle == False):
           c = (a/abs(a)) * (CL_MIN_ACTUATOR_DELTA - abs(a)) / 10
-          self.laneChange_angle = self.laneChange_angle -self.laneChange_direction * CL_CORRECTION_FACTOR * c * 10 
+          self.laneChange_angle = self.laneChange_angle -self.laneChange_direction * CL_CORRECTION_FACTOR * c * 10
           self.last10delta_correct(c)
         #print a, c, actuator_delta, self.laneChange_angle
         """
@@ -422,7 +422,7 @@ class ALCAController(object):
           self.laneChange_enabled = 4
           self.laneChange_counter = 1
       # this is the final stage of the ALCAS
-      # this just shows a message that we completed the lane change 
+      # this just shows a message that we completed the lane change
       # CONTROL: during this time we use the actuator angle to steer (OP Control)
       if self.laneChange_enabled == 7:
         if self.laneChange_counter ==1:
@@ -469,7 +469,7 @@ class ALCAController(object):
           self.pid.pos_limit = steers_max
           self.pid.neg_limit = -steers_max
           output_steer = self.pid.update(new_angle, CS.angle_steers , check_saturation=(CS.v_ego > 10), override=CS.steer_override, feedforward=new_angle * (CS.v_ego ** 2), speed=CS.v_ego, deadzone=0.0)
-        else: 
+        else:
           output_steer = actuators.steer
         if self.laneChange_steerByAngle and (not new_ALCA_Enabled) and (cur_time - self.last_time_enabled > WAIT_TIME_AFTER_TURN):
           new_angle = actuators.steer
@@ -481,4 +481,3 @@ class ALCAController(object):
         return [actuators.steer,actuators.steer,False,0]
       else:
         return [actuators.steerAngle,actuators.steer,False,0]
- 
