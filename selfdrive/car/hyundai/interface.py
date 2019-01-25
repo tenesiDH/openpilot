@@ -72,12 +72,12 @@ class CarInterface(object):
 
     ret.steerReactance = 1.0
     ret.steerInductance = 1.2
-    ret.steerResistance = 1.3
+    ret.steerResistance = 1.0
     ret.eonToFront = 0.5
     ret.steerActuatorDelay = 0.10
     ret.steerKf = 0.00006
     ret.steerRateCost = 0.50
-    tire_stiffness_factor = 0.90
+    tire_stiffness_factor = 0.60
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
     ret.steerKpV, ret.steerKiV = [[0.12], [0.06]]
     ret.minSteerSpeed = 0.
@@ -107,7 +107,11 @@ class CarInterface(object):
     elif candidate == CAR.SANTA_FE:  #AWD
       ret.mass = 3982 * CV.LB_TO_KG
       ret.wheelbase = 2.766
-      ret.steerRatio = 13.321 
+      ret.steerRatio = 13.321
+    elif candidate == CAR.UNKNOWN:
+      ret.mass = 1800
+      ret.wheelbase = 2.8
+      ret.steerRatio = 13.0
 
     ret.mass += std_cargo
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
@@ -152,7 +156,7 @@ class CarInterface(object):
     ret.enableCamera = not any(x for x in CAMERA_MSGS if x in fingerprint)
     ret.openpilotLongitudinalControl = True
 
-    ret.steerLimitAlert = False
+    ret.steerLimitAlert = True
     ret.stoppingControl = False
     ret.startAccel = 0.0
 
@@ -180,12 +184,7 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if self.CP.carFingerprint in FEATURES["use_cluster_gears"]:
-      ret.gearShifter = self.CS.gear_shifter_cluster
-    elif self.CP.carFingerprint in FEATURES["use_tcu_gears"]:
-      ret.gearShifter = self.CS.gear_tcu
-    else:
-      ret.gearShifter = self.CS.gear_shifter
+    ret.gearShifter = self.CS.gear_shifter_cluster
 
     # gas pedal
     ret.gas = self.CS.car_gas
@@ -249,7 +248,8 @@ class CarInterface(object):
         events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
-    if ret.gearShifter != 'drive':
+    # Try all 3 gear selector locations, as some cars miss one or 2 of them inconsistently
+    if (ret.gearShifter != 'drive') and (self.CS.gear_tcu != 'drive') and (self.CS.gear_shifter_cluster != 'drive'):
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))

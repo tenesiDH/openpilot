@@ -2,18 +2,18 @@
 //  fingerprint format:  [[bus#, addr, len], ...]
 //  all fingerprints must be matched before forwarding will occur.
 //  do not use addresses above 2047 if you want it to ever match.
-uint16_t candidate_fp[2][20][3] = { 
+uint16_t candidate_fp[2][20][3] = {
   // Hyundai new Giraffe (camera = bus2)
-  { {2,832,8}, {0,339,8},{0,356,4},{0,593,8},{0,608,8},{0,809,8},{0,897,8},{0,902,8},{0,916,8},{0,1056,8},{0,1057,8},{0,1078,4},{0,1170,8},{0,1265,4},{0,1312,8},{0,1345,8},{0,1419,8} },
+  { {2,832,8}, {0,339,8},{0,356,4},{0,593,8},{0,608,8},{0,809,8},{0,897,8},{0,902,8},{0,916,8},{0,1078,4},{0,1170,8},{0,1265,4},{0,1312,8},{0,1345,8},{0,1419,8} },
   // Hyundai old Giraffe (camera = bus1)
-  { {1,832,8}, {0,339,8},{0,356,4},{0,593,8},{0,608,8},{0,809,8},{0,897,8},{0,902,8},{0,916,8},{0,1056,8},{0,1057,8},{0,1078,4},{0,1170,8},{0,1265,4},{0,1312,8},{0,1345,8},{0,1419,8} }
+  { {1,832,8}, {0,339,8},{0,356,4},{0,593,8},{0,608,8},{0,809,8},{0,897,8},{0,902,8},{0,916,8},{0,1078,4},{0,1170,8},{0,1265,4},{0,1312,8},{0,1345,8},{0,1419,8} }
 };
 
 // Candidate Car Forwarding Profiles
 //  forwarding format:   [bus0to, bus1to, bus2to]
 //    array[bus#] = bus# to forward message to (or -1 for no forwarding)
 //  the order of the forwarding profiles must match the candidate_fp order above.
-int forward_profile[2][3] = { 
+int forward_profile[2][3] = {
   // Hyundai new Giraffe (camera = bus2)
   {  2, -1,  0 },
   // Hyundai old Giraffe (camera = bus1)
@@ -26,7 +26,7 @@ int identified_car = -1;
 
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
-  // skip everything if we've already completed fingerprinting 
+  // skip everything if we've already completed fingerprinting
   //   can be extended in the future for fancier forwarding rules based on specific car id
   if (identified_car >= 0) {
     return;
@@ -102,4 +102,3 @@ const safety_hooks forward_hooks = {
   .ignition = default_ign_hook,
   .fwd = forward_fwd_hook,
 };
-

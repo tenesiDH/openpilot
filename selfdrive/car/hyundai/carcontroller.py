@@ -1,8 +1,8 @@
 from selfdrive.car import limit_steer_rate
 from selfdrive.boardd.boardd import can_list_to_can_capnp
-from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
-                                             create_1191, create_1156, \
-                                             create_clu11, create_mdps12
+from selfdrive.car.hyundai.hyundaican import create_lkas11, \
+                                             create_clu11, create_mdps12, \
+                                             learn_checksum
 from selfdrive.car.hyundai.values import Buttons, CAR, FEATURES
 from selfdrive.can.packer import CANPacker
 #from selfdrive.car.modules.ALCA_module import ALCAController
@@ -41,6 +41,7 @@ class CarController(object):
     self.map_data_sock = messaging.sub_sock(context, service_list['liveMapData'].port, conflate=True)
     self.speed_conv = 3.6
     self.speed_adjusted = False
+    self.checksum = "NONE"
 
     #self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
@@ -49,6 +50,11 @@ class CarController(object):
 
     if not self.enable_camera:
       return
+
+    if self.checksum == "NONE":
+        self.checksum = learn_checksum(self.packer, CS.lkas11)
+        if self.checksum == "NONE":
+            return
 
     force_enable = False
 
@@ -113,18 +119,12 @@ class CarController(object):
     self.clu11_cnt = self.cnt % 0x10
     self.mdps12_cnt = self.cnt % 0x100
 
-    if self.camera_disconnected:
-      if (self.cnt % 10) == 0:
-        can_sends.append(create_lkas12())
-      if (self.cnt % 50) == 0:
-        can_sends.append(create_1191())
-      if (self.cnt % 7) == 0:
-        can_sends.append(create_1156())
-
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
-                                   enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), keep_stock=(not self.camera_disconnected)))
+                                   enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
+                                   True, self.checksum))
 
-    can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, CS.camcan))
+    can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, \
+                                    CS.camcan, self.checksum))
 
     if pcm_cancel_cmd and (not force_enable):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, 0))

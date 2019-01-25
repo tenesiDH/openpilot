@@ -1,4 +1,4 @@
-from selfdrive.car.hyundai.values import DBC
+from selfdrive.car.hyundai.values import DBC, STEER_THRESHOLD
 from selfdrive.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
@@ -50,6 +50,8 @@ def get_can_parser(CP):
     ("CF_Clu_InhibitR", "CLU15", 0),
 
     ("CF_Lvr_Gear","LVR12",0),
+    ("CF_Lvr_CruiseSet", "LVR12", 0),
+
     ("CUR_GR", "TCU12",0),
 
     ("ACCEnable", "TCS13", 0),
@@ -76,6 +78,7 @@ def get_can_parser(CP):
     ("VSetDis", "SCC11", 0),
     ("MainMode_ACC", "SCC11", 0),
     ("SCCInfoDisplay", "SCC11", 0),
+    ("TauGapSet", "SCC11", 0),
     ("ACCMode", "SCC12", 1),
 
     ("SAS_Angle", "SAS11", 0),
@@ -95,8 +98,6 @@ def get_can_parser(CP):
     ("EMS12", 100),
     ("CGW1", 10),
     ("WHL_SPD11", 50),
-    ("SCC11", 50),
-    ("SCC12", 50),
     ("SAS11", 100)
   ]
 
@@ -125,7 +126,9 @@ def get_camera_parser(CP):
     ("CF_Lkas_Unknown1", "LKAS11", 0),
     ("CF_Lkas_Unknown2", "LKAS11", 0),
     ("CF_Lkas_ActToi", "LKAS11", 0),
-    ("CR_Lkas_StrToqReq", "LKAS11", 0)
+    ("CR_Lkas_StrToqReq", "LKAS11", 0),
+    ("CF_Lkas_MsgCount", "LKAS11", 0),
+    ("CF_Lkas_Chksum", "LKAS11", 0)
   ]
 
   checks = [("LKAS11", 100)]
@@ -140,7 +143,7 @@ class CarState(object):
                       ["","",[""]], \
                       ["cam","CAM",[""]], \
                       ["alwon", "MAD",[""]], \
-                      ["sound", "SND", [""]]]
+                      ["", "", [""]]]
 
     # ALCA PARAMS
     # max REAL delta angle for correction vs actuator
@@ -205,6 +208,7 @@ class CarState(object):
     self.left_blinker_flash = 0
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
+    self.has_scc = False
 
     #BB UIEvents
     self.UE = UIEvents(self)
@@ -222,6 +226,9 @@ class CarState(object):
     # copy can_valid
     self.can_valid = cp.can_valid
 
+    if (cp.vl["SCC11"]['TauGapSet'] > 0):
+        self.has_scc = True
+
     # update prevs, update must run once per Loop
     self.prev_left_blinker_on = self.left_blinker_on
     self.prev_right_blinker_on = self.right_blinker_on
@@ -234,9 +241,13 @@ class CarState(object):
 
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
     self.main_on = True
-    self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
-      (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
-    self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
+    if self.has_scc:
+        self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
+            (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
+        self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
+    else:
+        self.acc_active = (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0)
+        self.acc_active_real = self.acc_active
     self.pcm_acc_status = int(self.acc_active)
 
     # calc best v_ego estimate, by averaging two opposite corners
@@ -256,9 +267,10 @@ class CarState(object):
     v_ego_x = self.v_ego_kf.update(self.v_wheel)
     self.v_ego = float(v_ego_x[0])
     self.a_ego = float(v_ego_x[1])
-    is_set_speed_in_mph = int(cp.vl["CLU11"]["CF_Clu_SPEED_UNIT"])
+    is_set_speed_in_mph = int(cp.vl["CLU11"]['CF_Clu_SPEED_UNIT'])
     speed_conv = CV.MPH_TO_MS if is_set_speed_in_mph else CV.KPH_TO_MS
-    self.cruise_set_speed = cp.vl["SCC11"]['VSetDis'] * speed_conv
+
+    self.cruise_set_speed = (cp.vl["SCC11"]['VSetDis'] * speed_conv) if self.has_scc else (cp.vl["LVR12"]["CF_Lvr_CruiseSet"] * speed_conv)
     self.standstill = not self.v_wheel > 0.1
 
     self.angle_steers = cp.vl["SAS11"]['SAS_Angle']
@@ -269,18 +281,18 @@ class CarState(object):
     self.left_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigLh']
     self.right_blinker_on = True if (cp.vl["CGW1"]['CF_Gway_TSigRHSw'] == True) or (cp.vl["CGW1"]['CF_Gway_TurnSigRh'] == True) else False
     self.right_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigRh']
-    self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > 1.0
+    self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > STEER_THRESHOLD
     self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_error = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["MDPS12"]['CR_Mdps_StrColTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
-    self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4.
+    self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if self.has_scc else False
 
     self.user_brake = 0
 
     self.brake_lights = bool(self.brake_pressed)
-    if (cp.vl["TCS13"]["DriverOverride"] == 0 and cp.vl["TCS13"]['ACC_REQ'] == 1):
+    if (cp.vl["TCS13"]["DriverOverride"] == 0) and (cp.vl["TCS13"]['ACC_REQ'] == 1 if self.has_scc else True):
       self.pedal_gas = 0
     else:
       self.pedal_gas = cp.vl["EMS12"]['TPS']
@@ -323,7 +335,6 @@ class CarState(object):
         self.gear_tcu = "unknown"
 
     # save the entire LKAS11, CLU11 and MDPS12
-    #print cp_cam.can_valid, cp_cam2.can_valid
     if cp_cam.can_valid == True:
       self.lkas11 = cp_cam.vl["LKAS11"]
       self.camcan = 2
