@@ -124,16 +124,20 @@ def learn_checksum(packer, lkas11):
     dat = packer.make_can_msg("LKAS11", 0, values)[2]
 
     # CRC Checksum
-    if hyundai_checksum(dat[:6] + dat[7]) == lkas11["CF_Lkas_Chksum"]:
-        return "crc8"
+    crc = hyundai_checksum(dat[:6] + dat[7])
 
     dat = [ord(i) for i in dat]
     # Checksum of first 6 Bytes
-    if (sum(dat[:6]) % 256) == lkas11["CF_Lkas_Chksum"]:
-        return "6B"
-
+    cs6b = (sum(dat[:6]) % 256)
     # Checksum of first 6 Bytes and last Byte
-    if ((sum(dat[:6]) + dat[7]) % 256) == lkas11["CF_Lkas_Chksum"]:
-        return "7B"
+    cs7b = ((sum(dat[:6]) + dat[7]) % 256)
+
+    if cs6b != crc and cs7b != crc and cs6b != cs7b:
+        if crc == lkas11["CF_Lkas_Chksum"]:
+            return "crc8"
+        elif cs6b == lkas11["CF_Lkas_Chksum"]:
+            return "6B"
+        elif cs7b == lkas11["CF_Lkas_Chksum"]:
+            return "7B"
 
     return "NONE"
