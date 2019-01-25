@@ -5,7 +5,7 @@ This is the "Community Port" for Kia and Hyundai.
 
 The port was started by Andrew Frahn of Emmertex.  
 @ku7 on commaai Slack, and ku7 tech on youtube
-https://www.youtube.com/channel/UCXmUBvIuFLjLRuJ0mX298Ng
+https://www.youtube.com/c/ku7tech
 Please support the port, and if you can, please help support me!
 
 
@@ -16,7 +16,7 @@ What is special about this port?
 It's unfettered awesome with no corporate fears!
 Where non standard features were made by someone other than me @ku7, they are credited with there Slack Username
 
-Based on OpenPilot 0.5.7 from comma.ai
+Based on OpenPilot 0.5.8 from comma.ai
 
 - Do not disable when Accelerator is depressed (MAD button*)
 - Disable auto-steering on blinker, but leave OP engaged
@@ -28,16 +28,18 @@ Based on OpenPilot 0.5.7 from comma.ai
 - - And with Blind Spot Detection for any Kia/Hyundai with it
 - Panda auto-detects Camera Pinout
 - - And now so does OP!  LKAS on CAN 2 or CAN 3, it doesn't matter!
-- No need for giraffe switches, If no EON, then forwards stock camera (Thanks @JamesT)
+- No need for giraffe switches, If no EON, then forwards stock camera (Thanks @JamesT-1)
 - Dashcam Recorder (Thanks @pjlao307)
 - Full Time Stock LKAS passthrough*
 - - Including High Beam Assist and Automatic Emergency Braking, Blind Spot, Traffic Sign Detection, and more.
 - - This includes Land Departure Warning, but stock LKAS must be enabled for this.
 - Optional Dynamic Stock and OP Steering.  The moment OP isn't steering, it switched back to Stock (LKAS button*)*
-- ** Temporarily removed ** CLI Based Real Time Tuning (Thanks @JamesT)
-- Unsupported cars default to Kia Sorento.  This should work for most cars.
+- ** Temporarily removed ** CLI Based Real Time Tuning (Thanks @JamesT-1)
+- Unsupported cars default to A special 'unsupported car'.  This should work for most cars.
 - Cruise Setpoint set from OSM Speed Limit*
 - Compress when not uploading
+- Automatically detects CAN Specifics (checksum, SCC, so on)
+- New Lateral Control from @Gernby
 - Probably other things I have forgotten
 
 * Has known issues
@@ -52,29 +54,12 @@ Known issues
 - Touch Events don't work properly in the new NEOS, changes are needed
 - Panda Safety doesn't really exist
 
-
-A note on visiond
-------
-
-There are mixed opinions about which visiond is best.
-Until 0.5.4 wiggly, every new version was always undeniably better.
-
-
-But then 0.5.4 Wiggle dropped, and this incredible visiond could drive down roads
-never before possible.  Take corners never before possible.  But is was a little crazy for some.
-A quick release 0.5.4 non wiggle was released.   It was like its predecessors, but better.
-
-
-since then, debate has ensued.
-so, choose your version, v0.5.7 is default.
-
-
-
 Contributing
 ------
 
-We welcome both pull requests and issues on
-[github](http://github.com/commaai/openpilot). Bug fixes and new car ports encouraged.
+We welcome both pull requests and issues on [github](http://github.com/commaai/openpilot). Bug fixes and new car ports encouraged.
+
+We also have a [bounty program](https://comma.ai/bounties.html).
 
 Want to get paid to work on openpilot? [comma.ai is hiring](https://comma.ai/jobs/)
 
