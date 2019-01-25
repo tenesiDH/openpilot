@@ -299,7 +299,7 @@ def state_control(plan, CS, CP, state, events, v_cruise_kph, v_cruise_kph_last, 
 
 def data_send(perception_state, plan, plan_ts, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk, carstate,
               carcontrol, live100, livempc, AM, driver_status,
-              LaC, LoC, angle_offset, passive):
+              LaC, LoC, angle_offset, passive, start_time):
   """Send actuators and hud commands to the car, send live100 and MPC logging"""
 
   CC = car.CarControl.new_message()
@@ -320,6 +320,8 @@ def data_send(perception_state, plan, plan_ts, CS, CI, CP, VM, state, events, ac
     CC.hudControl.speedVisible = isEnabled(state)
     CC.hudControl.lanesVisible = isEnabled(state)
     CC.hudControl.leadVisible = plan.hasLead
+    CC.hudControl.rightLaneVisible = plan.hasRightLane
+    CC.hudControl.leftLaneVisible = plan.hasLeftLane
     CC.hudControl.visualAlert = AM.visual_alert
     CC.hudControl.audibleAlert = AM.audible_alert
 
@@ -365,7 +367,11 @@ def data_send(perception_state, plan, plan_ts, CS, CI, CP, VM, state, events, ac
     "jerkFactor": float(plan.jerkFactor),
     "angleOffset": float(angle_offset),
     "gpsPlannerActive": plan.gpsPlannerActive,
+    "vCurvature": plan.vCurvature,
+    "decelForTurn": plan.decelForTurn,
     "cumLagMs": -rk.remaining * 1000.,
+    "startMonoTime": start_time,
+    "mapValid": plan.mapValid,
   }
   live100.send(dat.to_bytes())
 
@@ -487,6 +493,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
   prof = Profiler(False)  # off by default
 
   while True:
+    start_time = int(sec_since_boot() * 1e9)
     prof.checkpoint("Ratekeeper", ignore=True)
 
     # Sample data and compute car events
@@ -511,7 +518,7 @@ def controlsd_thread(gctx=None, rate=100, default_bias=0.):
 
     # Publish data
     CC = data_send(PL.perception_state, plan, plan_ts, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk, carstate, carcontrol,
-                   live100, livempc, AM, driver_status, LaC, LoC, angle_offset, passive)
+                   live100, livempc, AM, driver_status, LaC, LoC, angle_offset, passive, start_time)
     prof.checkpoint("Sent")
 
     rk.keep_time()  # Run at 100Hz
