@@ -61,11 +61,6 @@ class LatControl(object):
       self.ff_rate_factor = 0.0
     self.last_cloudlog_t = 0.0
     self.setup_mpc(CP.steerRateCost)
-    self.smooth_factor = CP.steerInductance * 2.0 * CP.steerActuatorDelay / _DT    # Multiplier for inductive component (feed forward)
-    self.projection_factor = CP.steerReactance * 5.0 * _DT                         # Mutiplier for reactive component (PI)
-    self.accel_limit = 2.0 / CP.steerResistance                                    # Desired acceleration limit to prevent "whip steer" (resistive component)
-    self.ff_angle_factor = 0.5                                                     # Kf multiplier for angle-based feed forward
-    self.ff_rate_factor = 5.0                                                      # Kf multiplier for rate-based feed forward
     self.prev_angle_rate = 0
     self.feed_forward = 0.0
     self.steerActuatorDelay = CP.steerActuatorDelay
