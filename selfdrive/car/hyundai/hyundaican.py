@@ -41,15 +41,15 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, \
 
   if checksum == "crc8":
     dat = dat[:6] + dat[7]
-    checksum = hyundai_checksum(dat)
+    checksumc = hyundai_checksum(dat)
   elif checksum == "6B":
     dat = [ord(i) for i in dat]
-    checksum = sum(dat[:6]) % 256
+    checksumc = sum(dat[:6]) % 256
   elif checksum == "7B":
     dat = [ord(i) for i in dat]
-    checksum = (sum(dat[:6]) + dat[7]) % 256
+    checksumc = (sum(dat[:6]) + dat[7]) % 256
 
-  values["CF_Lkas_Chksum"] = checksum
+  values["CF_Lkas_Chksum"] = checksumc
 
   return packer.make_can_msg("LKAS11", 0, values)
 
