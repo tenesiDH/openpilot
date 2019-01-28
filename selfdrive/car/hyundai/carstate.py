@@ -143,7 +143,7 @@ class CarState(object):
                       ["","",[""]], \
                       ["cam","CAM",[""]], \
                       ["alwon", "MAD",[""]], \
-                      ["", "", [""]]]
+                      ["sound", "SND", [""]]]
 
     # ALCA PARAMS
     # max REAL delta angle for correction vs actuator
