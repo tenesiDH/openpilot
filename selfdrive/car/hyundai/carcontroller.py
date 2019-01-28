@@ -8,6 +8,7 @@ from selfdrive.can.packer import CANPacker
 #from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
 import zmq
+import math
 from selfdrive.services import service_list
 import selfdrive.messaging as messaging
 from common.params import Params
@@ -133,11 +134,12 @@ class CarController(object):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0))
 
 
+
     # Speed Limit Related Stuff  Lot's of comments for others to understand!
     # Run this twice a second
     if (self.cnt % 50) == 0:
       # If Not Enabled, or cruise not set, allow auto speed adjustment again
-      if not enabled or not CS.acc_active_real:
+      if not (enabled and CS.acc_active_real and self.params.get("LimitSetSpeed") == "1" and self.params.get("SpeedLimitOffset") is not None):
           self.speed_adjusted = False
       # Attempt to read the speed limit from zmq
       map_data = messaging.recv_one_or_none(self.map_data_sock)
@@ -150,11 +152,17 @@ class CarController(object):
           self.speed_conv = CV.MS_TO_MPH
 
         # If the speed limit is valid
-        if map_data.liveMapData.speedLimitValid == True and map_data.liveMapData.speedLimit > 0:
+        if map_data.liveMapData.speedLimitValid:
           last_speed = self.map_speed
           # Get the speed limit, and add the offset to it,
-          self.map_speed = (map_data.liveMapData.speedLimit + float(self.params.get("SpeedLimitOffset"))) * self.speed_conv
-          # Compare it to the last time the speed was read.  If it is different, set the flag to allow it to auto set out speed
+          v_speed = (map_data.liveMapData.speedLimit + float(self.params.get("SpeedLimitOffset")))
+          ## Stolen curvature code from planner.py, and updated it for us
+          v_curvature = 45.0
+          if map_data.liveMapData.curvatureValid:
+            v_curvature = math.sqrt(1.85 / max(1e-4, abs(map_data.liveMapData.curvature)))
+          # Use the minimum between Speed Limit and Curve Limit, and convert it as needed
+          self.map_speed = min(v_speed, v_curvature) * self.speed_conv
+          # Compare it to the last time the speed was read.  If it is different, set the flag to allow it to auto set our speed
           if last_speed != self.map_speed:
               self.speed_adjusted = False
           print self.map_speed
@@ -176,6 +184,7 @@ class CarController(object):
         # If nothing needed adjusting, then the speed has been set, which will lock out this control
         else:
             self.speed_adjusted = True
+
 
     ### Send messages to canbus
     sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
