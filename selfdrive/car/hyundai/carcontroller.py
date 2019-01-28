@@ -20,6 +20,7 @@ class SteerLimitParams:
   STEER_MAX = 255   # >255 results in frozen torque, >409 results in no torque
   STEER_DELTA_UP = 3
   STEER_DELTA_DOWN = 5
+  DIVIDER = 2.0     # Must be > 1.0
 
 class CarController(object):
 
@@ -95,7 +96,7 @@ class CarController(object):
     #  apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
 
     # Limit steer rate for safety
-    apply_steer = limit_steer_rate(apply_steer, self.apply_steer_last, SteerLimitParams)
+    apply_steer = limit_steer_rate(apply_steer, self.apply_steer_last, SteerLimitParams, CS.steer_torque_driver)
 
     #if alca_enabled:
     #  self.turning_signal_timer = 0
@@ -132,7 +133,6 @@ class CarController(object):
     elif CS.stopped and (self.cnt - self.last_resume_cnt) > 5:
       self.last_resume_cnt = self.cnt
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0))
-
 
 
     # Speed Limit Related Stuff  Lot's of comments for others to understand!
@@ -184,7 +184,6 @@ class CarController(object):
         # If nothing needed adjusting, then the speed has been set, which will lock out this control
         else:
             self.speed_adjusted = True
-
 
     ### Send messages to canbus
     sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
