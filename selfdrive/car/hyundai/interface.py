@@ -91,7 +91,6 @@ class CarInterface(object):
       ret.mass = 2060
       ret.wheelbase = 3.01
       ret.steerRatio = 12.069
-      # ret.minSteerSpeed = 38 * CV.MPH_TO_MS - Using Soft Disable
     elif candidate == CAR.KIA_OPTIMA:
       ret.mass = 3558 * CV.LB_TO_KG
       ret.wheelbase = 2.80
@@ -249,7 +248,7 @@ class CarInterface(object):
     else:
       self.can_invalid_count = 0
     # Try all 3 gear selector locations, as some cars miss one or 2 of them inconsistently
-    if (ret.gearShifter != 'drive') and (self.CS.gear_tcu != 'drive') and (self.CS.gear_shifter_cluster != 'drive'):
+    if (ret.gearShifter != 'drive') and (ret.CS.gear_tcu != 'drive') and (ret.CS.gear_shifter_cluster != 'drive'):
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
