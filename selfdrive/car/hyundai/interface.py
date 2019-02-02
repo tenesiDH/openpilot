@@ -248,7 +248,7 @@ class CarInterface(object):
     else:
       self.can_invalid_count = 0
     # Try all 3 gear selector locations, as some cars miss one or 2 of them inconsistently
-    if (self.CS.gearShifter != 'drive') and (self.CS.gear_tcu != 'drive') and (self.CS.gear_shifter_cluster != 'drive'):
+    if (self.CS.gear_shifter != 'drive') and (self.CS.gear_tcu != 'drive') and (self.CS.gear_shifter_cluster != 'drive'):
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
