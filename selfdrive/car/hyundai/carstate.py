@@ -242,12 +242,12 @@ class CarState(object):
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
     self.main_on = True
     if self.has_scc:
-        self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
+      self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
             (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
-        self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
+      self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
     else:
-        self.acc_active = (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0)
-        self.acc_active_real = self.acc_active
+      self.acc_active = (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0)
+      self.acc_active_real = self.acc_active
     self.pcm_acc_status = int(self.acc_active)
 
     # calc best v_ego estimate, by averaging two opposite corners
@@ -326,13 +326,13 @@ class CarState(object):
     # Gear Selecton via TCU12
     gear2 = cp.vl["TCU12"]["CUR_GR"]
     if gear2 == 0:
-        self.gear_tcu = "park"
+      self.gear_tcu = "park"
     elif gear2 == 14:
-        self.gear_tcu = "reverse"
+      self.gear_tcu = "reverse"
     elif gear2 > 0 and gear2 < 14:    # unaware of anything over 8 currently
-        self.gear_tcu = "drive"
+      self.gear_tcu = "drive"
     else:
-        self.gear_tcu = "unknown"
+      self.gear_tcu = "unknown"
 
     # save the entire LKAS11, CLU11 and MDPS12
     if cp_cam.can_valid == True:

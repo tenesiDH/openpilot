@@ -97,28 +97,28 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11, camcan, checksum
 def learn_checksum(packer, lkas11):
     # Learn checksum used
     values = {
-        "CF_Lkas_Icon": lkas11["CF_Lkas_Icon"],
-        "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"],
-        "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"],
-        "CF_Lkas_LdwsLHWarning": lkas11["CF_Lkas_LdwsLHWarning"],
-        "CF_Lkas_LdwsRHWarning": lkas11["CF_Lkas_LdwsRHWarning"],
-        "CF_Lkas_HbaLamp": lkas11["CF_Lkas_HbaLamp"],
-        "CF_Lkas_FcwBasReq": lkas11["CF_Lkas_FcwBasReq"],
-        "CR_Lkas_StrToqReq": lkas11["CR_Lkas_StrToqReq"],
-        "CF_Lkas_ActToi": lkas11["CF_Lkas_ActToi"],
-        "CF_Lkas_ToiFlt": lkas11["CF_Lkas_ToiFlt"],
-        "CF_Lkas_HbaSysState": lkas11["CF_Lkas_HbaSysState"],
-        "CF_Lkas_FcwOpt": lkas11["CF_Lkas_FcwOpt"],
-        "CF_Lkas_HbaOpt": lkas11["CF_Lkas_HbaOpt"],
-        "CF_Lkas_MsgCount": lkas11["CF_Lkas_MsgCount"],
-        "CF_Lkas_FcwSysState": lkas11["CF_Lkas_FcwSysState"],
-        "CF_Lkas_FcwCollisionWarning": lkas11["CF_Lkas_FcwCollisionWarning"],
-        "CF_Lkas_FusionState": lkas11["CF_Lkas_FusionState"],
-        "CF_Lkas_Chksum": lkas11["CF_Lkas_Chksum"],
-        "CF_Lkas_FcwOpt_USM": lkas11["CF_Lkas_FcwOpt_USM"],
-        "CF_Lkas_LdwsOpt_USM": lkas11["CF_Lkas_LdwsOpt_USM"],
-        "CF_Lkas_Unknown1": lkas11["CF_Lkas_Unknown1"],
-        "CF_Lkas_Unknown2": lkas11["CF_Lkas_Unknown2"],
+      "CF_Lkas_Icon": lkas11["CF_Lkas_Icon"],
+      "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"],
+      "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"],
+      "CF_Lkas_LdwsLHWarning": lkas11["CF_Lkas_LdwsLHWarning"],
+      "CF_Lkas_LdwsRHWarning": lkas11["CF_Lkas_LdwsRHWarning"],
+      "CF_Lkas_HbaLamp": lkas11["CF_Lkas_HbaLamp"],
+      "CF_Lkas_FcwBasReq": lkas11["CF_Lkas_FcwBasReq"],
+      "CR_Lkas_StrToqReq": lkas11["CR_Lkas_StrToqReq"],
+      "CF_Lkas_ActToi": lkas11["CF_Lkas_ActToi"],
+      "CF_Lkas_ToiFlt": lkas11["CF_Lkas_ToiFlt"],
+      "CF_Lkas_HbaSysState": lkas11["CF_Lkas_HbaSysState"],
+      "CF_Lkas_FcwOpt": lkas11["CF_Lkas_FcwOpt"],
+      "CF_Lkas_HbaOpt": lkas11["CF_Lkas_HbaOpt"],
+      "CF_Lkas_MsgCount": lkas11["CF_Lkas_MsgCount"],
+      "CF_Lkas_FcwSysState": lkas11["CF_Lkas_FcwSysState"],
+      "CF_Lkas_FcwCollisionWarning": lkas11["CF_Lkas_FcwCollisionWarning"],
+      "CF_Lkas_FusionState": lkas11["CF_Lkas_FusionState"],
+      "CF_Lkas_Chksum": lkas11["CF_Lkas_Chksum"],
+      "CF_Lkas_FcwOpt_USM": lkas11["CF_Lkas_FcwOpt_USM"],
+      "CF_Lkas_LdwsOpt_USM": lkas11["CF_Lkas_LdwsOpt_USM"],
+      "CF_Lkas_Unknown1": lkas11["CF_Lkas_Unknown1"],
+      "CF_Lkas_Unknown2": lkas11["CF_Lkas_Unknown2"],
     }
 
     dat = packer.make_can_msg("LKAS11", 0, values)[2]
@@ -133,11 +133,11 @@ def learn_checksum(packer, lkas11):
     cs7b = ((sum(dat[:6]) + dat[7]) % 256)
 
     if cs6b != crc and cs7b != crc and cs6b != cs7b:
-        if crc == lkas11["CF_Lkas_Chksum"]:
-            return "crc8"
-        elif cs6b == lkas11["CF_Lkas_Chksum"]:
-            return "6B"
-        elif cs7b == lkas11["CF_Lkas_Chksum"]:
-            return "7B"
+      if crc == lkas11["CF_Lkas_Chksum"]:
+        return "crc8"
+      elif cs6b == lkas11["CF_Lkas_Chksum"]:
+        return "6B"
+      elif cs7b == lkas11["CF_Lkas_Chksum"]:
+        return "7B"
 
     return "NONE"
