@@ -30,9 +30,8 @@ selfdrive/proclogd/proclogd
 selfdrive/ui/ui
 selfdrive/test/tests/plant/out
 /src/
-
+openpilot_tools
 one
-
+selfdrive/visiond/visiond
 .vscode/*.json
 launch_chffrplus.sh
-
