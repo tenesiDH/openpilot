@@ -54,9 +54,9 @@ class CarController(object):
       return
 
     if self.checksum == "NONE":
-        self.checksum = learn_checksum(self.packer, CS.lkas11)
-        if self.checksum == "NONE":
-            return
+      self.checksum = learn_checksum(self.packer, CS.lkas11)
+      if self.checksum == "NONE":
+        return
 
     force_enable = False
 
@@ -66,8 +66,8 @@ class CarController(object):
       force_enable = True
 
     if (self.car_fingerprint in FEATURES["soft_disable"] and CS.v_wheel < 16.8):
-        enabled = False
-        force_enable = False
+      enabled = False
+      force_enable = False
 
 
     if (CS.left_blinker_on == 1 or CS.right_blinker_on == 1):
@@ -139,38 +139,38 @@ class CarController(object):
     # Run this twice a second
     if (self.cnt % 50) == 0:
       if self.params.get("LimitSetSpeed") == "1" and self.params.get("SpeedLimitOffset") is not None:
-          # If Not Enabled, or cruise not set, allow auto speed adjustment again
-          if not (enabled and CS.acc_active_real):
-              self.speed_adjusted = False
-          # Attempt to read the speed limit from zmq
-          map_data = messaging.recv_one_or_none(self.map_data_sock)
-          # If we got a message
-          if map_data != None:
-            # See if we use Metric or dead kings ligaments for measurements, and set a variable to the conversion value
-            if bool(self.params.get("IsMetric")):
-              self.speed_conv = CV.MS_TO_KPH
-            else:
-              self.speed_conv = CV.MS_TO_MPH
+        # If Not Enabled, or cruise not set, allow auto speed adjustment again
+        if not (enabled and CS.acc_active_real):
+          self.speed_adjusted = False
+        # Attempt to read the speed limit from zmq
+        map_data = messaging.recv_one_or_none(self.map_data_sock)
+        # If we got a message
+        if map_data != None:
+          # See if we use Metric or dead kings ligaments for measurements, and set a variable to the conversion value
+          if bool(self.params.get("IsMetric")):
+            self.speed_conv = CV.MS_TO_KPH
+          else:
+            self.speed_conv = CV.MS_TO_MPH
 
-            # If the speed limit is valid
-            if map_data.liveMapData.speedLimitValid:
-              last_speed = self.map_speed
-              # Get the speed limit, and add the offset to it,
-              v_speed = (map_data.liveMapData.speedLimit + float(self.params.get("SpeedLimitOffset")))
-              ## Stolen curvature code from planner.py, and updated it for us
-              v_curvature = 45.0
-              if map_data.liveMapData.curvatureValid:
-                v_curvature = math.sqrt(1.85 / max(1e-4, abs(map_data.liveMapData.curvature)))
-              # Use the minimum between Speed Limit and Curve Limit, and convert it as needed
-              self.map_speed = min(v_speed, v_curvature) * self.speed_conv
-              # Compare it to the last time the speed was read.  If it is different, set the flag to allow it to auto set our speed
-              if last_speed != self.map_speed:
-                  self.speed_adjusted = False
-              print self.map_speed
-            else:
-              # If it is not valid, set the flag so the cruise speed won't be changed.
-              self.map_speed = 0
-              self.speed_adjusted = True
+          # If the speed limit is valid
+          if map_data.liveMapData.speedLimitValid:
+            last_speed = self.map_speed
+            # Get the speed limit, and add the offset to it,
+            v_speed = (map_data.liveMapData.speedLimit + float(self.params.get("SpeedLimitOffset")))
+            ## Stolen curvature code from planner.py, and updated it for us
+            v_curvature = 45.0
+            if map_data.liveMapData.curvatureValid:
+              v_curvature = math.sqrt(1.85 / max(1e-4, abs(map_data.liveMapData.curvature)))
+            # Use the minimum between Speed Limit and Curve Limit, and convert it as needed
+            self.map_speed = min(v_speed, v_curvature) * self.speed_conv
+            # Compare it to the last time the speed was read.  If it is different, set the flag to allow it to auto set our speed
+            if last_speed != self.map_speed:
+              self.speed_adjusted = False
+            print self.map_speed
+          else:
+            # If it is not valid, set the flag so the cruise speed won't be changed.
+            self.map_speed = 0
+            self.speed_adjusted = True
       else:
         self.speed_adjusted = True
 
@@ -180,14 +180,14 @@ class CarController(object):
     # Do the spamming 10 times a second, we might get from 0 to 10 successful
     # Only do this if we have not yet set the cruise speed
     if CS.acc_active_real and not self.speed_adjusted and self.map_speed > (8.5 * self.speed_conv) and (self.cnt % 9 == 0 or self.cnt % 9 == 1):
-        # Use some tolerance because of Floats being what they are...
-        if (CS.cruise_set_speed * self.speed_conv) > (self.map_speed * 1.005):
-            can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.SET_DECEL, (1 if self.cnt % 9 == 1 else 0)))
-        elif (CS.cruise_set_speed * self.speed_conv) < (self.map_speed / 1.005):
-            can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, (1 if self.cnt % 9 == 1 else 0)))
-        # If nothing needed adjusting, then the speed has been set, which will lock out this control
-        else:
-            self.speed_adjusted = True
+      # Use some tolerance because of Floats being what they are...
+      if (CS.cruise_set_speed * self.speed_conv) > (self.map_speed * 1.005):
+        can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.SET_DECEL, (1 if self.cnt % 9 == 1 else 0)))
+      elif (CS.cruise_set_speed * self.speed_conv) < (self.map_speed / 1.005):
+        can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, (1 if self.cnt % 9 == 1 else 0)))
+      # If nothing needed adjusting, then the speed has been set, which will lock out this control
+      else:
+        self.speed_adjusted = True
 
     ### Send messages to canbus
     sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
