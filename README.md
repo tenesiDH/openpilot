@@ -16,8 +16,9 @@ What is special about this port?
 It's unfettered awesome with no corporate fears!
 Where non standard features were made by someone other than me @ku7, they are credited with there Slack Username
 
-Based on OpenPilot 0.5.8 from comma.ai
+Based on OpenPilot 0.5.9 from comma.ai
 
+- Auto-Port almost all Hyundai/Kia/Genesis
 - Do not disable when Accelerator is depressed (MAD button*)
 - Disable auto-steering on blinker, but leave OP engaged
 - - Disabled on first blink, and stays disabled until 1 second of no blinking.
