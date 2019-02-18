@@ -6,10 +6,10 @@ _K_CURV_V = [1., 0.6]
 _K_CURV_BP = [0., 0.002]
 
 # lane width http://safety.fhwa.dot.gov/geometric/pubs/mitigationstrategies/chapter3/3_lanewidth.cfm
-_LANE_WIDTH_V = [2.7, 3.0, 3.2, 3.4]
+_LANE_WIDTH_V = [3., 3.8]
 
 # break points of speed
-_LANE_WIDTH_BP = [0., 19., 26., 30.]
+_LANE_WIDTH_BP = [0., 31.]
 
 
 def calc_d_lookahead(v_ego, d_poly):
