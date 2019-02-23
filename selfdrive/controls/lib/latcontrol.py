@@ -17,6 +17,7 @@ class LatControl(object):
                             k_f=CP.steerKf, pos_limit=1.0)
     self.last_cloudlog_t = 0.0
     self.angle_steers_des = 0.
+    self.sat_time = 0.0
 
   def reset(self):
     self.pid.reset()
@@ -42,5 +43,21 @@ class LatControl(object):
       output_steer = self.pid.update(self.angle_steers_des, angle_steers, check_saturation=(v_ego > 10), override=steer_override,
                                      feedforward=steer_feedforward, speed=v_ego, deadzone=deadzone)
 
-    self.sat_flag = self.pid.saturated
+    # Reset sat_flat always, set it only if needed
+    self.sat_flag = False
+
+    # If PID is saturated, set time which it was saturated
+    if self.pid.saturated and self.sat_time < 0.5:
+      self.sat_time = sec_since_boot()
+
+    # To save cycles, nest in sat_time check
+    if self.sat_time > 0.5:
+      # If its been saturated for 1.5 seconds then set flag
+      if (sec_since_boot() - self.sat_time) > 0.7:
+        self.sat_flag = True
+
+      # If it is no longer saturated, clear the sat flag and timer
+      if not self.pid.saturated:
+        self.sat_time = 0.0
+
     return output_steer, float(self.angle_steers_des)
