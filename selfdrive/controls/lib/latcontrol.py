@@ -1,5 +1,6 @@
 from selfdrive.controls.lib.pid import PIController
 from common.numpy_fast import interp
+from common.realtime import sec_since_boot
 from cereal import car
 
 _DT = 0.01    # 100Hz
