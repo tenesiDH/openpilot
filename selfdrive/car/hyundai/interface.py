@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from cereal import car, log
+from cereal import car
 from common.realtime import sec_since_boot
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
@@ -287,7 +287,7 @@ class CarInterface(object):
 
     return ret.as_reader()
 
-  def apply(self, c, perception_state=log.Live20Data.new_message()):
+  def apply(self, c):
 
     hud_alert = get_hud_alerts(c.hudControl.visualAlert, c.hudControl.audibleAlert)
 

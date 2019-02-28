@@ -146,7 +146,7 @@ class CarController(object):
         map_data = messaging.recv_one_or_none(self.map_data_sock)
         # If we got a message
         if map_data != None:
-          # See if we use Metric or dead kings ligaments for measurements, and set a variable to the conversion value
+          # See if we use Metric or dead kings extremeties for measurements, and set a variable to the conversion value
           if bool(self.params.get("IsMetric")):
             self.speed_conv = CV.MS_TO_KPH
           else:
@@ -166,7 +166,6 @@ class CarController(object):
             # Compare it to the last time the speed was read.  If it is different, set the flag to allow it to auto set our speed
             if last_speed != self.map_speed:
               self.speed_adjusted = False
-            print self.map_speed
           else:
             # If it is not valid, set the flag so the cruise speed won't be changed.
             self.map_speed = 0
