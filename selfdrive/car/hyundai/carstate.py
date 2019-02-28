@@ -329,7 +329,7 @@ class CarState(object):
       self.gear_tcu = "park"
     elif gear2 == 14:
       self.gear_tcu = "reverse"
-    elif gear2 > 0 and gear2 < 14:    # unaware of anything over 8 currently
+    elif gear2 > 0 and gear2 < 9:    # unaware of anything over 8 currently
       self.gear_tcu = "drive"
     else:
       self.gear_tcu = "unknown"

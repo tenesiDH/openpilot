@@ -252,7 +252,7 @@ class Way:
 
     if 'maxspeed:advisory' in tags:
       adv_speed = tags['maxspeed:advisory']
-
+      adv_speed = parse_speed_unit(adv_speed)
     return adv_speed
 
   def on_way(self, lat, lon, heading, points=None):
