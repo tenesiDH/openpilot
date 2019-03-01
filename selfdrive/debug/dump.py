@@ -87,9 +87,11 @@ if __name__ == "__main__":
         elif values:
           print "logMonotime = {}".format(evt.logMonoTime)
           for value in values:
-            item = evt
-            for key in value:
-              item = getattr(item, key)
-            print "{} = {}".format(".".join(value), item)
+            if hasattr(evt, value[0]):
+              item = evt
+              for key in value:
+                item = getattr(item, key)
+              print "{} = {}".format(".".join(value), item)
+          print ""
         else:
           print evt
