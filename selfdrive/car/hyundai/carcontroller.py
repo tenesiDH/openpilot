@@ -188,6 +188,9 @@ class CarController(object):
       else:
         self.speed_adjusted = True
 
+    ### If Driver Overrides using accelerator (or gas for the antiquated), cancel auto speed adjustment
+    if CS.pedal_gas:
+      self.speed_adjusted = True
     ### Send messages to canbus
     sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
 
