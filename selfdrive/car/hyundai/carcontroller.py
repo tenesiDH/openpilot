@@ -162,7 +162,8 @@ class CarController(object):
             if map_data.liveMapData.curvatureValid:
               v_curvature = math.sqrt(1.85 / max(1e-4, abs(map_data.liveMapData.curvature)))
             # Use the minimum between Speed Limit and Curve Limit, and convert it as needed
-            self.map_speed = min(v_speed, v_curvature) * self.speed_conv
+            #self.map_speed = min(v_speed, v_curvature) * self.speed_conv
+            self.map_speed = v_speed * self.speed_conv
             # Compare it to the last time the speed was read.  If it is different, set the flag to allow it to auto set our speed
             if last_speed != self.map_speed:
               self.speed_adjusted = False
@@ -188,6 +189,9 @@ class CarController(object):
       else:
         self.speed_adjusted = True
 
+    ### If Driver Overrides using accelerator (or gas for the antiquated), cancel auto speed adjustment
+    if CS.pedal_gas:
+      self.speed_adjusted = True
     ### Send messages to canbus
     sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
 
