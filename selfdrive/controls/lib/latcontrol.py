@@ -16,6 +16,8 @@ class LatControl(object):
     self.last_cloudlog_t = 0.0
     self.dampened_angle_steers = 0.
     self.angle_steers_des = 0.
+    self.sat_time = 0
+
 
   def reset(self):
     self.pid.reset()
