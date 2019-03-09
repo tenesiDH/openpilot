@@ -1,10 +1,7 @@
 from selfdrive.controls.lib.pid import PIController
 from common.numpy_fast import interp
-from common.realtime import sec_since_boot
 from cereal import car
-
-_DT = 0.01    # 100Hz
-_DT_MPC = 0.05  # 20Hz
+from common.realtime import sec_since_boot
 
 
 def get_steer_max(CP, v_ego):
@@ -17,23 +14,20 @@ class LatControl(object):
                             (CP.steerKiBP, CP.steerKiV),
                             k_f=CP.steerKf, pos_limit=1.0)
     self.last_cloudlog_t = 0.0
+    self.dampened_angle_steers = 0.
     self.angle_steers_des = 0.
-    self.sat_time = 0.0
 
   def reset(self):
     self.pid.reset()
 
-  def update(self, active, v_ego, angle_steers, steer_override, CP, VM, path_plan):
+  def update(self, active, v_ego, angle_steers, angle_rate, steer_override, CP, VM, path_plan):
     if v_ego < 0.3 or not active:
       output_steer = 0.0
       self.pid.reset()
     else:
-      # TODO: ideally we should interp, but for tuning reasons we keep the mpc solution
-      # constant for 0.05s.
-      #dt = min(cur_time - self.angle_steers_des_time, _DT_MPC + _DT) + _DT  # no greater than dt mpc + dt, to prevent too high extraps
-      #self.angle_steers_des = self.angle_steers_des_prev + (dt / _DT_MPC) * (self.angle_steers_des_mpc - self.angle_steers_des_prev)
-      self.angle_steers_des = path_plan.angleSteers  # get from MPC/PathPlanner
-
+      self.angle_steers_des = interp(sec_since_boot(), path_plan.mpcTimes, path_plan.mpcAngles)
+      projected_angle_steers = angle_steers + 0.5 * angle_rate
+      self.dampened_angle_steers = (49. * self.dampened_angle_steers + projected_angle_steers) / 50.
       steers_max = get_steer_max(CP, v_ego)
       self.pid.pos_limit = steers_max
       self.pid.neg_limit = -steers_max
@@ -41,7 +35,7 @@ class LatControl(object):
       if CP.steerControlType == car.CarParams.SteerControlType.torque:
         steer_feedforward *= v_ego**2  # proportional to realigning tire momentum (~ lateral accel)
       deadzone = 0.0
-      output_steer = self.pid.update(self.angle_steers_des, angle_steers, check_saturation=(v_ego > 10), override=steer_override,
+      output_steer = self.pid.update(self.angle_steers_des, self.dampened_angle_steers, check_saturation=(v_ego > 10), override=steer_override,
                                      feedforward=steer_feedforward, speed=v_ego, deadzone=deadzone)
 
     # Reset sat_flat always, set it only if needed
