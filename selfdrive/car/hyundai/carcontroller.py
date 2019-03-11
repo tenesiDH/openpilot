@@ -44,6 +44,7 @@ class CarController(object):
     self.speed_conv = 3.6
     self.speed_adjusted = False
     self.checksum = "NONE"
+    self.checksum_learn_cnt = 0
 
     #self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
@@ -53,10 +54,28 @@ class CarController(object):
     if not self.enable_camera:
       return
 
-    if self.checksum == "NONE":
-      self.checksum = learn_checksum(self.packer, CS.lkas11)
+    if CS.camcan > 0:
       if self.checksum == "NONE":
-        return
+        self.checksum = learn_checksum(self.packer, CS.lkas11)
+        print ("Discovered Checksum", self.checksum)
+        if self.checksum == "NONE":
+          return
+    elif CS.steer_error == 1:
+      if self.checksum_learn_cnt > 200:
+        self.checksum_learn_cnt = 0
+        if self.checksum == "NONE":
+          print ("Testing 6B Checksum")
+          self.checksum == "6B"
+        elif self.checksum == "6B":
+          print ("Testing 7B Checksum")
+          self.checksum == "7B"
+        elif self.checksum == "7B":
+          print ("Testing CRC8 Checksum")
+          self.checksum == "crc8"
+        else:
+          self.checksum == "NONE"
+      else:
+        self.checksum_learn_cnt += 1
 
     force_enable = False
 
@@ -123,9 +142,10 @@ class CarController(object):
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
                                    enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
-                                   True, self.checksum))
+                                   (False if CS.camcan == 0 else True), self.checksum))
 
-    can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, \
+    if CS.camcan > 0:
+      can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, \
                                     CS.camcan, self.checksum))
 
     if pcm_cancel_cmd and (not force_enable):

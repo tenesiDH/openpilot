@@ -338,9 +338,11 @@ class CarState(object):
     if cp_cam.can_valid == True:
       self.lkas11 = cp_cam.vl["LKAS11"]
       self.camcan = 2
-    else:
+    elif cp_cam2.can_valid == True:
       self.lkas11 = cp_cam2.vl["LKAS11"]
       self.camcan = 1
+    else:
+      self.camcan = 0
 
     self.clu11 = cp.vl["CLU11"]
     self.mdps12 = cp.vl["MDPS12"]

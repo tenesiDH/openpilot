@@ -11,6 +11,9 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, \
   if enabled:
     use_stock = False
 
+  if keep_stock == False:
+    use_stock = False
+
   values = {
     "CF_Lkas_Icon": 2 if (car_fingerprint in FEATURES["icon_basic"]) else \
         (lkas11["CF_Lkas_Icon"] if use_stock else (2 if enabled else 0)),
