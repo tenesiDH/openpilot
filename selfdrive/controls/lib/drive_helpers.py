@@ -60,7 +60,7 @@ def learn_angle_offset(lateral_control, v_ego, angle_offset, c_poly, c_prob, ang
   # while being in the middle of the lane
   min_offset = -5.  # deg
   max_offset = 5.  # deg
-  alpha = 1. / 36000.  # correct by 1 deg in 2 mins, at 30m/s, with 50cm of error, at 20Hz
+  alpha = 1. / 3600.  # correct by 1 deg in 2 mins, at 30m/s, with 50cm of error, at 20Hz
   min_learn_speed = 1.
 
   # learn less at low speed or when turning
