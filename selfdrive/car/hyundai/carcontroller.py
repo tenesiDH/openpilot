@@ -192,6 +192,10 @@ class CarController(object):
         self.en_spas = 5
       else:
         self.en_spas = 3
+      
+      if not self.lkas or not enabled:
+        self.apply_steer_ang = CS.mdps11_strang
+        self.en_spas = 3
 
       self.mdps11_stat_last = CS.mdps11_stat
       self.en_cnt += 1
