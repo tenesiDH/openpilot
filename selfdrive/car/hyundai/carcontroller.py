@@ -5,7 +5,7 @@ from selfdrive.car.hyundai.hyundaican import create_lkas11, \
                                              learn_checksum, create_spas11, create_spas12
 from selfdrive.car.hyundai.values import Buttons, CAR, FEATURES
 from selfdrive.can.packer import CANPacker
-#from selfdrive.car.modules.ALCA_module import ALCAController
+from selfdrive.car.modules.ALCA_module import ALCAController
 import numpy as np
 import zmq
 import math
@@ -49,10 +49,10 @@ class CarController(object):
     self.en_cnt = 0
     self.apply_steer_ang = 0.0
     self.en_spas = 3
-    self.mdps11_stat_last
+    self.mdps11_stat_last = 0
     self.lkas = False
 
-    #self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
+    self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
 
   def update(self, sendcan, enabled, CS, actuators, pcm_cancel_cmd, hud_alert):
