@@ -2,7 +2,7 @@ from selfdrive.car import limit_steer_rate
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.hyundai.hyundaican import create_lkas11, \
                                              create_clu11, create_mdps12, \
-                                             learn_checksum
+                                             learn_checksum, create_spas11, create_spas12
 from selfdrive.car.hyundai.values import Buttons, CAR, FEATURES
 from selfdrive.can.packer import CANPacker
 #from selfdrive.car.modules.ALCA_module import ALCAController
@@ -20,6 +20,7 @@ class SteerLimitParams:
   STEER_MAX = 255   # >255 results in frozen torque, >409 results in no torque
   STEER_DELTA_UP = 3
   STEER_DELTA_DOWN = 5
+  STEER_ANG_MAX = 20
   DIVIDER = 2.0     # Must be > 1.0
 
 class CarController(object):
@@ -45,6 +46,11 @@ class CarController(object):
     self.speed_adjusted = False
     self.checksum = "NONE"
     self.checksum_learn_cnt = 0
+    self.en_cnt = 0
+    self.apply_steer_ang = 0.0
+    self.en_spas = 3
+    self.mdps11_stat_last
+    self.lkas = False
 
     #self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
@@ -100,25 +106,26 @@ class CarController(object):
 
     # Get the angle from ALCA.
     alca_enabled = False
-    #alca_steer = 0.
-    #alca_angle = 0.
-    #turn_signal_needed = 0
+    alca_steer = 0.
+    alca_angle = 0.
+    turn_signal_needed = 0
     # Update ALCA status and custom button every 0.1 sec.
-    #if self.ALCA.pid == None:
-    #  self.ALCA.set_pid(CS)
-    #self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
+    if self.ALCA.pid == None:
+      self.ALCA.set_pid(CS)
+    self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
-    #alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
-    #if force_enable and not CS.acc_active:
-    apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
-    #else:
-    #  apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
+    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
+    if force_enable and not CS.acc_active:
+      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
+    else:
+      apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
+    apply_steer_ang_req = np.clip(actuators.steerAngle, -1*(SteerLimitParams.STEER_ANG_MAX), SteerLimitParams.STEER_ANG_MAX)
 
     # Limit steer rate for safety
     apply_steer = limit_steer_rate(apply_steer, self.apply_steer_last, SteerLimitParams, CS.steer_torque_driver)
 
-    #if alca_enabled:
-    #  self.turning_signal_timer = 0
+    if alca_enabled:
+      self.turning_signal_timer = 0
 
     if self.turning_signal_timer > 0:
       self.turning_signal_timer = self.turning_signal_timer - 1
@@ -126,9 +133,28 @@ class CarController(object):
     else:
       turning_signal = 0
 
+    # Use LKAS or SPAS
+    if CS.mdps11_stat == 7 or CS.v_wheel > 2.7:
+      self.lkas = True
+    elif CS.v_wheel < 0.1:
+      self.lkas = False
+
+
     # If ALCA is disabled, and turning indicators are turned on, we do not want OP to steer,
     if not enabled or (turning_signal and not alca_enabled):
-      apply_steer = 0
+      if self.lkas:
+        apply_steer = 0
+      else:
+        self.apply_steer_ang = 0.0
+        self.en_cnt = 0
+
+    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.4 and self.en_spas == 5 and enabled:
+      if apply_steer_ang_req > self.apply_steer_ang:
+        self.apply_steer_ang += 0.3
+      else:
+        self.apply_steer_ang -= 0.3
+    else:
+      self.apply_steer_ang = CS.mdps11_strang
 
     steer_req = 1 if enabled else 0
 
@@ -139,15 +165,43 @@ class CarController(object):
     self.lkas11_cnt = self.cnt % 0x10
     self.clu11_cnt = self.cnt % 0x10
     self.mdps12_cnt = self.cnt % 0x100
+    self.spas_cnt = self.cnt % 0x200
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
-                                   enabled, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
+                                   enabled if self.lkas else False, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
                                    (False if CS.camcan == 0 else True), self.checksum))
 
     if CS.camcan > 0:
       can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, \
                                     CS.camcan, self.checksum))
 
+    # SPAS11 50hz
+    if (self.cnt % 2) == 0:
+      if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
+        self.en_spas == 7
+        self.en_cnt = 0
+
+      if self.en_spas == 7 and self.en_cnt >= 7:
+        self.en_spas = 3
+        self.en_cnt = 0
+
+      if self.en_cnt < 7 and enabled and not self.lkas:
+        self.en_cnt += 1
+        self.en_spas = 4
+      elif self.en_cnt >= 7 and enabled and not self.lkas:
+        self.en_spas = 5
+      else:
+        self.en_spas = 3
+
+      self.mdps11_stat_last = CS.mdps11_stat
+      self.en_cnt += 1
+      can_sends.append(create_spas11(self.packer, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang))
+    
+    # SPAS12 20Hz
+    if (self.cnt % 5) == 0:
+      can_sends.append(create_spas12(self.packer))
+
+    # Force Disable
     if pcm_cancel_cmd and (not force_enable):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, 0))
     elif CS.stopped and (self.cnt - self.last_resume_cnt) > 5:

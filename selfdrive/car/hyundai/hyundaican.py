@@ -145,3 +145,50 @@ def learn_checksum(packer, lkas11):
         return "7B"
 
     return "NONE"
+
+def create_spas11(packer, cnt, en_spas, apply_steer):
+  values = {
+    "CF_Spas_Stat": en_spas,
+    "CF_Spas_TestMode": 0,
+    "CR_Spas_StrAngCmd": apply_steer,
+    "CF_Spas_BeepAlarm": 0,
+    "CF_Spas_Mode_Seq": 2,
+    "CF_Spas_AliveCnt": cnt,
+    "CF_Spas_Chksum": 0,
+    "CF_Spas_PasVol": 0,
+  }
+
+  dat = packer.make_can_msg("SPAS11", 0, values)[2]
+  dat = [ord(i) for i in dat]
+  values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
+
+  return packer.make_can_msg("SPAS11", 0, values)
+
+def create_spas12(packer):
+  values = {
+    "CF_Spas_HMI_Stat": 0,
+    "CF_Spas_Disp": 0,
+    "CF_Spas_FIL_Ind": 0,
+    "CF_Spas_FIR_Ind": 0,
+    "CF_Spas_FOL_Ind": 0,
+    "CF_Spas_FOR_Ind": 0,
+    "CF_Spas_VolDown": 0,
+    "CF_Spas_RIL_Ind": 0,
+    "CF_Spas_RIR_Ind": 0,
+    "CF_Spas_FLS_Alarm": 0,
+    "CF_Spas_ROL_Ind": 0,
+    "CF_Spas_ROR_Ind": 0,
+    "CF_Spas_FCS_Alarm": 0,
+    "CF_Spas_FI_Ind": 0,
+    "CF_Spas_RI_Ind": 0,
+    "CF_Spas_FRS_Alarm": 0,
+    "CF_Spas_FR_Alarm": 0,
+    "CF_Spas_RR_Alarm": 0,
+    "CF_Spas_BEEP_Alarm": 0,
+    "CF_Spas_StatAlarm": 0,
+    "CF_Spas_RLS_Alarm": 0,
+    "CF_Spas_RCS_Alarm": 0,
+    "CF_Spas_RRS_Alarm": 0,
+  }
+
+  return packer.make_can_msg("SPAS12", 0, values)

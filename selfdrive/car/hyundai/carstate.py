@@ -63,6 +63,8 @@ def get_can_parser(CP):
 
     ("CF_Lvr_GearInf", "LVR11", 0),        #Transmission Gear (0 = N or P, 1-8 = Fwd, 14 = Rev)
 
+    ("CR_Mdps_StrAng", "MDPS11", 0),
+    ("CF_Mdps_Stat", "MDPS11", 0),
     ("CR_Mdps_StrColTq", "MDPS12", 0),
     ("CF_Mdps_Def", "MDPS12", 0),
     ("CF_Mdps_ToiActive", "MDPS12", 0),
@@ -140,7 +142,7 @@ class CarState(object):
     #labels for buttons
     self.btns_init = [["","",["","",""]], \
                       ["","",[""]], \
-                      ["","",[""]], \
+                      ["alca","ALC",["MadMax", "Normal", "Wifey"]], \
                       ["cam","CAM",[""]], \
                       ["alwon", "MAD",[""]], \
                       ["sound", "SND", [""]]]
@@ -288,6 +290,8 @@ class CarState(object):
     self.steer_torque_driver = cp.vl["MDPS12"]['CR_Mdps_StrColTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
     self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if self.has_scc else False
+    self.mdps11_strang = cp.vl["MDPS11"]["CR_Mdps_StrAng"]
+    self.mdps11_stat = cp.vl["MDPS11"]["CF_Mdps_Stat"]
 
     self.user_brake = 0
 
