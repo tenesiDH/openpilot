@@ -146,7 +146,7 @@ def learn_checksum(packer, lkas11):
 
     return "NONE"
 
-def create_spas11(packer, cnt, en_spas, apply_steer):
+def create_spas11(packer, cnt, en_spas, apply_steer, checksum):
   values = {
     "CF_Spas_Stat": en_spas,
     "CF_Spas_TestMode": 0,
@@ -159,8 +159,12 @@ def create_spas11(packer, cnt, en_spas, apply_steer):
   }
 
   dat = packer.make_can_msg("SPAS11", 0, values)[2]
-  dat = [ord(i) for i in dat]
-  values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
+  if checksum == "crc8":
+    dat = dat[:6] + dat[7]
+    values["CF_Spas_Chksum"] = hyundai_checksum(dat)
+  else:
+    dat = [ord(i) for i in dat]
+    values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
 
   return packer.make_can_msg("SPAS11", 0, values)
 
