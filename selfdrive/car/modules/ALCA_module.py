@@ -270,7 +270,7 @@ class ALCAController(object):
 
     # lane change in process
     if self.laneChange_enabled > 1:
-      if (CS.steer_override or (CS.v_ego < cl_min_v)):
+      if (CS.driver_steer_override or (CS.v_ego < cl_min_v)):
         CS.UE.custom_alert_message(4,"Auto Lane Change Canceled! (u)",200,3)
         self.laneChange_cancelled = True
         self.laneChange_cancelled_counter = 200
@@ -468,7 +468,7 @@ class ALCAController(object):
           steers_max = interp(CS.v_ego, CS.CP.steerMaxBP, CS.CP.steerMaxV)
           self.pid.pos_limit = steers_max
           self.pid.neg_limit = -steers_max
-          output_steer = self.pid.update(new_angle, CS.angle_steers , check_saturation=(CS.v_ego > 10), override=CS.steer_override, feedforward=new_angle * (CS.v_ego ** 2), speed=CS.v_ego, deadzone=0.0)
+          output_steer = self.pid.update(new_angle, CS.angle_steers , check_saturation=(CS.v_ego > 10), override=CS.driver_steer_override, feedforward=new_angle * (CS.v_ego ** 2), speed=CS.v_ego, deadzone=0.0)
         else:
           output_steer = actuators.steer
         if self.laneChange_steerByAngle and (not new_ALCA_Enabled) and (cur_time - self.last_time_enabled > WAIT_TIME_AFTER_TURN):

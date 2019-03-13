@@ -20,7 +20,8 @@ class SteerLimitParams:
   STEER_MAX = 255   # >255 results in frozen torque, >409 results in no torque
   STEER_DELTA_UP = 3
   STEER_DELTA_DOWN = 5
-  STEER_ANG_MAX = 20
+  STEER_ANG_MAX = 20          # SPAS Max Angle
+  STEER_ANG_MAX_RATE = 0.4    # SPAS Degrees per ms
   DIVIDER = 2.0     # Must be > 1.0
 
 class CarController(object):
@@ -119,7 +120,17 @@ class CarController(object):
       apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     else:
       apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
+
+    # SPAS limit angle extremes for safety
     apply_steer_ang_req = np.clip(actuators.steerAngle, -1*(SteerLimitParams.STEER_ANG_MAX), SteerLimitParams.STEER_ANG_MAX)
+    # SPAS limit angle rate for safety
+    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.6:
+      if apply_steer_ang_req > self.apply_steer_ang:
+        self.apply_steer_ang += 0.5
+      else:
+        self.apply_steer_ang -= 0.5
+    else:
+      self.apply_steer_ang = apply_steer_ang_req
 
     # Limit steer rate for safety
     apply_steer = limit_steer_rate(apply_steer, self.apply_steer_last, SteerLimitParams, CS.steer_torque_driver)
@@ -148,15 +159,7 @@ class CarController(object):
         self.apply_steer_ang = 0.0
         self.en_cnt = 0
 
-    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.4 and self.en_spas == 5 and enabled:
-      if apply_steer_ang_req > self.apply_steer_ang:
-        self.apply_steer_ang += 0.3
-      else:
-        self.apply_steer_ang -= 0.3
-    else:
-      self.apply_steer_ang = CS.mdps11_strang
-
-    steer_req = 1 if enabled else 0
+    steer_req = 1 if enabled and self.lkas else 0
 
     self.apply_steer_last = apply_steer
 
@@ -181,21 +184,19 @@ class CarController(object):
         self.en_spas == 7
         self.en_cnt = 0
 
-      if self.en_spas == 7 and self.en_cnt >= 7:
+      if self.en_spas == 7 and self.en_cnt >= 8:
         self.en_spas = 3
         self.en_cnt = 0
 
-      if self.en_cnt < 7 and enabled and not self.lkas:
-        self.en_cnt += 1
+      if self.en_cnt < 8 and enabled and not self.lkas:
         self.en_spas = 4
-      elif self.en_cnt >= 7 and enabled and not self.lkas:
+      elif self.en_cnt >= 8 and enabled and not self.lkas:
         self.en_spas = 5
-      else:
-        self.en_spas = 3
       
-      if not self.lkas or not enabled:
+      if self.lkas or not enabled:
         self.apply_steer_ang = CS.mdps11_strang
         self.en_spas = 3
+        self.en_cnt = 0
 
       self.mdps11_stat_last = CS.mdps11_stat
       self.en_cnt += 1
