@@ -52,6 +52,7 @@ class CarController(object):
     self.en_spas = 3
     self.mdps11_stat_last = 0
     self.lkas = False
+    self.spas_present = True
 
     self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
@@ -149,7 +150,8 @@ class CarController(object):
       self.lkas = True
     elif CS.v_wheel < 0.1:
       self.lkas = False
-
+    if self.spas_present:
+      self.lkas = False
 
     # If ALCA is disabled, and turning indicators are turned on, we do not want OP to steer,
     if not enabled or (turning_signal and not alca_enabled):
@@ -171,15 +173,15 @@ class CarController(object):
     self.spas_cnt = self.cnt % 0x200
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt, \
-                                   enabled if self.lkas else False, CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
-                                   (False if CS.camcan == 0 else True), self.checksum))
+                                  enabled if self.lkas else False, False if CS.camcan == 0 else CS.lkas11, hud_alert, (CS.cstm_btns.get_button_status("cam") > 0), \
+                                  (False if CS.camcan == 0 else True), self.checksum))
 
     if CS.camcan > 0:
       can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11, \
                                     CS.camcan, self.checksum))
 
     # SPAS11 50hz
-    if (self.cnt % 2) == 0:
+    if (self.cnt % 2) == 0 and not self.spas_present:
       if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
         self.en_spas == 7
         self.en_cnt = 0
@@ -203,7 +205,7 @@ class CarController(object):
       can_sends.append(create_spas11(self.packer, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang, self.checksum))
     
     # SPAS12 20Hz
-    if (self.cnt % 5) == 0:
+    if (self.cnt % 5) == 0 and not self.spas_present:
       can_sends.append(create_spas12(self.packer))
 
     # Force Disable
