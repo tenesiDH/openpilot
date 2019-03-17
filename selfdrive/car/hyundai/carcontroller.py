@@ -151,7 +151,7 @@ class CarController(object):
     elif CS.v_wheel < 0.1:
       self.lkas = False
     if self.spas_present:
-      self.lkas = False
+      self.lkas = True
 
     # If ALCA is disabled, and turning indicators are turned on, we do not want OP to steer,
     if not enabled or (turning_signal and not alca_enabled):
