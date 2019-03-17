@@ -160,7 +160,7 @@ def create_spas11(packer, cnt, en_spas, apply_steer, checksum):
 
   dat = packer.make_can_msg("SPAS11", 0, values)[2]
   if checksum == "crc8":
-    dat = dat[:6] + dat[7]
+    dat = dat[:6]
     values["CF_Spas_Chksum"] = hyundai_checksum(dat)
   else:
     dat = [ord(i) for i in dat]
