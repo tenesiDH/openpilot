@@ -52,7 +52,7 @@ class CarController(object):
     self.en_spas = 3
     self.mdps11_stat_last = 0
     self.lkas = False
-    self.spas_present = True
+    self.spas_present = True # TODO Make Automatic
 
     self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
@@ -117,7 +117,7 @@ class CarController(object):
     self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
 
     alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, self.cnt, actuators)
-    if force_enable and not CS.acc_active:
+    if force_enable and not CS.acc_active and False:  # TODO Tune and enable
       apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     else:
       apply_steer = int(round(alca_steer * SteerLimitParams.STEER_MAX))
