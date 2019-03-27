@@ -143,6 +143,8 @@ def learn_checksum(packer, lkas11):
         return "6B"
       elif cs7b == lkas11["CF_Lkas_Chksum"]:
         return "7B"
+      else:
+        return "crc8"
 
     return "NONE"
 
