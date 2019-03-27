@@ -5,7 +5,7 @@ const int HYUNDAI_MAX_RATE_UP = 6;
 const int HYUNDAI_MAX_RATE_DOWN = 8;
 
 int hyundai_camera_detected = 0;
-int hyundai_camera_bus = 1;
+int hyundai_camera_bus = 0;
 int hyundai_giraffe_switch_2 = 0;          // is giraffe switch 2 high?
 int hyundai_rt_torque_last = 0;
 int hyundai_cruise_engaged_last = 0;
@@ -30,8 +30,7 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     // update array of samples
     update_sample(&hyundai_torque_driver, torque_driver_new);
   }
-  
-  controls_allowed = 1;
+
   // check if stock camera ECU is still online
   if (bus == 0 && addr == 832) {
     hyundai_camera_detected = 1;
@@ -57,6 +56,7 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
     hyundai_cruise_engaged_last = cruise_engaged;
   } */
+  controls_allowed = 1;
 
   // 832 is lkas cmd. If it is on camera bus, then giraffe switch 2 is high
   if ((to_push->RIR>>21) == 832 && (bus == hyundai_camera_bus) && (hyundai_camera_bus != 0)) {
