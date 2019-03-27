@@ -1,1 +1,1 @@
-#define COMMA_VERSION "0.5.9.6-lkas"
+#define COMMA_VERSION "0.5.10.1-ku7"
