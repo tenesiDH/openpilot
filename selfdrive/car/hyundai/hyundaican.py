@@ -11,11 +11,14 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, \
   if enabled:
     use_stock = False
 
+  if keep_stock == False:
+    use_stock = False
+
   values = {
     "CF_Lkas_Icon": 2 if (car_fingerprint in FEATURES["icon_basic"]) else \
-        (lkas11["CF_Lkas_Icon"] if use_stock else (2 if enabled else 0)),
+        (lkas11["CF_Lkas_Icon"] if use_stock else (3 if enabled else 1)),
     "CF_Lkas_LdwsSysState": lkas11["CF_Lkas_LdwsSysState"] if use_stock else \
-        (4 if enabled else lkas11["CF_Lkas_LdwsSysState"]),
+        (3 if steer_req else 1),
     "CF_Lkas_SysWarning": lkas11["CF_Lkas_SysWarning"] if use_stock else hud_alert,
     "CF_Lkas_LdwsLHWarning": lkas11["CF_Lkas_LdwsLHWarning"] if keep_stock else 0,
     "CF_Lkas_LdwsRHWarning": lkas11["CF_Lkas_LdwsRHWarning"] if keep_stock else 0,
@@ -33,7 +36,7 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, \
     "CF_Lkas_FusionState": lkas11["CF_Lkas_FusionState"] if keep_stock else 0,
     "CF_Lkas_Chksum": 0,
     "CF_Lkas_FcwOpt_USM": lkas11["CF_Lkas_FcwOpt_USM"] if keep_stock else (2 if enabled else 1),
-    "CF_Lkas_LdwsOpt_USM": lkas11["CF_Lkas_LdwsOpt_USM"] if keep_stock else 3,
+    "CF_Lkas_LdwsOpt_USM": (3 if lkas11["CF_Lkas_LdwsOpt_USM"] == 4 else lkas11["CF_Lkas_LdwsOpt_USM"]) if keep_stock else 3,
     "CF_Lkas_Unknown1": lkas11["CF_Lkas_Unknown1"] if keep_stock else 0,
     "CF_Lkas_Unknown2": lkas11["CF_Lkas_Unknown2"] if keep_stock else 0,
   }
@@ -140,5 +143,58 @@ def learn_checksum(packer, lkas11):
         return "6B"
       elif cs7b == lkas11["CF_Lkas_Chksum"]:
         return "7B"
+      else:
+        return "crc8"
 
     return "NONE"
+
+def create_spas11(packer, cnt, en_spas, apply_steer, checksum):
+  values = {
+    "CF_Spas_Stat": en_spas,
+    "CF_Spas_TestMode": 0,
+    "CR_Spas_StrAngCmd": apply_steer,
+    "CF_Spas_BeepAlarm": 0,
+    "CF_Spas_Mode_Seq": 2,
+    "CF_Spas_AliveCnt": cnt,
+    "CF_Spas_Chksum": 0,
+    "CF_Spas_PasVol": 0,
+  }
+
+  dat = packer.make_can_msg("SPAS11", 0, values)[2]
+  if checksum == "crc8":
+    dat = dat[:6]
+    values["CF_Spas_Chksum"] = hyundai_checksum(dat)
+  else:
+    dat = [ord(i) for i in dat]
+    values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
+
+  return packer.make_can_msg("SPAS11", 0, values)
+
+def create_spas12(packer):
+  values = {
+    "CF_Spas_HMI_Stat": 0,
+    "CF_Spas_Disp": 0,
+    "CF_Spas_FIL_Ind": 0,
+    "CF_Spas_FIR_Ind": 0,
+    "CF_Spas_FOL_Ind": 0,
+    "CF_Spas_FOR_Ind": 0,
+    "CF_Spas_VolDown": 0,
+    "CF_Spas_RIL_Ind": 0,
+    "CF_Spas_RIR_Ind": 0,
+    "CF_Spas_FLS_Alarm": 0,
+    "CF_Spas_ROL_Ind": 0,
+    "CF_Spas_ROR_Ind": 0,
+    "CF_Spas_FCS_Alarm": 0,
+    "CF_Spas_FI_Ind": 0,
+    "CF_Spas_RI_Ind": 0,
+    "CF_Spas_FRS_Alarm": 0,
+    "CF_Spas_FR_Alarm": 0,
+    "CF_Spas_RR_Alarm": 0,
+    "CF_Spas_BEEP_Alarm": 0,
+    "CF_Spas_StatAlarm": 0,
+    "CF_Spas_RLS_Alarm": 0,
+    "CF_Spas_RCS_Alarm": 0,
+    "CF_Spas_RRS_Alarm": 0,
+  }
+
+  return packer.make_can_msg("SPAS12", 0, values)
