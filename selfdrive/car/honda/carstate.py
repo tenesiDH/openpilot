@@ -358,6 +358,7 @@ class CarState(object):
     if self.cruise_setting == 3:
       if cp.vl["SCM_BUTTONS"]["CRUISE_SETTING"] == 0:
         self.trMode = (self.trMode + 1 ) % 4
+        self.kegman = kegman_conf()
         self.kegman.conf['lastTrMode'] = str(self.trMode)   # write last distance bar setting to file
         self.kegman.write_config(self.kegman.conf) 
         
