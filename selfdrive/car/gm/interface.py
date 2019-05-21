@@ -5,8 +5,9 @@ from common.numpy_fast import interp
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import create_event, EventTypes as ET
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.car.gm.values import DBC, CAR, STOCK_CONTROL_MSGS, AUDIO_HUD, SUPERCRUISE_CARS
-from selfdrive.car.gm.carstate import CarState, CruiseButtons, get_powertrain_can_parser, get_chassis_can_parser
+from selfdrive.car.gm.values import DBC, CAR, STOCK_CONTROL_MSGS, AUDIO_HUD, \
+                                    SUPERCRUISE_CARS, AccState
+from selfdrive.car.gm.carstate import CarState, CruiseButtons, get_powertrain_can_parser
 
 try:
   from selfdrive.car.gm.carcontroller import CarController
@@ -108,7 +109,7 @@ class CarInterface(object):
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
       ret.minEnableSpeed = 8 * CV.MPH_TO_MS
       # kg of standard extra cargo to count for driver, gas, etc...
-      ret.mass = 1607 + std_cargo
+      ret.mass = 1607. + std_cargo
       ret.safetyModel = car.CarParams.SafetyModels.gm
       ret.wheelbase = 2.69
       ret.steerRatio = 15.7
@@ -118,7 +119,7 @@ class CarInterface(object):
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
       ret.minEnableSpeed = 18 * CV.MPH_TO_MS
-      ret.mass = 1496 + std_cargo
+      ret.mass = 1496. + std_cargo
       ret.safetyModel = car.CarParams.SafetyModels.gm
       ret.wheelbase = 2.83
       ret.steerRatio = 15.8
@@ -127,7 +128,7 @@ class CarInterface(object):
 
     elif candidate == CAR.HOLDEN_ASTRA:
       # kg of standard extra cargo to count for driver, gas, etc...
-      ret.mass = 1363 + std_cargo
+      ret.mass = 1363. + std_cargo
       ret.wheelbase = 2.662
       # Remaining parameters copied from Volt for now
       ret.centerToFront = ret.wheelbase * 0.4
@@ -137,7 +138,7 @@ class CarInterface(object):
       ret.steerRatioRear = 0.
 
     elif candidate == CAR.ACADIA:
-      ret.minEnableSpeed = -1 # engage speed is decided by pcm
+      ret.minEnableSpeed = -1. # engage speed is decided by pcm
       ret.mass = 4353. * CV.LB_TO_KG + std_cargo
       ret.safetyModel = car.CarParams.SafetyModels.gm
       ret.wheelbase = 2.86
@@ -156,7 +157,7 @@ class CarInterface(object):
 
     elif candidate == CAR.CADILLAC_ATS:
       ret.minEnableSpeed = 18 * CV.MPH_TO_MS
-      ret.mass = 1601 + std_cargo
+      ret.mass = 1601. + std_cargo
       ret.safetyModel = car.CarParams.SafetyModels.gm
       ret.wheelbase = 2.78
       ret.steerRatio = 15.3
@@ -165,7 +166,7 @@ class CarInterface(object):
 
     elif candidate == CAR.CADILLAC_CT6:
       # engage speed is decided by pcm
-      ret.minEnableSpeed = -1
+      ret.minEnableSpeed = -1.
       # kg of standard extra cargo to count for driver, gas, etc...
       ret.mass = 4016. * CV.LB_TO_KG + std_cargo
       ret.safetyModel = car.CarParams.SafetyModels.cadillac
@@ -200,25 +201,24 @@ class CarInterface(object):
                             ret.mass / mass_civic * \
                             (ret.centerToFront / ret.wheelbase) / (centerToFront_civic / wheelbase_civic)
 
-
     # same tuning for Volt and CT6 for now
-    ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
-    ret.steerKpV, ret.steerKiV = [[0.2], [0.00]]
-    ret.steerKf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
+    ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
+    ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
 
-    ret.steerMaxBP = [0.] # m/s
+    ret.steerMaxBP = [0.]  # m/s
     ret.steerMaxV = [1.]
     ret.gasMaxBP = [0.]
     ret.gasMaxV = [0.5]
     ret.brakeMaxBP = [0.]
     ret.brakeMaxV = [1.]
-    ret.longPidDeadzoneBP = [0.]
-    ret.longPidDeadzoneV = [0.]
 
-    ret.longitudinalKpBP = [0., 5., 35.]
-    ret.longitudinalKpV = [3.3, 2.425, 2.2]
-    ret.longitudinalKiBP = [0., 35.]
-    ret.longitudinalKiV = [0.18, 0.36]
+    ret.longitudinalTuning.kpBP = [5., 35.]
+    ret.longitudinalTuning.kpV = [2.4, 1.5]
+    ret.longitudinalTuning.kiBP = [0.]
+    ret.longitudinalTuning.kiV = [0.36]
+    ret.longitudinalTuning.deadzoneBP = [0.]
+    ret.longitudinalTuning.deadzoneV = [0.]
 
     ret.steerLimitAlert = True
 
@@ -271,7 +271,7 @@ class CarInterface(object):
 
     # cruise state
     ret.cruiseState.available = bool(self.CS.main_on)
-    cruiseEnabled = self.CS.pcm_acc_status != 0
+    cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
     ret.cruiseState.enabled = cruiseEnabled
     ret.cruiseState.standstill = False
 
@@ -374,6 +374,10 @@ class CarInterface(object):
         events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
       if ret.gasPressed:
         events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
+      if ret.cruiseState.standstill:
+        events.append(create_event('resumeRequired', [ET.WARNING]))
+      if self.CS.pcm_acc_status == AccState.FAULTED:
+        events.append(create_event('controlsFailed', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
 
       # handle button presses
       for b in ret.buttonEvents:
