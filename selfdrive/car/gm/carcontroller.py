@@ -152,8 +152,10 @@ class CarController(object):
       # Send dashboard UI commands (ACC status), 25hz
       follow_level = CS.get_follow_level()
       if (frame % 4) == 0:
-        send_fcw = 0x3 if self.fcw_count > 0 else 0
-        self.fcw_count -= 1
+        send_fcw = 0
+        if self.fcw_count > 0:
+          self.fcw_count -= 1
+          send_fcw = 0x3
         can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, canbus.powertrain, enabled, 
                                                            hud_v_cruise * CV.MS_TO_KPH, hud_show_car, follow_level, send_fcw))
 
@@ -190,7 +192,7 @@ class CarController(object):
 
     # Send chimes
     if self.chime != chime:
-      duration = 0x3c
+      duration = 0x1e
 
       # There is no 'repeat forever' chime command
       # TODO: Manage periodic re-issuing of chime command
