@@ -115,7 +115,7 @@ def get_can_signals(CP):
                 ("LEAD_DISTANCE", "RADAR_HUD", 0)]
     checks += [("RADAR_HUD", 50)]
   elif CP.carFingerprint in (CAR.CIVIC_BOSCH, CAR.CRV_HYBRID):
-    signals += [("DRIVERS_DOOR_OPEN", "SCM_FEEDBACK", 1),
+    signals += [("DRIVERS_DOOR_OPEN", "SCM_FEEDBACK", 1)]
     checks += [("RADAR_HUD", 50)]
   elif CP.carFingerprint == CAR.ODYSSEY_CHN:
     signals += [("DRIVERS_DOOR_OPEN", "SCM_BUTTONS", 1)]
