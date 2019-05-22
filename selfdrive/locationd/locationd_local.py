@@ -249,7 +249,7 @@ def locationd_thread(gctx, addr, disabled_logs):
           kegman = kegman_conf()
           if kegman.conf['liveParams'] == "1":
             params_reader.put("LiveParameters", json.dumps(params))
-          params_reader.put("ControlsParams", json.dumps({'angle_model_bias': log.live100.angleModelBias}))
+            params_reader.put("ControlsParams", json.dumps({'angle_model_bias': log.live100.angleModelBias}))
 
         i += 1
       elif socket is camera_odometry_socket:
