@@ -110,11 +110,11 @@ def get_can_signals(CP):
     else:
       checks += [("CRUISE_PARAMS", 50)]
 
-  if CP.carFingerprint in (CAR.ACCORD, CAR.ACCORD_15, CAR.ACCORDH, CAR.CIVIC_BOSCH, CAR.INSIGHT):
+  if CP.carFingerprint in (CAR.ACCORD, CAR.ACCORD_15, CAR.ACCORDH, CAR.INSIGHT):
     signals += [("DRIVERS_DOOR_OPEN", "SCM_FEEDBACK", 1),
                 ("LEAD_DISTANCE", "RADAR_HUD", 0)]
     checks += [("RADAR_HUD", 50)]
-  elif CP.carFingerprint in (CAR.CRV_HYBRID):
+  elif CP.carFingerprint in (CAR.CIVIC_BOSCH, CAR.CRV_HYBRID):
     signals += [("DRIVERS_DOOR_OPEN", "SCM_FEEDBACK", 1)]
     checks += [("RADAR_HUD", 50)]
   elif CP.carFingerprint == CAR.ODYSSEY_CHN:
@@ -230,11 +230,11 @@ class CarState(object):
     # ******************* parse out can *******************
 
 
-    if self.CP.carFingerprint in (CAR.ACCORD, CAR.ACCORD_15, CAR.ACCORDH, CAR.CIVIC_BOSCH, CAR.INSIGHT): # TODO: find wheels moving bit in dbc
+    if self.CP.carFingerprint in (CAR.ACCORD, CAR.ACCORD_15, CAR.ACCORDH, CAR.INSIGHT): # TODO: find wheels moving bit in dbc
       self.standstill = cp.vl["ENGINE_DATA"]['XMISSION_SPEED'] < 0.1
       self.door_all_closed = not cp.vl["SCM_FEEDBACK"]['DRIVERS_DOOR_OPEN']
       self.lead_distance = cp.vl["RADAR_HUD"]['LEAD_DISTANCE']
-    elif self.CP.carFingerprint in (CAR.CRV_HYBRID):
+    elif self.CP.carFingerprint in (CAR.CIVIC_BOSCH, CAR.CRV_HYBRID):
       self.standstill = cp.vl["ENGINE_DATA"]['XMISSION_SPEED'] < 0.1
       self.door_all_closed = not cp.vl["SCM_FEEDBACK"]['DRIVERS_DOOR_OPEN']
     elif self.CP.carFingerprint == CAR.ODYSSEY_CHN:
