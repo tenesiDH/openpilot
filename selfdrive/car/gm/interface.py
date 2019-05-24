@@ -415,6 +415,6 @@ class CarInterface(object):
       c.actuators,
       hud_v_cruise, c.hudControl.lanesVisible, \
       c.hudControl.leadVisible, \
-      chime, chime_count)
+      chime, chime_count, c.hudControl.visualAlert)
 
     self.frame += 1
