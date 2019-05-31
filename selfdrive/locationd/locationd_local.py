@@ -107,7 +107,8 @@ class ParamsLearner(object):
     self.ao = math.radians(angle_offset)
     self.slow_ao = math.radians(angle_offset)
     self.x = stiffness_factor
-    self.sR = VM.sR if steer_ratio is None else steer_ratio
+    #self.sR = VM.sR if steer_ratio is None else steer_ratio
+    self.sR = VM.sR
     self.MIN_SR = MIN_SR * self.VM.sR
     self.MAX_SR = MAX_SR * self.VM.sR
     self.MIN_SR_TH = MIN_SR_TH * self.VM.sR
@@ -146,7 +147,7 @@ class ParamsLearner(object):
 
       self.x -= self.alpha3 * -2.0*cF0*cR0*l*m*u**3*(ao - sa)*(aF*cF0 - aR*cR0)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**3)
 
-      self.sR -= self.alpha4 * -2.0*cF0*cR0*l*u*x*(ao - sa)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**3*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
+      #self.sR -= self.alpha4 * -2.0*cF0*cR0*l*u*x*(ao - sa)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**3*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
 
     if DEBUG:
       # s1 = "Measured yaw rate % .6f" % psi
