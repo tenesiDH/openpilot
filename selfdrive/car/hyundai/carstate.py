@@ -30,6 +30,7 @@ def get_can_parser(CP):
     ("TPS", "EMS12", 0),
 
     ("CYL_PRES", "ESP12", 0),
+    ("CRUISE_LAMP_M", "EMS16", 0),
 
     ("CF_Clu_CruiseSwState", "CLU11", 0),
     ("CF_Clu_CruiseSwMain" , "CLU11", 0),
@@ -63,6 +64,8 @@ def get_can_parser(CP):
 
     ("CF_Lvr_GearInf", "LVR11", 0),        #Transmission Gear (0 = N or P, 1-8 = Fwd, 14 = Rev)
 
+    ("CR_Mdps_StrAng", "MDPS11", 0),
+    ("CF_Mdps_Stat", "MDPS11", 0),
     ("CR_Mdps_StrColTq", "MDPS12", 0),
     ("CF_Mdps_Def", "MDPS12", 0),
     ("CF_Mdps_ToiActive", "MDPS12", 0),
@@ -90,9 +93,7 @@ def get_can_parser(CP):
 
   checks = [
     # address, frequency
-    ("MDPS12", 50),
     ("TCS15", 10),
-    ("TCS13", 50),
     ("CLU11", 50),
     ("ESP12", 100),
     ("EMS12", 100),
@@ -140,7 +141,7 @@ class CarState(object):
     #labels for buttons
     self.btns_init = [["","",["","",""]], \
                       ["","",[""]], \
-                      ["","",[""]], \
+                      ["alca","ALC",["MadMax", "Normal", "Wifey"]], \
                       ["cam","CAM",[""]], \
                       ["alwon", "MAD",[""]], \
                       ["sound", "SND", [""]]]
@@ -246,7 +247,8 @@ class CarState(object):
             (cp.vl["SCC11"]["MainMode_ACC"] != 0)  # I'm Dangerous!
       self.acc_active_real = (cp.vl["SCC12"]['ACCMode'] !=0)
     else:
-      self.acc_active = (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0)
+      self.acc_active = (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0) if not self.cstm_btns.get_button_status("alwon") else \
+            cp.vl['EMS16']['CRUISE_LAMP_M']
       self.acc_active_real = self.acc_active
     self.pcm_acc_status = int(self.acc_active)
 
@@ -282,12 +284,15 @@ class CarState(object):
     self.right_blinker_on = True if (cp.vl["CGW1"]['CF_Gway_TSigRHSw'] == True) or (cp.vl["CGW1"]['CF_Gway_TurnSigRh'] == True) else False
     self.right_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigRh']
     self.steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > STEER_THRESHOLD or self.left_blinker_on or self.right_blinker_on
+    self.driver_steer_override = abs(cp.vl["MDPS12"]['CR_Mdps_StrColTq']) > STEER_THRESHOLD
     self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_error = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["MDPS12"]['CR_Mdps_StrColTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
     self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if self.has_scc else False
+    self.mdps11_strang = cp.vl["MDPS11"]["CR_Mdps_StrAng"]
+    self.mdps11_stat = cp.vl["MDPS11"]["CF_Mdps_Stat"]
 
     self.user_brake = 0
 
@@ -329,7 +334,7 @@ class CarState(object):
       self.gear_tcu = "park"
     elif gear2 == 14:
       self.gear_tcu = "reverse"
-    elif gear2 > 0 and gear2 < 14:    # unaware of anything over 8 currently
+    elif gear2 > 0 and gear2 < 9:    # unaware of anything over 8 currently
       self.gear_tcu = "drive"
     else:
       self.gear_tcu = "unknown"
@@ -338,9 +343,11 @@ class CarState(object):
     if cp_cam.can_valid == True:
       self.lkas11 = cp_cam.vl["LKAS11"]
       self.camcan = 2
-    else:
+    elif cp_cam2.can_valid == True:
       self.lkas11 = cp_cam2.vl["LKAS11"]
       self.camcan = 1
+    else:
+      self.camcan = 0
 
     self.clu11 = cp.vl["CLU11"]
     self.mdps12 = cp.vl["MDPS12"]

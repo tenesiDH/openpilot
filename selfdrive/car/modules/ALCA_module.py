@@ -115,14 +115,14 @@ class ALCAController(object):
     self.laneChange_avg_count = 0. # used if we do average entry angle over x frames
     self.laneChange_enabled = 1 # set to zero for no lane change
     self.laneChange_counter = 0 # used to count frames during lane change
-    self.laneChange_min_duration = 2. # min time to wait before looking for next lane
+    self.laneChange_min_duration = 2.0 # min time to wait before looking for next lane
     self.laneChange_duration = 5.6 # how many max seconds to actually do the move; if lane not found after this then send error
     self.laneChange_after_lane_duration_mult = 1.  # multiplier for time after we cross the line before we let OP take over; multiplied with CL_TIMEA_T
     self.laneChange_wait = 1 # how many seconds to wait before it starts the change
-    self.laneChange_lw = 3.4 # lane width in meters
+    self.laneChange_lw = 3.2 # lane width in meters
     self.laneChange_angle = 0. # saves the last angle from actuators before lane change starts
     self.laneChange_angled = 0. # angle delta
-    self.laneChange_steerr = 13.7 # steer ratio for lane change
+    self.laneChange_steerr = 14.7 # steer ratio for lane change
     self.laneChange_direction = 0 # direction of the lane change
     self.prev_right_blinker_on = False # local variable for prev position
     self.prev_left_blinker_on = False # local variable for prev position
@@ -270,7 +270,7 @@ class ALCAController(object):
 
     # lane change in process
     if self.laneChange_enabled > 1:
-      if (CS.steer_override or (CS.v_ego < cl_min_v)):
+      if (CS.driver_steer_override or (CS.v_ego < cl_min_v)):
         CS.UE.custom_alert_message(4,"Auto Lane Change Canceled! (u)",200,3)
         self.laneChange_cancelled = True
         self.laneChange_cancelled_counter = 200
@@ -468,7 +468,7 @@ class ALCAController(object):
           steers_max = interp(CS.v_ego, CS.CP.steerMaxBP, CS.CP.steerMaxV)
           self.pid.pos_limit = steers_max
           self.pid.neg_limit = -steers_max
-          output_steer = self.pid.update(new_angle, CS.angle_steers , check_saturation=(CS.v_ego > 10), override=CS.steer_override, feedforward=new_angle * (CS.v_ego ** 2), speed=CS.v_ego, deadzone=0.0)
+          output_steer = self.pid.update(new_angle, CS.angle_steers , check_saturation=(CS.v_ego > 10), override=CS.driver_steer_override, feedforward=new_angle * (CS.v_ego ** 2), speed=CS.v_ego, deadzone=0.0)
         else:
           output_steer = actuators.steer
         if self.laneChange_steerByAngle and (not new_ALCA_Enabled) and (cur_time - self.last_time_enabled > WAIT_TIME_AFTER_TURN):

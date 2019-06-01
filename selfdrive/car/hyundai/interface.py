@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from cereal import car, log
+from cereal import car
 from common.realtime import sec_since_boot
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
@@ -70,10 +70,6 @@ class CarInterface(object):
     tireStiffnessFront_civic = 192150
     tireStiffnessRear_civic = 202500
 
-    ret.steerReactance = 1.0
-    ret.steerInductance = 1.2
-    ret.steerResistance = 1.0
-    ret.eonToFront = 0.5
     ret.steerActuatorDelay = 0.10
     ret.steerKf = 0.00006
     ret.steerRateCost = 0.50
@@ -287,7 +283,7 @@ class CarInterface(object):
 
     return ret.as_reader()
 
-  def apply(self, c, perception_state=log.Live20Data.new_message()):
+  def apply(self, c):
 
     hud_alert = get_hud_alerts(c.hudControl.visualAlert, c.hudControl.audibleAlert)
 

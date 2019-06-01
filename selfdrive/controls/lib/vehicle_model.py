@@ -102,13 +102,17 @@ class VehicleModel(object):
     self.l = CP.wheelbase
     self.aF = CP.centerToFront
     self.aR = CP.wheelbase - CP.centerToFront
-    self.cF = CP.tireStiffnessFront
-    self.cR = CP.tireStiffnessRear
-    self.sR = CP.steerRatio
     self.chi = CP.steerRatioRear
-    self.gsfc = 0.
-    self.curvf = 0.
-    self.sf = 0.
+
+    self.cF_orig = CP.tireStiffnessFront
+    self.cR_orig = CP.tireStiffnessRear
+    self.update_params(1.0, CP.steerRatio)
+
+  def update_params(self, stiffness_factor, steer_ratio):
+    """Update the vehicle model with a new stiffness factor and steer ratio"""
+    self.cF = stiffness_factor * self.cF_orig
+    self.cR = stiffness_factor * self.cR_orig
+    self.sR = steer_ratio
 
   def steady_state_sol(self, sa, u):
     """Returns the steady state solution.
@@ -150,9 +154,8 @@ class VehicleModel(object):
     Returns:
       Curvature factor [1/m]
     """
-    self.sf = calc_slip_factor(self)
-    self.curvf = (1. - self.chi) / (1. - self.sf * u**2) / self.l
-    return self.curvf
+    sf = calc_slip_factor(self)
+    return (1. - self.chi) / (1. - sf * u**2) / self.l
 
   def get_steer_from_curvature(self, curv, u):
     """Calculates the required steering wheel angle for a given curvature
@@ -165,8 +168,7 @@ class VehicleModel(object):
       Steering wheel angle [rad]
     """
 
-    self.gsfc = curv * self.sR * 1.0 / self.curvature_factor(u)
-    return self.gsfc
+    return curv * self.sR * 1.0 / self.curvature_factor(u)
 
   def yaw_rate(self, sa, u):
     """Calculate yaw rate

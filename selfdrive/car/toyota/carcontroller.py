@@ -2,13 +2,13 @@ from cereal import car
 from common.numpy_fast import clip, interp
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car import apply_toyota_steer_torque_limits
+from selfdrive.car import create_gas_command
 from selfdrive.car.toyota.toyotacan import make_can_msg, create_video_target,\
                                            create_steer_command, create_ui_command, \
                                            create_ipas_steer_command, create_accel_command, \
                                            create_fcw_command
 from selfdrive.car.toyota.values import ECU, STATIC_MSGS
 from selfdrive.can.packer import CANPacker
-from selfdrive.car.modules.ALCA_module import ALCAController
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 AudibleAlert = car.CarControl.HUDControl.AudibleAlert
@@ -121,7 +121,6 @@ class CarController(object):
     if enable_camera: self.fake_ecus.add(ECU.CAM)
     if enable_dsu: self.fake_ecus.add(ECU.DSU)
     if enable_apg: self.fake_ecus.add(ECU.APGS)
-    self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
 
     self.packer = CANPacker(dbc_name)
 
@@ -131,19 +130,19 @@ class CarController(object):
     # *** compute control surfaces ***
 
     # gas and brake
-    apply_accel = actuators.gas - actuators.brake
+
+    apply_gas = clip(actuators.gas, 0., 1.)
+
+    if CS.CP.enableGasInterceptor:
+      # send only negative accel if interceptor is detected. otherwise, send the regular value
+      # +0.06 offset to reduce ABS pump usage when OP is engaged
+      apply_accel = 0.06 - actuators.brake
+    else:
+      apply_accel = actuators.gas - actuators.brake
+
     apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady, enabled)
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
-    # Get the angle from ALCA.
-    alca_enabled = False
-    alca_steer = 0.
-    alca_angle = 0.
-    turn_signal_needed = 0
-    # Update ALCA status and custom button every 0.1 sec.
-    if self.ALCA.pid == None:
-      self.ALCA.set_pid(CS)
-    if (frame % 10 == 0):
-      self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
+
     # steer torque
     apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
 
@@ -164,11 +163,9 @@ class CarController(object):
       ipas_state_transition(self.steer_angle_enabled, enabled, CS.ipas_active, self.ipas_reset_counter)
     #print self.steer_angle_enabled, self.ipas_reset_counter, CS.ipas_active
 
-
     # steer angle
     if self.steer_angle_enabled and CS.ipas_active:
-
-      apply_angle = alca_angle
+      apply_angle = actuators.steerAngle
       angle_lim = interp(CS.v_ego, ANGLE_MAX_BP, ANGLE_MAX_V)
       apply_angle = clip(apply_angle, -angle_lim, angle_lim)
 
@@ -225,6 +222,11 @@ class CarController(object):
         can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req, lead))
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, lead))
+
+    if (frame % 2 == 0) and (CS.CP.enableGasInterceptor):
+        # send exactly zero if apply_gas is zero. Interceptor will send the max between read value and apply_gas.
+        # This prevents unexpected pedal range rescaling
+        can_sends.append(create_gas_command(self.packer, apply_gas, frame/2))
 
     if frame % 10 == 0 and ECU.CAM in self.fake_ecus and not forwarding_camera:
       for addr in TARGET_IDS:

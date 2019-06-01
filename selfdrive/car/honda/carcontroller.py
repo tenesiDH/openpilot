@@ -3,10 +3,10 @@ from common.realtime import sec_since_boot
 from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.controls.lib.drive_helpers import rate_limit
 from common.numpy_fast import clip
+from selfdrive.car import create_gas_command
 from selfdrive.car.honda import hondacan
 from selfdrive.car.honda.values import AH, CruiseButtons, CAR
 from selfdrive.can.packer import CANPacker
-from selfdrive.car.modules.ALCA_module import ALCAController
 
 def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   # hyst params
@@ -84,10 +84,10 @@ class CarController(object):
     self.enable_camera = enable_camera
     self.packer = CANPacker(dbc_name)
     self.new_radar_config = False
-    self.ALCA = ALCAController(self,True,False)  # Enabled  True and SteerByAngle only False
+
   def update(self, sendcan, enabled, CS, frame, actuators, \
              pcm_speed, pcm_override, pcm_cancel_cmd, pcm_accel, \
-             radar_error, hud_v_cruise, hud_show_lanes, hud_show_car, \
+             hud_v_cruise, hud_show_lanes, hud_show_car, \
              hud_alert, snd_beep, snd_chime):
 
     """ Controls thread """
@@ -122,7 +122,7 @@ class CarController(object):
 
     # For lateral control-only, send chimes as a beep since we don't send 0x1fa
     if CS.CP.radarOffCan:
-      snd_beep = snd_beep if snd_beep is not 0 else snd_chime
+      snd_beep = snd_beep if snd_beep != 0 else snd_chime
 
     #print chime, alert_id, hud_alert
     fcw_display, steer_required, acc_alert = process_hud_alert(hud_alert)
@@ -141,30 +141,10 @@ class CarController(object):
     else:
       STEER_MAX = 0x1000
 
-    #update custom UI buttons and alerts
-    CS.UE.update_custom_ui()
-    if (frame % 1000 == 0):
-      CS.cstm_btns.send_button_info()
-      CS.UE.uiSetCarEvent(CS.cstm_btns.car_folder,CS.cstm_btns.car_name)
-
-    # Get the angle from ALCA.
-    alca_enabled = False
-    alca_steer = 0.
-    alca_angle = 0.
-    turn_signal_needed = 0
-    # Update ALCA status and custom button every 0.1 sec.
-    if self.ALCA.pid == None:
-      self.ALCA.set_pid(CS)
-    if (frame % 10 == 0):
-      self.ALCA.update_status(CS.cstm_btns.get_button_status("alca") > 0)
-    # steer torque
-    alca_angle, alca_steer, alca_enabled, turn_signal_needed = self.ALCA.update(enabled, CS, frame, actuators)
-
-
     # steer torque is converted back to CAN reference (positive when steering right)
     apply_gas = clip(actuators.gas, 0., 1.)
     apply_brake = int(clip(self.brake_last * BRAKE_MAX, 0, BRAKE_MAX - 1))
-    apply_steer = int(clip(-alca_steer * STEER_MAX, -STEER_MAX, STEER_MAX))
+    apply_steer = int(clip(-actuators.steer * STEER_MAX, -STEER_MAX, STEER_MAX))
 
     lkas_active = enabled and not CS.steer_not_allowed
 
@@ -191,7 +171,7 @@ class CarController(object):
     else:
       # Send gas and brake commands.
       if (frame % 2) == 0:
-        idx = (frame / 2) % 4
+        idx = frame / 2
         pump_on, self.last_pump_ts = brake_pump_hysteresys(apply_brake, self.apply_brake_last, self.last_pump_ts)
         can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
           pcm_override, pcm_cancel_cmd, hud.chime, hud.fcw, idx))
@@ -200,6 +180,6 @@ class CarController(object):
         if CS.CP.enableGasInterceptor:
           # send exactly zero if apply_gas is zero. Interceptor will send the max between read value and apply_gas.
           # This prevents unexpected pedal range rescaling
-          can_sends.append(hondacan.create_gas_command(self.packer, apply_gas, idx))
+          can_sends.append(create_gas_command(self.packer, apply_gas, idx))
 
     sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
