@@ -19,6 +19,9 @@ from selfdrive.locationd.kalman.loc_local_kf import LocLocalKalman
 from selfdrive.locationd.kalman.kalman_helpers import ObservationKind
 from selfdrive.kegman_conf import kegman_conf
 
+kegman = kegman_conf()
+
+
 DEBUG = False
 kf = LocLocalKalman()  # Make sure that model is generated on import time
 
@@ -139,15 +142,16 @@ class ParamsLearner(object):
     sR = self.sR
 
     # Gradient descent:  learn angle offset, tire stiffness and steer ratio.
-    if u > 10.0 and abs(math.degrees(sa)) < 15.:
-      self.ao -= self.alpha1 * 2.0*cF0*cR0*l*u*x*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
+    if kegman.conf['liveParams'] == "1":
+      if u > 10.0 and abs(math.degrees(sa)) < 15.:
+        self.ao -= self.alpha1 * 2.0*cF0*cR0*l*u*x*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
 
-      ao = self.slow_ao
-      self.slow_ao -= self.alpha2 * 2.0*cF0*cR0*l*u*x*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
+        ao = self.slow_ao
+        self.slow_ao -= self.alpha2 * 2.0*cF0*cR0*l*u*x*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
 
-      self.x -= self.alpha3 * -2.0*cF0*cR0*l*m*u**3*(ao - sa)*(aF*cF0 - aR*cR0)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**3)
+        self.x -= self.alpha3 * -2.0*cF0*cR0*l*m*u**3*(ao - sa)*(aF*cF0 - aR*cR0)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**2*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**3)
 
-      #self.sR -= self.alpha4 * -2.0*cF0*cR0*l*u*x*(ao - sa)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**3*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
+        #self.sR -= self.alpha4 * -2.0*cF0*cR0*l*u*x*(ao - sa)*(1.0*cF0*cR0*l*u*x*(ao - sa) + psi*sR*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0)))/(sR**3*(cF0*cR0*l**2*x - m*u**2*(aF*cF0 - aR*cR0))**2)
 
     if DEBUG:
       # s1 = "Measured yaw rate % .6f" % psi
@@ -247,7 +251,6 @@ def locationd_thread(gctx, addr, disabled_logs):
         if i % 6000 == 0:   # once a minute
           params = learner.get_values()
           params['carFingerprint'] = CP.carFingerprint
-          kegman = kegman_conf()
           if kegman.conf['liveParams'] == "1":
             params_reader.put("LiveParameters", json.dumps(params))
             params_reader.put("ControlsParams", json.dumps({'angle_model_bias': log.live100.angleModelBias}))
