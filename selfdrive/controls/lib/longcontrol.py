@@ -4,7 +4,7 @@ from selfdrive.controls.lib.pid import PIController
 from selfdrive.kegman_conf import kegman_conf
 
 kegman = kegman_conf()
-LongCtrlState = log.Live100Data.LongControlState
+LongCtrlState = log.ControlsState.LongControlState
 
 STOPPING_EGO_SPEED = 0.5
 MIN_CAN_SPEED = 0.3  # TODO: parametrize this in car interface

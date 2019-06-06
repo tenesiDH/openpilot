@@ -33,7 +33,7 @@ class LatControlPID(object):
 
     self.live_tune(CP)
 
-    pid_log = log.Live100Data.LateralPIDState.new_message()
+    pid_log = log.ControlsState.LateralPIDState.new_message()
     pid_log.steerAngle = float(angle_steers)
     pid_log.steerRate = float(angle_steers_rate)
 

@@ -9,10 +9,6 @@ from selfdrive.car.gm.values import DBC, CAR, STOCK_CONTROL_MSGS, AUDIO_HUD, \
                                     SUPERCRUISE_CARS, AccState
 from selfdrive.car.gm.carstate import CarState, CruiseButtons, get_powertrain_can_parser, get_chassis_can_parser
 
-try:
-  from selfdrive.car.gm.carcontroller import CarController
-except ImportError:
-  CarController = None
 
 FOLLOW_AGGRESSION = 0.15 # (Acceleration/Decel aggression) Lower is more aggressive
 
@@ -24,7 +20,7 @@ class CanBus(object):
     self.sw_gmlan = 3
 
 class CarInterface(object):
-  def __init__(self, CP, sendcan=None):
+  def __init__(self, CP, CarController):
     self.CP = CP
 
     self.frame = 0
@@ -41,10 +37,9 @@ class CarInterface(object):
     self.ch_cp = get_chassis_can_parser(CP, canbus)
     self.ch_cp_dbc_name = DBC[CP.carFingerprint]['chassis']
 
-    # sending if read only is False
-    if sendcan is not None:
-      self.sendcan = sendcan
-      self.CC = CarController(canbus, CP.carFingerprint, CP.enableCamera)
+    self.CC = None
+    if CarController is not None:
+      self.CC = CarController(canbus, CP.carFingerprint)
 
   @staticmethod
   def compute_gb(accel, speed):
@@ -89,16 +84,17 @@ class CarInterface(object):
     return float(max(max_accel, a_target / FOLLOW_AGGRESSION)) * min(speedLimiter, accelLimiter)
 
   @staticmethod
-  def get_params(candidate, fingerprint):
+  def get_params(candidate, fingerprint, vin=""):
     ret = car.CarParams.new_message()
 
     ret.carName = "gm"
     ret.carFingerprint = candidate
+    ret.carVin = vin
 
     ret.enableCruise = False
 
     # Presence of a camera on the object bus is ok.
-    # Have to go passive if ASCM is online (ACC-enabled cars),
+    # Have to go to read_only if ASCM is online (ACC-enabled cars),
     # or camera is on powertrain bus (LKA cars without ACC).
     ret.enableCamera = not any(x for x in STOCK_CONTROL_MSGS[candidate] if x in fingerprint)
     ret.openpilotLongitudinalControl = ret.enableCamera
@@ -233,10 +229,16 @@ class CarInterface(object):
 
   # returns a car.CarState
   def update(self, c):
+<<<<<<< HEAD
 
     self.pt_cp.update(int(sec_since_boot() * 1e9), True)
     self.ch_cp.update(int(sec_since_boot() * 1e9), True)
     self.CS.update(self.pt_cp, self.ch_cp)
+=======
+    can_valid, _ = self.pt_cp.update(int(sec_since_boot() * 1e9), True)
+    can_rcv_error = not can_valid
+    self.CS.update(self.pt_cp)
+>>>>>>> upstream/devel
 
     # create message
     ret = car.CarState.new_message()
@@ -332,12 +334,17 @@ class CarInterface(object):
     events = []
     if not self.CS.can_valid:
       self.can_invalid_count += 1
-      if self.can_invalid_count >= 5:
-        events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
+<<<<<<< HEAD
     if cruiseEnabled and (self.CS.left_blinker_on or self.CS.right_blinker_on):
        events.append(create_event('manualSteeringRequiredBlinkersOn', [ET.WARNING]))
+=======
+
+    if can_rcv_error or self.can_invalid_count >= 5:
+      events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
+
+>>>>>>> upstream/devel
     if self.CS.steer_error:
       events.append(create_event('steerUnavailable', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
     if self.CS.steer_not_allowed:
@@ -411,10 +418,11 @@ class CarInterface(object):
     # In GM, PCM faults out if ACC command overlaps user gas.
     enabled = c.enabled and not self.CS.user_gas_pressed
 
-    self.CC.update(self.sendcan, enabled, self.CS, self.frame, \
-      c.actuators,
-      hud_v_cruise, c.hudControl.lanesVisible, \
-      c.hudControl.leadVisible, \
-      chime, chime_count, c.hudControl.visualAlert)
+    can_sends = self.CC.update(enabled, self.CS, self.frame, \
+                               c.actuators,
+                               hud_v_cruise, c.hudControl.lanesVisible, \
+                               c.hudControl.leadVisible, \
+                               chime, chime_count, c.hudControl.visualAlert)
 
     self.frame += 1
+    return can_sends

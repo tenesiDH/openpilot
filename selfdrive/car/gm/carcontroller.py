@@ -2,7 +2,6 @@ from cereal import car
 from common.numpy_fast import interp
 from common.realtime import sec_since_boot
 from selfdrive.config import Conversions as CV
-from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.gm import gmcan
 from selfdrive.car.gm.values import DBC, AccState, SUPERCRUISE_CARS
@@ -69,14 +68,13 @@ def process_hud_alert(hud_alert):
   return steer
 
 class CarController(object):
-  def __init__(self, canbus, car_fingerprint, allow_controls):
+  def __init__(self, canbus, car_fingerprint):
     self.pedal_steady = 0.
     self.start_time = sec_since_boot()
     self.chime = 0
     self.steer_idx = 0
     self.apply_steer_last = 0
     self.car_fingerprint = car_fingerprint
-    self.allow_controls = allow_controls
     self.lka_icon_status_last = (False, False)
     self.fcw_count = 0
 
@@ -88,19 +86,17 @@ class CarController(object):
     self.packer_pt = CANPacker(DBC[car_fingerprint]['pt'])
     self.packer_ch = CANPacker(DBC[car_fingerprint]['chassis'])
 
-  def update(self, sendcan, enabled, CS, frame, actuators, \
+  def update(self, enabled, CS, frame, actuators, \
              hud_v_cruise, hud_show_lanes, hud_show_car, chime, chime_cnt, hud_alert):
-    """ Controls thread """
-
-    # Sanity check.
-    if not self.allow_controls:
-      return
 
     P = self.params
     # Send CAN commands.
     can_sends = []
     canbus = self.canbus
     
+    alert_out = process_hud_alert(hud_alert)
+    steer = alert_out
+
     alert_out = process_hud_alert(hud_alert)
     steer = alert_out
 
@@ -219,4 +215,4 @@ class CarController(object):
       # issued for the same chime type and duration
       self.chime = chime
 
-    sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan'))
+    return can_sends
