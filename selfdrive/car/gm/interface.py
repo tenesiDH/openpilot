@@ -229,16 +229,12 @@ class CarInterface(object):
 
   # returns a car.CarState
   def update(self, c):
-<<<<<<< HEAD
 
     self.pt_cp.update(int(sec_since_boot() * 1e9), True)
     self.ch_cp.update(int(sec_since_boot() * 1e9), True)
     self.CS.update(self.pt_cp, self.ch_cp)
-=======
     can_valid, _ = self.pt_cp.update(int(sec_since_boot() * 1e9), True)
     can_rcv_error = not can_valid
-    self.CS.update(self.pt_cp)
->>>>>>> upstream/devel
 
     # create message
     ret = car.CarState.new_message()
@@ -336,15 +332,12 @@ class CarInterface(object):
       self.can_invalid_count += 1
     else:
       self.can_invalid_count = 0
-<<<<<<< HEAD
     if cruiseEnabled and (self.CS.left_blinker_on or self.CS.right_blinker_on):
        events.append(create_event('manualSteeringRequiredBlinkersOn', [ET.WARNING]))
-=======
 
     if can_rcv_error or self.can_invalid_count >= 5:
       events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
 
->>>>>>> upstream/devel
     if self.CS.steer_error:
       events.append(create_event('steerUnavailable', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
     if self.CS.steer_not_allowed:
