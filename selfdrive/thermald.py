@@ -149,7 +149,6 @@ def thermald_thread():
   started_ts = None
   ignition_seen = False
   #started_seen = False
-  passive_starter = LocationStarter()
   thermal_status = ThermalStatus.green
   health_sock.RCVTIMEO = 1500
   current_filter = FirstOrderFilter(0., CURRENT_TAU, 1.)
