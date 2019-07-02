@@ -274,7 +274,7 @@ class CarInterface(object):
 
     elif candidate == CAR.INSIGHT:
       stop_and_go = True
-      ret.mass = 2987. * CV.LB_TO_KG + std_cargo
+      ret.mass = 2987. * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 2.7
       ret.centerToFront = ret.wheelbase * 0.39
       ret.steerRatio = 15  # 12.58 is spec end-to-end
@@ -510,21 +510,10 @@ class CarInterface(object):
 
     # events
     events = []
-    if not self.CS.can_valid:
-      self.can_invalid_count += 1
-    else:
-      self.can_invalid_count = 0
 
-    if can_rcv_error or self.can_invalid_count >= 5:
-      events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
-
-    if not self.CS.cam_can_valid and self.CP.enableCamera:
-      self.cam_can_invalid_count += 1
-      # wait 1.0s before throwing the alert to avoid it popping when you turn off the car
-      if self.cp_cam.can_invalid_cnt >= 100 and self.CS.CP.carFingerprint not in HONDA_BOSCH and self.CP.enableCamera:
-        events.append(create_event('invalidGiraffeHonda', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
-    else:
-      self.cam_can_invalid_count = 0
+    # wait 1.0s before throwing the alert to avoid it popping when you turn off the car
+    if self.cp_cam.can_invalid_cnt >= 100 and self.CS.CP.carFingerprint not in HONDA_BOSCH and self.CP.enableCamera:
+      events.append(create_event('invalidGiraffeHonda', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
 
     if not self.CS.lkMode:
       events.append(create_event('manualSteeringRequired', [ET.WARNING]))

@@ -128,7 +128,7 @@ class CarController(object):
 
     # For lateral control-only, send chimes as a beep since we don't send 0x1fa
     if CS.CP.radarOffCan:
-      snd_beep = snd_beep if snd_beep is not 0 else snd_chime
+      snd_beep = snd_beep if snd_beep != 0 else snd_chime
       
     # Do not send audible alert when steering is disabled or blinkers on
     #if not CS.lkMode or CS.left_blinker_on or CS.right_blinker_on:
