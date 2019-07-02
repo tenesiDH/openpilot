@@ -128,7 +128,7 @@ struct CarState {
   # lock info
   doorOpen @24 :Bool;
   seatbeltUnlatched @25 :Bool;
-  canValid @27 :Bool;
+  canValid @28 :Bool;
 
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
