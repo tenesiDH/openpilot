@@ -140,7 +140,6 @@ class CarState(object):
     self.steer_error = False
 
     self.brake_error = False
-    self.can_valid = True
 
     self.prev_left_blinker_on = self.left_blinker_on
     self.prev_right_blinker_on = self.right_blinker_on

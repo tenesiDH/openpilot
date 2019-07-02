@@ -1,6 +1,5 @@
 #!/usr/bin/env python2.7
 import os
-import zmq
 from smbus2 import SMBus
 from cereal import log
 from selfdrive.version import training_version
@@ -138,10 +137,9 @@ def thermald_thread():
   BATT_PERC_OFF = int(kegman.conf['battPercOff'])
 
   # now loop
-  context = zmq.Context()
-  thermal_sock = messaging.pub_sock(context, service_list['thermal'].port)
-  health_sock = messaging.sub_sock(context, service_list['health'].port)
-  location_sock = messaging.sub_sock(context, service_list['gpsLocation'].port)
+  thermal_sock = messaging.pub_sock(service_list['thermal'].port)
+  health_sock = messaging.sub_sock(service_list['health'].port)
+  location_sock = messaging.sub_sock(service_list['gpsLocation'].port)
   fan_speed = 0
   count = 0
 

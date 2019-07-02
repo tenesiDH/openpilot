@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from common.numpy_fast import interp
 
@@ -30,6 +31,8 @@ TWO_BAR_PROFILE_BP = [0.0, 3.0]
 
 THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, 2.5]
 THREE_BAR_PROFILE_BP = [0.0, 4.0]
+LOG_MPC = os.environ.get('LOG_MPC', False)
+
 
 class LongitudinalMpc(object):
   def __init__(self, mpc_id, live_longitudinal_mpc):
@@ -82,7 +85,7 @@ class LongitudinalMpc(object):
     self.cur_state[0].a_ego = a
 
   def update(self, CS, lead, v_cruise_setpoint):
-    v_ego = CS.carState.vEgo
+    v_ego = CS.vEgo
 
     # Setup current mpc state
     self.cur_state[0].x_ego = 0.0
@@ -173,7 +176,9 @@ class LongitudinalMpc(object):
     t = sec_since_boot()
     n_its = self.libmpc.run_mpc(self.cur_state, self.mpc_solution, self.a_lead_tau, a_lead, TR)
     duration = int((sec_since_boot() - t) * 1e9)
-    self.send_mpc_solution(n_its, duration)
+
+    if LOG_MPC:
+      self.send_mpc_solution(n_its, duration)
 
     # Get solution. MPC timestep is 0.2 s, so interpolation to 0.05 s is needed
     self.v_mpc = self.mpc_solution[0].v_ego[1]
@@ -197,5 +202,5 @@ class LongitudinalMpc(object):
       self.cur_state[0].v_ego = v_ego
       self.cur_state[0].a_ego = 0.0
       self.v_mpc = v_ego
-      self.a_mpc = CS.carState.aEgo
+      self.a_mpc = CS.aEgo
       self.prev_lead_status = False
