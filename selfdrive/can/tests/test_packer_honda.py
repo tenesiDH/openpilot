@@ -36,9 +36,9 @@ class TestPackerMethods(unittest.TestCase):
       self.assertEqual(m_old, m)
 
       pcm_speed = random.randint(0, 65536)
-      #hud = HUDData(random.randint(0, 65536), random.randint(0, 65536), 1, random.randint(0, 65536),
-              #0xc1, random.randint(0, 65536), random.randint(0, 65536), random.randint(0, 65536),
-              #random.randint(0, 65536), random.randint(0, 65536), random.randint(0, 65536), 2, 1, 2)
+      hud = HUDData(random.randint(0, 65536), random.randint(0, 65536), 1, random.randint(0, 65536),
+              0xc1, random.randint(0, 65536), random.randint(0, 65536), random.randint(0, 65536),
+              random.randint(0, 65536), random.randint(0, 65536), random.randint(0, 65536), 2, 1, 2)
       car_fingerprint = HONDA_BOSCH[0]
       idx = random.randint(0, 65536)
       is_metric = (random.randint(0, 2) % 2 == 0)
