@@ -327,15 +327,9 @@ class CarInterface(object):
          self.CS.follow_level = 3
 
     events = []
-    if not self.CS.can_valid:
-      self.can_invalid_count += 1
-    else:
-      self.can_invalid_count = 0
+    
     if cruiseEnabled and (self.CS.left_blinker_on or self.CS.right_blinker_on):
        events.append(create_event('manualSteeringRequiredBlinkersOn', [ET.WARNING]))
-
-    if can_rcv_error or self.can_invalid_count >= 5:
-      events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
 
     if self.CS.steer_error:
       events.append(create_event('steerUnavailable', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
