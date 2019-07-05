@@ -229,7 +229,6 @@ class CarInterface(object):
     self.ch_cp.update(int(sec_since_boot() * 1e9), True)
     self.CS.update(self.pt_cp, self.ch_cp)
     can_valid, _ = self.pt_cp.update(int(sec_since_boot() * 1e9), True)
-    can_rcv_error = not can_valid
     can_rcv_valid, _ = self.pt_cp.update(int(sec_since_boot() * 1e9), True)
 
 
