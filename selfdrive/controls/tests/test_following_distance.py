@@ -81,6 +81,7 @@ def run_following_distance_simulation(v_lead, t_end=200.0):
 
 class TestFollowingDistance(unittest.TestCase):
   def test_following_distanc(self):
+    return 1
     #for speed_mph in np.linspace(10, 100, num=10):
     #  v_lead = float(speed_mph * CV.MPH_TO_MS)
 
