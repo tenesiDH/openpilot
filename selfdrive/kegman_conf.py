@@ -45,7 +45,7 @@ class kegman_conf():
         self.config.update({"liveParams":"1"})
         self.element_updated = True
 	
-       if "leadDistance" not in self.config:
+      if "leadDistance" not in self.config:
         self.config.update({"leadDistance":"5"})
         self.element_updated = True
 
