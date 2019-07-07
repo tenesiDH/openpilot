@@ -44,6 +44,11 @@ class kegman_conf():
       if "liveParams" not in self.config:
         self.config.update({"liveParams":"1"})
         self.element_updated = True
+	
+       if "leadDistance" not in self.config:
+        self.config.update({"leadDistance":"5"})
+        self.element_updated = True
+
 
 
       # Force update battery charge limits to higher values for Big Model
@@ -60,7 +65,7 @@ class kegman_conf():
       self.config = {"cameraOffset":"0.06", "lastTrMode":"1", "battChargeMin":"60", "battChargeMax":"70", \
                      "wheelTouchSeconds":"180", "battPercOff":"25", "carVoltageMinEonShutdown":"11800", \
                      "brakeStoppingTarget":"0.25", "tuneGernby":"1", \
-                     "Kp":"-1", "Ki":"-1", "liveParams":"1"}
+                     "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5"}
 
       self.write_config(self.config)
     return self.config
