@@ -72,12 +72,12 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     calibrationProgress @47;
     lowBattery @48;
     invalidGiraffeHonda @49;
-    vehicleModelInvalid @50;
-    controlsFailed @51;
-    sensorDataInvalid @52;
-    commIssue @53;
-    manualSteeringRequired @54;
-    manualSteeringRequiredBlinkersOn @55;
+    manualSteeringRequired @50;
+    manualSteeringRequiredBlinkersOn @51;
+    vehicleModelInvalid @52;
+    controlsFailed @53;
+    sensorDataInvalid @54;
+    commIssue @55;
   }
 }
 
@@ -122,13 +122,13 @@ struct CarState {
   leftBlinker @20 :Bool;
   rightBlinker @21 :Bool;
   genericToggle @23 :Bool;
-  readdistancelines @27 :Float32;
-  lkMode @28 :Bool;
+  readdistancelines @26 :Float32;
+  lkMode @27 :Bool;
 
   # lock info
   doorOpen @24 :Bool;
   seatbeltUnlatched @25 :Bool;
-  canValid @26 :Bool;
+  canValid @28 :Bool;
 
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
@@ -348,8 +348,6 @@ struct CarParams {
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
     kf @4 :Float32;
-    dampTime @5 :Float32;
-    reactMPC @6 :Float32;
   }
 
   struct LongitudinalPIDTuning {
@@ -367,7 +365,6 @@ struct CarParams {
     innerLoopGain @1 :Float32;
     timeConstant @2 :Float32;
     actuatorEffectiveness @3 :Float32;
-    reactMPC @4 :Float32;
   }
 
 
