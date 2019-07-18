@@ -6,7 +6,6 @@ from selfdrive.car import create_gas_command
 from selfdrive.car.honda import hondacan
 from selfdrive.car.honda.values import AH, CruiseButtons, CAR
 from selfdrive.can.packer import CANPacker
-from common.params import Params
 from selfdrive.kegman_conf import kegman_conf
 
 kegman = kegman_conf()
@@ -74,7 +73,7 @@ def process_hud_alert(hud_alert):
 
 HUDData = namedtuple("HUDData",
                      ["pcm_accel", "v_cruise", "mini_car", "car", "X4",
-                      "lanes", "beep", "chime", "fcw", "acc_alert", "steer_required", "dist_lines", "dashed_lanes", "speed_units"])
+                      "lanes", "beep", "chime", "fcw", "acc_alert", "steer_required", "dist_lines", "dashed_lanes"])
 
 
 class CarController(object):
@@ -87,13 +86,6 @@ class CarController(object):
     self.packer = CANPacker(dbc_name)
     self.new_radar_config = False
     self.prev_lead_distance = 0.0
-    #self.params = Params()
-    self.is_metric = Params().get("IsMetric") == "1"
-    if self.is_metric:
-      self.speed_units = 2
-    else:
-      self.speed_units = 3
-
 
 
   def update(self, enabled, CS, frame, actuators, \
@@ -138,7 +130,7 @@ class CarController(object):
     fcw_display, steer_required, acc_alert = process_hud_alert(hud_alert)
 
     hud = HUDData(int(pcm_accel), int(round(hud_v_cruise)), 1, hud_car,
-                  0xc1, hud_lanes, int(snd_beep), snd_chime, fcw_display, acc_alert, steer_required, CS.read_distance_lines, CS.lkMode, self.speed_units)
+                  0xc1, hud_lanes, int(snd_beep), snd_chime, fcw_display, acc_alert, steer_required, CS.read_distance_lines, CS.lkMode)
 
     # **** process the car messages ****
 
