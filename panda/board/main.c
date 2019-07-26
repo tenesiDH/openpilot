@@ -531,14 +531,14 @@ int spi_cb_rx(uint8_t *data, int len, uint8_t *data_out) {
 #endif
 
 // allow safety_forward to enable sending can messages
-void safety_cb_enable_all() {
+void safety_cb_enable_all(void) {
       // allow sending can messages
       can_silent = ALL_CAN_LIVE;
       can_init_all();
 }
 
 // disable safety_forward
-void safety_cb_disable_all() {
+void safety_cb_disable_all(void) {
       // disable sending can messages
       can_silent = ALL_CAN_SILENT;
       can_init_all();
