@@ -22,12 +22,15 @@ class TestPackerMethods(unittest.TestCase):
       cnt = random.randint(0, 65536)
       enabled = (random.randint(0, 2) % 2 == 0)
       lkas11 = {
+        "CF_Lkas_Icon": random.randint(0,65536),
         "CF_Lkas_LdwsSysState": random.randint(0,65536),
         "CF_Lkas_SysWarning": random.randint(0,65536),
         "CF_Lkas_LdwsLHWarning": random.randint(0,65536),
         "CF_Lkas_LdwsRHWarning": random.randint(0,65536),
         "CF_Lkas_HbaLamp": random.randint(0,65536),
         "CF_Lkas_FcwBasReq": random.randint(0,65536),
+        "CR_Lkas_StrToqReq": random.randint(0,65536),
+        "CF_Lkas_ActToi": random.randint(0,65536),
         "CF_Lkas_ToiFlt": random.randint(0,65536),
         "CF_Lkas_HbaSysState": random.randint(0,65536),
         "CF_Lkas_FcwOpt": random.randint(0,65536),
