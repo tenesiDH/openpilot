@@ -58,6 +58,7 @@ static int forward_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
 }
 
 static void forward_init(int16_t param) {
+  UNUSED(param);
   controls_allowed = 0;
 }
 
