@@ -13,7 +13,6 @@ import selfdrive.messaging as messaging
 LOG_MPC = os.environ.get('LOG_MPC', False)
 
 
-
 def calc_states_after_delay(states, v_ego, steer_angle, curvature_factor, steer_ratio, delay):
   states[0].x = v_ego * delay
   states[0].psi = v_ego * curvature_factor * math.radians(steer_angle) / steer_ratio * delay
@@ -127,6 +126,7 @@ class PathPlanner(object):
     plan_send.pathPlan.mpcSolutionValid = bool(plan_solution_valid)
     plan_send.pathPlan.paramsValid = bool(sm['liveParameters'].valid)
     plan_send.pathPlan.sensorValid = bool(sm['liveParameters'].sensorValid)
+    plan_send.pathPlan.posenetValid = bool(sm['liveParameters'].posenetValid)
 
     self.plan.send(plan_send.to_bytes())
 

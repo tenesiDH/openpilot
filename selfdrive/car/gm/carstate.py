@@ -49,7 +49,7 @@ def get_powertrain_can_parser(CP, canbus):
       ("CruiseState", "AcceleratorPedal2", 0),
     ]
 
-  return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], canbus.powertrain, timeout=100)
+  return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], canbus.powertrain)
 
 
 def get_chassis_can_parser(CP, canbus):

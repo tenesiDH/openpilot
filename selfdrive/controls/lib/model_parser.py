@@ -1,10 +1,8 @@
 from common.numpy_fast import interp
 import numpy as np
 from selfdrive.controls.lib.latcontrol_helpers import model_polyfit, calc_desired_path, compute_path_pinv
-from selfdrive.kegman_conf import kegman_conf
 
-kegman = kegman_conf()
-CAMERA_OFFSET = float(kegman.conf['cameraOffset'])  # m from center car to camera
+CAMERA_OFFSET = 0.06  # m from center car to camera
 
 
 class ModelParser(object):
@@ -16,9 +14,9 @@ class ModelParser(object):
     self.lead_dist, self.lead_prob, self.lead_var = 0, 0, 1
     self._path_pinv = compute_path_pinv()
 
-    self.lane_width_estimate = 2.85
+    self.lane_width_estimate = 3.7
     self.lane_width_certainty = 1.0
-    self.lane_width = 2.85
+    self.lane_width = 3.7
     self.l_prob = 0.
     self.r_prob = 0.
     self.x_points = np.arange(50)
@@ -46,9 +44,9 @@ class ModelParser(object):
     self.lane_width_certainty += 0.05 * (lr_prob - self.lane_width_certainty)
     current_lane_width = abs(l_poly[3] - r_poly[3])
     self.lane_width_estimate += 0.005 * (current_lane_width - self.lane_width_estimate)
-    speed_lane_width = interp(v_ego, [0., 31.], [2.85, 3.5])
+    speed_lane_width = interp(v_ego, [0., 31.], [2.8, 3.5])
     self.lane_width = self.lane_width_certainty * self.lane_width_estimate + \
-                        (1 - self.lane_width_certainty) * speed_lane_width
+                      (1 - self.lane_width_certainty) * speed_lane_width
 
     self.lead_dist = md.lead.dist
     self.lead_prob = md.lead.prob
