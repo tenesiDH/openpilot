@@ -212,6 +212,7 @@ class CarInterface(object):
   def update(self, c, can_strings):
     self.pt_cp.update_strings(int(sec_since_boot() * 1e9), can_strings)
 
+    self.CS.update(self.pt_cp)
 
     # create message
     ret = car.CarState.new_message()
