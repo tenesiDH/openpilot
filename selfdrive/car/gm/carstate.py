@@ -89,8 +89,6 @@ class CarState(object):
     self.v_ego = 0.
 
   def update(self, pt_cp):
-
-    self.can_valid = pt_cp.can_valid
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]['ACCButtons']
     self.prev_lka_button = self.lka_button

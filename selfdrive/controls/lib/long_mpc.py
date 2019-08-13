@@ -48,6 +48,8 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 
 LOG_MPC = os.environ.get('LOG_MPC', False)
 
+LOG_MPC = os.environ.get('LOG_MPC', False)
+
 
 class LongitudinalMpc(object):
   def __init__(self, mpc_id, live_longitudinal_mpc):
