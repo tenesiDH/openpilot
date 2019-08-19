@@ -78,8 +78,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     commIssue @53;
     tooDistracted @54;
     posenetInvalid @55;
-    turningIndicatorOn @56;
-  }
+    soundsUnavailable @56;
+    turningIndicatorOn @57;  }
 }
 
 # ******* main car state @ 100hz *******
