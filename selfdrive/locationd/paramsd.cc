@@ -1,3 +1,4 @@
+#include <iostream>
 #include <czmq.h>
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>
@@ -30,9 +31,9 @@ int main(int argc, char *argv[]) {
   zmq_pollitem_t polls[num_polls] = {{0}};
   polls[0].socket = controls_state_sock;
   polls[0].events = ZMQ_POLLIN;
-  polls[1].socket = sensor_events_sock;
+  polls[1].socket = camera_odometry_sock;
   polls[1].events = ZMQ_POLLIN;
-  polls[2].socket = camera_odometry_sock;
+  polls[2].socket = sensor_events_sock;
   polls[2].events = ZMQ_POLLIN;
 
   // Read car params
@@ -63,6 +64,7 @@ int main(int argc, char *argv[]) {
   double sR = car_params.getSteerRatio();
   double x = 1.0;
   double ao = 0.0;
+  double posenet_invalid_count = 0;
 
   if (result == 0){
     auto str = std::string(value, value_sz);
@@ -108,14 +110,26 @@ int main(int argc, char *argv[]) {
         assert(err == 0);
         err = zmq_msg_recv(&msg, polls[i].socket, 0);
         assert(err >= 0);
+
         // make copy due to alignment issues, will be freed on out of scope
         auto amsg = kj::heapArray<capnp::word>((zmq_msg_size(&msg) / sizeof(capnp::word)) + 1);
         memcpy(amsg.begin(), zmq_msg_data(&msg), zmq_msg_size(&msg));
-
-        auto which = localizer.handle_log((const unsigned char*)amsg.begin(), amsg.size());
         zmq_msg_close(&msg);
 
-        if (which == cereal::Event::CONTROLS_STATE){
+        capnp::FlatArrayMessageReader capnp_msg(amsg);
+        cereal::Event::Reader event = capnp_msg.getRoot<cereal::Event>();
+
+        localizer.handle_log(event);
+
+        auto which = event.which();
+        // Throw vision failure if posenet and odometric speed too different
+        if (which == cereal::Event::CAMERA_ODOMETRY){
+          if (std::abs(localizer.posenet_speed - localizer.car_speed) > std::max(0.4 * localizer.car_speed, 5.0)) {
+              posenet_invalid_count++;
+            } else {
+            posenet_invalid_count = 0;
+          }
+        } else if (which == cereal::Event::CONTROLS_STATE){
           save_counter++;
 
           double yaw_rate = -localizer.x[0];
@@ -141,12 +155,13 @@ int main(int argc, char *argv[]) {
             live_params.setAngleOffsetAverage(angle_offset_average_degrees);
             live_params.setStiffnessFactor(learner.x);
             live_params.setSteerRatio(learner.sR);
+            live_params.setPosenetSpeed(localizer.posenet_speed);
+            live_params.setPosenetValid(posenet_invalid_count < 4);
 
             auto words = capnp::messageToFlatArray(msg);
             auto bytes = words.asBytes();
             zmq_send(live_parameters_sock_raw, bytes.begin(), bytes.size(), ZMQ_DONTWAIT);
           }
-
 
           // Save parameters every minute
           if (save_counter % 6000 == 0) {

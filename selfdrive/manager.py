@@ -47,7 +47,7 @@ if __name__ == "__main__":
   if is_neos:
     version = int(open("/VERSION").read()) if os.path.isfile("/VERSION") else 0
     revision = int(open("/REVISION").read()) if version >= 10 else 0 # Revision only present in NEOS 10 and up
-    neos_update_required = version < 10 or (version == 10 and revision != 3)
+    neos_update_required = version < 10 or (version == 10 and revision != 4)
 
   if neos_update_required:
     # update continue.sh before updating NEOS
@@ -132,6 +132,9 @@ unkillable_processes = ['visiond']
 
 # processes to end with SIGINT instead of SIGTERM
 interrupt_processes = []
+
+# processes to end with SIGKILL instead of SIGTERM
+kill_processes = ['sensord']
 
 persistent_processes = [
   'thermald',
@@ -261,6 +264,8 @@ def kill_managed_process(name):
   if running[name].exitcode is None:
     if name in interrupt_processes:
       os.kill(running[name].pid, signal.SIGINT)
+    elif name in kill_processes:
+      os.kill(running[name].pid, signal.SIGKILL)
     else:
       running[name].terminate()
 
@@ -368,7 +373,6 @@ def manager_thread():
   logger_dead = False
 
   while 1:
-    # get health of board, log this in "thermal"
     msg = messaging.recv_sock(thermal_sock, wait=True)
 
     # uploader is gated based on the phone temperature
@@ -514,6 +518,9 @@ def main():
   # the flippening!
   os.system('LD_LIBRARY_PATH="" content insert --uri content://settings/system --bind name:s:user_rotation --bind value:i:1')
 
+  # disable bluetooth
+  os.system('service call bluetooth_manager 8')
+
   if os.getenv("NOLOG") is not None:
     del managed_processes['loggerd']
     del managed_processes['tombstoned']
@@ -566,6 +573,8 @@ def main():
     params.put("LongitudinalControl", "0")
   if params.get("LimitSetSpeed") is None:
     params.put("LimitSetSpeed", "0")
+  if params.get("LimitSetSpeedNeural") is None:
+    params.put("LimitSetSpeedNeural", "0")
 
   # is this chffrplus?
   if os.getenv("PASSIVE") is not None:
