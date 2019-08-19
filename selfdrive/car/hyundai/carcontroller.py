@@ -1,7 +1,7 @@
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11
+                                             create_clu11, create_mdps12
 from selfdrive.car.hyundai.values import Buttons
 from selfdrive.can.packer import CANPacker
 
@@ -47,6 +47,7 @@ class CarController(object):
 
     self.lkas11_cnt = self.cnt % 0x10
     self.clu11_cnt = self.cnt % 0x10
+    self.mdps12_cnt = self.cnt % 0x100
 
     if self.camera_disconnected:
       if (self.cnt % 10) == 0:
@@ -55,15 +56,17 @@ class CarController(object):
         can_sends.append(create_1191())
       if (self.cnt % 7) == 0:
         can_sends.append(create_1156())
-
+    else:
+      can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11))
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    enabled, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
 
-    if pcm_cancel_cmd:
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))
-    elif CS.stopped and (self.cnt - self.last_resume_cnt) > 5:
-      self.last_resume_cnt = self.cnt
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL))
+    #if pcm_cancel_cmd:
+      #can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))
+    if CS.stopped and (self.cnt - self.last_resume_cnt) > 20:
+      if (self.cnt - self.last_resume_cnt) % 5 == 0:
+        self.last_resume_cnt = self.cnt
+      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, self.clu11_cnt))
 
     self.cnt += 1
 

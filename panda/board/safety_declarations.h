@@ -26,6 +26,8 @@ bool driver_limit_check(int val, int val_last, struct sample_t *val_driver,
   const int MAX_ALLOWANCE, const int DRIVER_FACTOR);
 bool rt_rate_limit_check(int val, int val_last, const int MAX_RT_DELTA);
 float interpolate(struct lookup_t xy, float x);
+void safety_cb_enable_all(void);
+void safety_cb_disable_all(void);
 
 typedef void (*safety_hook_init)(int16_t param);
 typedef void (*rx_hook)(CAN_FIFOMailBox_TypeDef *to_push);

@@ -14,6 +14,7 @@
 #include "safety/safety_chrysler.h"
 #include "safety/safety_subaru.h"
 #include "safety/safety_elm327.h"
+#include "safety/safety_forward.h"
 
 const safety_hooks *current_hooks = &nooutput_hooks;
 
@@ -59,6 +60,7 @@ typedef struct {
 #define SAFETY_TOYOTA_IPAS 0x1335U
 #define SAFETY_ALLOUTPUT 0x1337U
 #define SAFETY_ELM327 0xE327U
+#define SAFETY_FORWARD 0xFA0DU
 
 const safety_hook_config safety_hook_registry[] = {
   {SAFETY_NOOUTPUT, &nooutput_hooks},
@@ -76,7 +78,10 @@ const safety_hook_config safety_hook_registry[] = {
   {SAFETY_TESLA, &tesla_hooks},
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
   {SAFETY_ELM327, &elm327_hooks},
+  {SAFETY_FORWARD, &forward_hooks},
 };
+
+uint16_t current_safety_mode = SAFETY_NOOUTPUT;
 
 int safety_set_mode(uint16_t mode, int16_t param) {
   int set_status = -1;   // not set
@@ -91,6 +96,7 @@ int safety_set_mode(uint16_t mode, int16_t param) {
   if ((set_status == 0) && (current_hooks->init != NULL)) {
     current_hooks->init(param);
   }
+  current_safety_mode = mode;
   return set_status;
 }
 
