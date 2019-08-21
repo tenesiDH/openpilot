@@ -594,7 +594,7 @@ void safety_cb_enable_all(void) {
 // disable safety_forward
 void safety_cb_disable_all(void) {
       // disable sending can messages
-      can_silent = ALL_CAN_SILENT;
+      set_safety_mode(SAFETY_NOOUTPUT, 0U);
       can_init_all();
 }
 
