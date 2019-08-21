@@ -27,9 +27,9 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     enabled = 1;
     }
   if ((enabled == 1) && (hyundai_camera_detected == 1)) {
-    safety_cb_disable_all();
     // camera connected, disable forwarding
     enabled = 0;
+    safety_cb_disable_all();
     }
 
 }
