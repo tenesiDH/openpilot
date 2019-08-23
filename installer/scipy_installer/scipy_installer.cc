@@ -115,6 +115,10 @@ struct Updater {
   Updater() {
     touch_init(&touch);
 
+    //mount system and data rw so apt can do its thing
+    system("mount -o rw,remount /system");
+    system("mount -o rw,remount /data");
+
     fb = framebuffer_init("updater", 0x00001000, false,
                           &display, &surface, &fb_w, &fb_h);
     assert(fb);

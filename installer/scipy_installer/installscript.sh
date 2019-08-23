@@ -1,8 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/sh
 
-# mount system rw so we can install stuff
-mount -o rw,remount /system
-mount -o rw,remount /data
 # Get some needed tools. coreutils for mkdir command, gnugp for the signing key, and apt-transport-https to actually connect to the repo
 apt-get update
 apt-get  --assume-yes upgrade 
