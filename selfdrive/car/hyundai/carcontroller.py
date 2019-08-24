@@ -117,7 +117,7 @@ class CarController(object):
 
       self.mdps11_stat_last = CS.mdps11_stat
       self.en_cnt += 1
-      can_sends.append(create_spas11(self.packer, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang))
+      can_sends.append(create_spas11(self.packer, self.car_fingerprint, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang))
     
     # SPAS12 20Hz
     if (self.cnt % 5) == 0 and not self.spas_present:
