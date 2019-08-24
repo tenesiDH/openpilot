@@ -100,6 +100,28 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
 
   return packer.make_can_msg("MDPS12", 2, values)
 
+def create_spas11(packer, cnt, en_spas, apply_steer, checksum):
+  values = {
+    "CF_Spas_Stat": en_spas,
+    "CF_Spas_TestMode": 0,
+    "CR_Spas_StrAngCmd": apply_steer,
+    "CF_Spas_BeepAlarm": 0,
+    "CF_Spas_Mode_Seq": 2,
+    "CF_Spas_AliveCnt": cnt,
+    "CF_Spas_Chksum": 0,
+    "CF_Spas_PasVol": 0,
+  }
+
+  dat = packer.make_can_msg("SPAS11", 0, values)[2]
+  if checksum == "crc8":
+    dat = dat[:6]
+    values["CF_Spas_Chksum"] = hyundai_checksum(dat)
+  else:
+    dat = [ord(i) for i in dat]
+    values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
+
+  return packer.make_can_msg("SPAS11", 0, values)
+
 def create_spas12(packer):
   values = {
     "CF_Spas_HMI_Stat": 0,
