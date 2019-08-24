@@ -100,7 +100,7 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
 
   return packer.make_can_msg("MDPS12", 2, values)
 
-def create_spas11(packer, cnt, en_spas, apply_steer, checksum):
+def create_spas11(packer, cnt, en_spas, apply_steer):
   values = {
     "CF_Spas_Stat": en_spas,
     "CF_Spas_TestMode": 0,
