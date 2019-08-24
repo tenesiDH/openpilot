@@ -1,9 +1,13 @@
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11, create_mdps12
+                                             create_clu11, create_mdps12, \
+                                             create_spas11, create_spas12
 from selfdrive.car.hyundai.values import Buttons
 from selfdrive.can.packer import CANPacker
+import numpy as np
+from selfdrive.config import Conversions as CV
+
 
 
 # Steer torque limits
@@ -15,6 +19,8 @@ class SteerLimitParams:
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
+  STEER_ANG_MAX = 20          # SPAS Max Angle
+  STEER_ANG_MAX_RATE = 0.4    # SPAS Degrees per ms
 
 class CarController(object):
   def __init__(self, dbc_name, car_fingerprint):
@@ -26,6 +32,12 @@ class CarController(object):
     # True when giraffe switch 2 is low and we need to replace all the camera messages
     # otherwise we forward the camera msgs and we just replace the lkas cmd signals
     self.camera_disconnected = False
+    self.en_cnt = 0
+    self.apply_steer_ang = 0.0
+    self.en_spas = 3
+    self.mdps11_stat_last = 0
+    self.lkas = False
+    self.spas_present = False # TODO Make Automatic
 
     self.packer = CANPacker(dbc_name)
 
@@ -42,12 +54,35 @@ class CarController(object):
     steer_req = 1 if enabled else 0
 
     self.apply_steer_last = apply_steer
+    
+
+    # SPAS limit angle extremes for safety
+    apply_steer_ang_req = np.clip(actuators.steerAngle, -1*(SteerLimitParams.STEER_ANG_MAX), SteerLimitParams.STEER_ANG_MAX)
+    # SPAS limit angle rate for safety
+    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.6:
+      if apply_steer_ang_req > self.apply_steer_ang:
+        self.apply_steer_ang += 0.5
+      else:
+        self.apply_steer_ang -= 0.5
+    else:
+      self.apply_steer_ang = apply_steer_ang_req
+
+    # Use LKAS or SPAS
+    if CS.mdps11_stat == 7 or CS.v_wheel > 10. * KPH_TO_MS:
+      self.lkas = True
+    elif CS.v_wheel < 10. * KPH_TO_MS:
+      self.lkas = False
+    if self.spas_present:
+      self.lkas = True
+
 
     can_sends = []
 
     self.lkas11_cnt = self.cnt % 0x10
     self.clu11_cnt = self.cnt % 0x10
     self.mdps12_cnt = self.cnt % 0x100
+    self.spas_cnt = self.cnt % 0x200
+
 
     if self.camera_disconnected:
       if (self.cnt % 10) == 0:
@@ -60,7 +95,33 @@ class CarController(object):
       can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11))
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    enabled, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
+    # SPAS11 50hz
+    if (self.cnt % 2) == 0 and not self.spas_present:
+      if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
+        self.en_spas == 7
+        self.en_cnt = 0
 
+      if self.en_spas == 7 and self.en_cnt >= 8:
+        self.en_spas = 3
+        self.en_cnt = 0
+
+      if self.en_cnt < 8 and enabled and not self.lkas:
+        self.en_spas = 4
+      elif self.en_cnt >= 8 and enabled and not self.lkas:
+        self.en_spas = 5
+      
+      if self.lkas or not enabled:
+        self.apply_steer_ang = CS.mdps11_strang
+        self.en_spas = 3
+        self.en_cnt = 0
+
+      self.mdps11_stat_last = CS.mdps11_stat
+      self.en_cnt += 1
+      can_sends.append(create_spas11(self.packer, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang, self.checksum))
+    
+    # SPAS12 20Hz
+    if (self.cnt % 5) == 0 and not self.spas_present:
+      can_sends.append(create_spas12(self.packer))
     #if pcm_cancel_cmd:
       #can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))
     if CS.stopped and (self.cnt - self.last_resume_cnt) > 20:
