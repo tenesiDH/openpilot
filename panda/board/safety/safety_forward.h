@@ -48,10 +48,13 @@ static int forward_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   int bus_fwd = -1;
   if (enabled == 1) {
     if (bus_num == 0) {
-      bus_fwd = hyundai_camera_bus;
+      bus_fwd = hyundai_camera_bus + 10;
     }
     if (bus_num == hyundai_camera_bus) {
-      bus_fwd = 0;
+      bus_fwd = 0 + 10;
+    }
+    if (bus_num == 1) {
+      bus_fwd = 0 + 20;
     }
   }
   return bus_fwd;
