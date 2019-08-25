@@ -68,9 +68,9 @@ class CarController(object):
       self.apply_steer_ang = apply_steer_ang_req
 
     # Use LKAS or SPAS
-    if CS.mdps11_stat == 7 or CS.v_wheel > 10. * CV.KPH_TO_MS:
+    if CS.mdps11_stat == 7 or CS.v_ego > 10. * CV.KPH_TO_MS:
       self.lkas = True
-    elif CS.v_wheel < 10. * CV.KPH_TO_MS:
+    elif CS.v_ego < 10. * CV.KPH_TO_MS:
       self.lkas = False
     if self.spas_present:
       self.lkas = True
