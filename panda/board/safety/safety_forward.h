@@ -39,12 +39,12 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
   if (enabled == 1) {
     if (addr == 593) {
-  if (MDPS12_cnt < 330) {
-    uint8_t dat[8];
-    for (int i=0; i<8; i++) {
-      dat[i] = GET_BYTE(to_send, i);
-      }
-    int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
+      if (MDPS12_cnt < 330) {
+        uint8_t dat[8];
+        for (int i=0; i<8; i++) {
+          dat[i] = GET_BYTE(to_send, i);
+        }
+        int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
 	//int Chksum2 = dat[3];
         int New_Chksum2 = 0;
 	int OutTq = dat[6] >> 4 | dat[7] << 4;
@@ -63,21 +63,21 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 	dat[6] &= 0xF;
 	dat[6] |= (OutTq & 0xF) << 4;
 	dat[7] = OutTq >> 4;
-    for (int i=0; i<8; i++) {
-      New_Chksum2 += dat[i];
-	  }
+        for (int i=0; i<8; i++) {
+          New_Chksum2 += dat[i];
+	}
 	New_Chksum2 %= 255;
-    to_send->RDLR &= 0xFFF800;
-    to_send->RDLR |= StrColTq | New_Chksum2 << 24;
-    to_send->RDHR &= 0xFFFFF;
-    to_send->RDHR |= OutTq << 20;
+        to_send->RDLR &= 0xFFF800;
+        to_send->RDLR |= StrColTq | New_Chksum2 << 24;
+        to_send->RDHR &= 0xFFFFF;
+        to_send->RDHR |= OutTq << 20;
 	last_StrColT = StrColTq;
-    MDPS12_cnt += 1;
-    if (MDPS12_cnt > 344) {
-      MDPS12_cnt = 0;
-      }
-    }
-}
+        MDPS12_cnt += 1;
+        if (MDPS12_cnt > 344) {
+          MDPS12_cnt = 0;
+        }
+     }
+  }
       // must be true for fwd_hook to function
       return 1;
   }
