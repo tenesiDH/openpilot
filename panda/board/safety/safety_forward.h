@@ -1,7 +1,8 @@
 
 // Stores the array index of a matched car fingerprint/forwarding profile
 int enabled = -1;
-
+int MDPS12_cnt = 0;   
+int last_StrColT = 0;
 
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
@@ -37,6 +38,46 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   UNUSED(to_send);
   if (enabled == 1) {
+    if (addr == 593) {
+  if (MDPS12_cnt < 330) {
+    uint8_t dat[8];
+    for (int i=0; i<8; i++) {
+      dat[i] = GET_BYTE(to_push, i);
+      }
+    int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
+	int Chksum2 = dat[3];
+	int OutTq = dat[6] >> 4 | dat[7] << 4;
+	if (MDPS12_cnt == 331) {
+	  StrColTq -= 164;
+	  OutTq = 4095;
+	}
+	else {
+	  StrColTq = last_StrColT + 34;
+	  OutTq = 4095;
+	}
+	dat[0] = StrColTq & 0xFF;
+	dat[1] &= 0xF8;
+	dat[1] |= StrColTq >> 8;
+	dat[3] = 0;
+	dat[6] &= 0xF;
+	dat[6] |= (OutTq & 0xF) << 4;
+	dat[7] = OutTq >> 4;
+    for (int i=0; i<8; i++) {
+      int New_Chksum2	= 0;
+      New_Chksum2 += dat[i];
+	  }
+	New_Chksum2 %= 255;
+    to_send.RDLR &= 0xFFF800;
+	to_send.RDLR |= StrColTq | New_Chksum2 << 24;
+    to_send.RDHR &= 0xFFFFF;
+    to_send.RDHR |= OutTq << 20;
+	last_StrColT = StrColTq;
+    MDPS12_cnt += 1;
+    if (MDPS12_cnt > 344) {
+      MDPS12_cnt = 0;
+      }
+    }
+}
       // must be true for fwd_hook to function
       return 1;
   }
