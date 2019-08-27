@@ -50,6 +50,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 	if (MDPS12_cnt == 331) {
 	  StrColTq -= 164;
 	  OutTq = 4095;
+	last_StrColT = StrColTq;
 	}
 	else {
 	  StrColTq = last_StrColT + 34;
@@ -70,8 +71,8 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         to_send->RDLR |= StrColTq | New_Chksum2 << 24;
         to_send->RDHR &= 0xFFFFF;
         to_send->RDHR |= OutTq << 20;
-        }
 	last_StrColT = StrColTq;
+        }
         MDPS12_cnt += 1;
         if (MDPS12_cnt > 344) {
           MDPS12_cnt = 0;
