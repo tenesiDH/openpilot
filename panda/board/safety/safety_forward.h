@@ -49,13 +49,13 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 	int OutTq = dat[6] >> 4 | dat[7] << 4;
 	if (MDPS12_cnt == 331) {
 	  StrColTq -= 164;
-	  OutTq = 4095;
-	last_StrColT = StrColTq;
+	  OutTq = 2058;
+	  last_StrColT = StrColTq;
 	}
 	else {
 	  StrColTq = last_StrColT + 34;
-	  OutTq = 4095;
-	last_StrColT = StrColTq;
+	  OutTq = 2058;
+	  last_StrColT = StrColTq;
 	}
 	dat[0] = StrColTq & 0xFF;
 	dat[1] &= 0xF8;
@@ -67,7 +67,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         for (int i=0; i<8; i++) {
           New_Chksum2 += dat[i];
 	}
-	New_Chksum2 %= 255;
+	New_Chksum2 %= 256;
         to_send->RDLR &= 0xFFF800;
         to_send->RDLR |= StrColTq | New_Chksum2 << 24;
         to_send->RDHR &= 0xFFFFF;
