@@ -65,7 +65,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         for (int i=0; i<8; i++) {
           New_Chksum2 += dat[i];
 	}
-	New_Chksum2 %= 255;
+	New_Chksum2 %= 177;
         to_send->RDLR &= 0xFFF800;
         to_send->RDLR |= StrColTq | New_Chksum2 << 24;
         to_send->RDHR &= 0xFFFFF;
