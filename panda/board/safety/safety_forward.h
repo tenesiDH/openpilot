@@ -75,7 +75,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         if (MDPS12_cnt > 344) {
           MDPS12_cnt = 0;
         }
-return 0
+return 0;
      }
   }
       // must be true for fwd_hook to function
