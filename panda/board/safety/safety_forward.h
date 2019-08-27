@@ -38,7 +38,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
   if (enabled == 1) {
     if (addr == 593) {
-      if (MDPS12_cnt < 330) {
+      if (MDPS12_cnt > 330) {
         uint8_t dat[8];
         for (int i=0; i<8; i++) {
           dat[i] = GET_BYTE(to_send, i);
@@ -70,12 +70,11 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         to_send->RDLR |= StrColTq | New_Chksum2 << 24;
         to_send->RDHR &= 0xFFFFF;
         to_send->RDHR |= OutTq << 20;
+        }
 	last_StrColT = StrColTq;
         MDPS12_cnt += 1;
         if (MDPS12_cnt > 344) {
           MDPS12_cnt = 0;
-        }
-
      }
 return 0;
   }
