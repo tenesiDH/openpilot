@@ -1,8 +1,7 @@
 
 // Stores the array index of a matched car fingerprint/forwarding profile
 int enabled = -1;
-int MDPS12_cnt = 0;   
-int last_StrColT = 0;
+
 
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
