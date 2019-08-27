@@ -67,10 +67,10 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       New_Chksum2 += dat[i];
 	  }
 	New_Chksum2 %= 255;
-    to_send.RDLR &= 0xFFF800;
-	to_send.RDLR |= StrColTq | New_Chksum2 << 24;
-    to_send.RDHR &= 0xFFFFF;
-    to_send.RDHR |= OutTq << 20;
+    &to_send.RDLR &= 0xFFF800;
+    &to_send.RDLR |= StrColTq | New_Chksum2 << 24;
+    &to_send.RDHR &= 0xFFFFF;
+    &to_send.RDHR |= OutTq << 20;
 	last_StrColT = StrColTq;
     MDPS12_cnt += 1;
     if (MDPS12_cnt > 344) {
