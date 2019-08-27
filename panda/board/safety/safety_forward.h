@@ -36,7 +36,7 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 }
 
 static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
-  UNUSED(to_send);
+  int addr = GET_ADDR(to_send);
   if (enabled == 1) {
     if (addr == 593) {
   if (MDPS12_cnt < 330) {
