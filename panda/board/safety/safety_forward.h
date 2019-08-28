@@ -1,7 +1,9 @@
 
 // Stores the array index of a matched car fingerprint/forwarding profile
 int enabled = -1;
-
+int MDPS12_checksum = -1;
+int MDPS12_cnt = 0;   
+int last_StrColT = 0;
 
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
@@ -21,6 +23,26 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if ((addr == 832) && (bus == hyundai_camera_bus) && (hyundai_camera_detected != 1)) {
     hyundai_giraffe_switch_2 = 1;
   }
+  if (addr == 593) {
+    if (MDPS12_checksum == -1) {
+      int New_Chksum2 = 0;
+      uint8_t dat[8];
+      for (int i=0; i<8; i++) {
+        dat[i] = GET_BYTE(to_push, i);
+        }
+      int Chksum2 = dat[3];
+	dat[3] = 0;
+      for (int i=0; i<8; i++) {
+        New_Chksum2 += dat[i];
+        }
+      if (Chksum2 == New_Chksum2) {
+	MDPS12_checksum = 1
+      }
+      else {
+	MDPS12_checksum = 0
+      }
+    }
+  } 
   if ((enabled != 1) && (hyundai_camera_detected != 1) && (hyundai_giraffe_switch_2 == 1)) {
     safety_cb_enable_all();
     // begin forwarding with that profile
