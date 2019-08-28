@@ -14,8 +14,6 @@ int hyundai_desired_torque_last = 0;
 int hyundai_cruise_engaged_last = 0;
 uint32_t hyundai_ts_last = 0;
 struct sample_t hyundai_torque_driver;         // last few driver torques measured
-int MDPS12_cnt = 0;   
-int last_StrColT = 0;
 
 static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus = GET_BUS(to_push);
@@ -125,46 +123,6 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   //    tx = 0;
   //  }
   //}
-      if (addr == 593) {
-      if (MDPS12_cnt < 330) {
-        uint8_t dat[8];
-        for (int i=0; i<8; i++) {
-          dat[i] = GET_BYTE(to_send, i);
-        }
-        int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
-	//int Chksum2 = dat[3];
-        int New_Chksum2 = 0;
-	int OutTq = dat[6] >> 4 | dat[7] << 4;
-	if (MDPS12_cnt == 331) {
-	  StrColTq -= 164;
-	  OutTq = 4095;
-	}
-	else {
-	  StrColTq = last_StrColT + 34;
-	  OutTq = 4095;
-	}
-	dat[0] = StrColTq & 0xFF;
-	dat[1] &= 0xF8;
-	dat[1] |= StrColTq >> 8;
-	dat[3] = 0;
-	dat[6] &= 0xF;
-	dat[6] |= (OutTq & 0xF) << 4;
-	dat[7] = OutTq >> 4;
-        for (int i=0; i<8; i++) {
-          New_Chksum2 += dat[i];
-	}
-	New_Chksum2 %= 255;
-        to_send->RDLR &= 0xFFF800;
-        to_send->RDLR |= StrColTq | New_Chksum2 << 24;
-        to_send->RDHR &= 0xFFFFF;
-        to_send->RDHR |= OutTq << 20;
-	last_StrColT = StrColTq;
-        MDPS12_cnt += 1;
-        if (MDPS12_cnt > 344) {
-          MDPS12_cnt = 0;
-        }
-     }
-  }
 
   // 1 allows the message through
   return tx;
