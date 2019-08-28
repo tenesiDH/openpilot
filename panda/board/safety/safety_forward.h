@@ -31,7 +31,7 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
         dat[i] = GET_BYTE(to_push, i);
         }
       int Chksum2 = dat[3];
-	dat[3] = 0;
+      dat[3] = 0;
       for (int i=0; i<8; i++) {
         New_Chksum2 += dat[i];
         }
@@ -60,7 +60,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
   if (enabled == 1) {
     if (addr == 593) {
-      if (MDPS12_cnt > 330) {
+      if ((MDPS12_cnt > 330) && (MDPS12_checksum == 1)) {
         uint8_t dat[8];
         for (int i=0; i<8; i++) {
           dat[i] = GET_BYTE(to_send, i);
@@ -98,8 +98,8 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         MDPS12_cnt += 1;
         if (MDPS12_cnt > 344) {
           MDPS12_cnt = 0;
-     }
-  }
+        }
+    }
       // must be true for fwd_hook to function
       return 1;
   }
