@@ -95,10 +95,10 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         to_send->RDHR &= 0xFFFFF;
         to_send->RDHR |= OutTq << 20;
         }
-        MDPS12_cnt += 1;
-        if (MDPS12_cnt > 344) {
-          MDPS12_cnt = 0;
-        }
+      MDPS12_cnt += 1;
+      if (MDPS12_cnt > 344) {
+        MDPS12_cnt = 0;
+      }
     }
       // must be true for fwd_hook to function
       return 1;
