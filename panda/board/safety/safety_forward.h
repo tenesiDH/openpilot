@@ -35,6 +35,7 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       for (int i=0; i<8; i++) {
         New_Chksum2 += dat[i];
         }
+      New_Chksum2 %= 256;
       if (Chksum2 == New_Chksum2) {
 	MDPS12_checksum = 1
       }
@@ -66,7 +67,6 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
           dat[i] = GET_BYTE(to_send, i);
         }
         int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
-	int Chksum2 = dat[3];
         int New_Chksum2 = 0;
 	int OutTq = dat[6] >> 4 | dat[7] << 4;
 	if (MDPS12_cnt == 331) {
@@ -90,7 +90,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
           New_Chksum2 += dat[i];
 	}
 	New_Chksum2 %= 256;
-	if (Chksum2 != New_Chksum2) { //we need CRC8 checksum, won't work 1/256 times
+	if (!MDPS12_checksum) { //we need CRC8 checksum
 	  New_Chksum2 = 0;
 	  for (int i=0; i<8; i++){
 	    New_Chksum2 ^= dat[i];
