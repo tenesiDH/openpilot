@@ -37,10 +37,10 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
         }
       New_Chksum2 %= 256;
       if (Chksum2 == New_Chksum2) {
-	MDPS12_checksum = 1
+	MDPS12_checksum = 1;
       }
       else {
-	MDPS12_checksum = 0
+	MDPS12_checksum = 0;
       }
     }
   } 
