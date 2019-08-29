@@ -72,12 +72,10 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 	if (MDPS12_cnt == 331) {
 	  StrColTq -= 164;
 	  OutTq = 2058;
-	  last_StrColT = StrColTq;
 	}
 	else {
 	  StrColTq = last_StrColT + 34;
 	  OutTq = 2058;
-	  last_StrColT = StrColTq;
 	}
 	dat[0] = StrColTq & 0xFF;
 	dat[1] &= 0xF8;
@@ -86,12 +84,14 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 	dat[6] &= 0xF;
 	dat[6] |= (OutTq & 0xF) << 4;
 	dat[7] = OutTq >> 4;
-        for (int i=0; i<8; i++) {
-          New_Chksum2 += dat[i];
-	}
-	New_Chksum2 %= 256;
-	if (!MDPS12_checksum) { //we need CRC8 checksum
-	  New_Chksum2 = 0;
+	      
+        if (MDPS12_checksum) { 
+          for (int i=0; i<8; i++) {
+            New_Chksum2 += dat[i];
+	  }
+	  New_Chksum2 %= 256;
+
+        } else if (!MDPS12_checksum) { //we need CRC8 checksum
 	  for (int i=0; i<8; i++){
 	    New_Chksum2 ^= dat[i];
 	    for (int j=0; j<8; j++) {
@@ -108,12 +108,11 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         to_send->RDLR |= StrColTq | New_Chksum2 << 24;
         to_send->RDHR &= 0xFFFFF;
         to_send->RDHR |= OutTq << 20;
+        last_StrColT = StrColTq;
         }
       MDPS12_cnt += 1;
-      if (MDPS12_cnt > 344) {
-        MDPS12_cnt = 0;
+      MDPS12_cnt %= 345;
       }
-    }
       // must be true for fwd_hook to function
       return 1;
   }
