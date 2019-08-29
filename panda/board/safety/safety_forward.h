@@ -60,7 +60,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
   if (enabled == 1) {
     if (addr == 593) {
-      if ((MDPS12_cnt > 330) && (MDPS12_checksum == 1)) {
+      if (MDPS12_cnt > 330) {
         uint8_t dat[8];
         for (int i=0; i<8; i++) {
           dat[i] = GET_BYTE(to_send, i);
