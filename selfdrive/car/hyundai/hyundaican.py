@@ -113,7 +113,7 @@ def create_ems11(packer, enabled, ems11):
     "N": ems11["N"],
     "TQI": ems11["TQI"],
     "TQFR": ems11["TQFR"],
-    "VS": 62,
+    "VS": 62 if enabled else ems11["VS"],
     "RATIO_TQI_BAS_MAX_STND": ems11["RATIO_TQI_BAS_MAX_STND"],
   }
   return packer.make_can_msg("EMS11", 1, values)
