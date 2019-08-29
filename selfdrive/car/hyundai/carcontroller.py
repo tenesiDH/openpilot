@@ -1,7 +1,7 @@
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11, create_mdps12
+                                             create_clu11, create_mdps12, create_ems11
 from selfdrive.car.hyundai.values import Buttons
 from selfdrive.can.packer import CANPacker
 
@@ -67,6 +67,9 @@ class CarController(object):
       if (self.cnt - self.last_resume_cnt) % 5 == 0:
         self.last_resume_cnt = self.cnt
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, self.clu11_cnt))
+      
+    low_speed = CS.v_ego < 17
+    can_sends.append(create_ems11(self.packer, low_speed, CS.ems11))
 
     self.cnt += 1
 
