@@ -37,10 +37,10 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
         }
       New_Chksum2 %= 256;
       if (Chksum2 == New_Chksum2) {
-	MDPS12_checksum = 1;
+      MDPS12_checksum = 1;
       }
       else {
-	MDPS12_checksum = 0;
+      MDPS12_checksum = 0;
       }
     }
   } 
@@ -68,42 +68,44 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         }
         int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
         int New_Chksum2 = 0;
-	int OutTq = dat[6] >> 4 | dat[7] << 4;
-	if (MDPS12_cnt == 331) {
-	  StrColTq -= 164;
-	  OutTq = 2058;
-	}
-	else {
-	  StrColTq = last_StrColT + 34;
-	  OutTq = 2058;
-	}
-	dat[0] = StrColTq & 0xFF;
-	dat[1] &= 0xF8;
-	dat[1] |= StrColTq >> 8;
-	dat[3] = 0;
-	dat[6] &= 0xF;
-	dat[6] |= (OutTq & 0xF) << 4;
-	dat[7] = OutTq >> 4;
-	      
+        int OutTq = dat[6] >> 4 | dat[7] << 4;
+        if (MDPS12_cnt == 331) {
+          StrColTq -= 164;
+        } else {
+          StrColTq = last_StrColT + 34;
+        }
+        OutTq = 2058;
+
+        dat[0] = StrColTq & 0xFF;
+        dat[1] &= 0xF8;
+        dat[1] |= StrColTq >> 8;
+        dat[3] = 0;
+        dat[6] &= 0xF;
+        dat[6] |= (OutTq & 0xF) << 4;
+        dat[7] = OutTq >> 4;
+            
         if (MDPS12_checksum) { 
           for (int i=0; i<8; i++) {
             New_Chksum2 += dat[i];
-	  }
-	  New_Chksum2 %= 256;
+          }
+          New_Chksum2 %= 256;
 
         } else if (!MDPS12_checksum) { //we need CRC8 checksum
-	  for (int i=0; i<8; i++){
-	    New_Chksum2 ^= dat[i];
-	    for (int j=0; j<8; j++) {
-	      if ((New_Chksum2 & 0x80) != 0) {
-	        New_Chksum2 = (New_Chksum2 << 1) ^ 0x07;
-	      } else {
-	        New_Chksum2 <<= 1;
-	      }
-	    }
-	  }
-	  New_Chksum2 %= 256;
-	}
+          uint8_t crc = 0xFD;
+          uint8_t poly = 0x11D;
+          int i, j;
+          for (i=0; i<8; i++){
+            crc ^= dat[i];
+            for (j=0; j<8; j++) {
+              if ((crc & 0xDF) != 0U) {
+                crc = (uint8_t)((crc << 1) ^ poly);
+              } else {
+                crc <<= 1;
+              }
+            }
+          }
+          New_Chksum2 = crc;
+        }
         to_send->RDLR &= 0xFFF800;
         to_send->RDLR |= StrColTq | New_Chksum2 << 24;
         to_send->RDHR &= 0xFFFFF;
