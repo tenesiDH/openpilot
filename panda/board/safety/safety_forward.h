@@ -92,7 +92,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
         } else if (!MDPS12_checksum) { //we need CRC8 checksum
           uint8_t crc = 0xFD;
-          uint8_t poly = 0x11D;
+          uint16_t poly = 0x11D;
           int i, j;
           for (i=0; i<8; i++){
             crc ^= dat[i];
