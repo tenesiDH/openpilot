@@ -74,7 +74,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         } else {
           StrColTq = last_StrColT + 34;
         }
-        OutTq = 2068;
+        OutTq = 2058;
 
         dat[0] = StrColTq & 0xFF;
         dat[1] &= 0xF8;
