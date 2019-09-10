@@ -99,19 +99,23 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         New_Chksum2 %= 256;
 
       } else if (!MDPS12_checksum) { //we need CRC8 checksum
-        uint8_t crc = 0xFD;
-        uint16_t poly = 0x11D;
+        uint8_t crc = 0xFF;
+        uint8_t poly = 0x1D;
         int i, j;
         for (i=0; i<8; i++){
-          crc ^= dat[i];
-          for (j=0; j<8; j++) {
-            if ((crc & 0xDF) != 0U) {
-              crc = (uint8_t)((crc << 1) ^ poly);
-            } else {
-              crc <<= 1;
+          if (i!=3){ //don't include CRC byte
+            crc ^= dat[i];
+            for (j=0; j<8; j++) {
+              if ((crc & 0x80) != 0U) {
+                crc = (crc << 1) ^ poly;
+              } else {
+                crc <<= 1;
+              }
             }
           }
         }
+        crc ^= 0xFF;
+        crc %= 256;
         New_Chksum2 = crc;
       }
       to_send->RDLR |= New_Chksum2 << 24;
