@@ -1,8 +1,4 @@
 
-// Stores the array index of a matched car fingerprint/forwarding profile
-int enabled = -1;
-
-
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
   int bus = GET_BUS(to_push);
