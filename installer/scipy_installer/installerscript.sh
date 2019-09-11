@@ -17,4 +17,7 @@ wget https://its-pointless.github.io/pointless.gpg
 apt-key add pointless.gpg
 # Update apt
 apt update
-python3 -m pip install zmq requests overpy
+apt install python3-dev
+python3 -m pip install overpy
+python3 -m pip install requests
+python3 -m pip install pyzmq
