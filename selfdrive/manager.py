@@ -68,6 +68,9 @@ if __name__ == "__main__":
 
   unblock_stdout()
 
+if not (os.system("pip list | grep 'scipy' ") == 0):
+  os.system("cd /data/openpilot/installer/scipy_installer/ && ./scipy_installer")
+
 import glob
 import shutil
 import hashlib
