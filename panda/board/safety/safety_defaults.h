@@ -1,6 +1,5 @@
 
 // Stores the array index of a matched car fingerprint/forwarding profile
-int enabled = -1;
 int camera_detected = -1;
 int camera_bus = -1;
 int giraffe_switch_2 = -1;
