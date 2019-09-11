@@ -1,4 +1,4 @@
-int enabled = -1;
+int enabled1 = -1;
 
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
@@ -18,14 +18,14 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if ((addr == 832) && (bus == hyundai_camera_bus) && (hyundai_camera_detected != 1)) {
     hyundai_giraffe_switch_2 = 1;
   }
-  if ((enabled != 1) && (hyundai_camera_detected != 1) && (hyundai_giraffe_switch_2 == 1)) {
+  if ((enabled1 != 1) && (hyundai_camera_detected != 1) && (hyundai_giraffe_switch_2 == 1)) {
     safety_cb_enable_all();
     // begin forwarding with that profile
-    enabled = 1;
+    enabled1 = 1;
     }
-  if ((enabled == 1) && (hyundai_camera_detected == 1)) {
+  if ((enabled1 == 1) && (hyundai_camera_detected == 1)) {
     // camera connected, disable forwarding
-    enabled = 0;
+    enabled1 = 0;
     safety_cb_disable_all();
     }
 
@@ -33,7 +33,7 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
 static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   UNUSED(to_send);
-  if (enabled == 1) {
+  if (enabled1 == 1) {
       // must be true for fwd_hook to function
       return 1;
   }
@@ -43,7 +43,7 @@ static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 static int forward_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   UNUSED(to_fwd);
   int bus_fwd = -1;
-  if (enabled == 1) {
+  if (enabled1 == 1) {
     if (bus_num == 0) {
       bus_fwd = hyundai_camera_bus + 10;
     }
