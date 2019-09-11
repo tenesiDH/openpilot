@@ -1,3 +1,4 @@
+int enabled = -1;
 
 static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
