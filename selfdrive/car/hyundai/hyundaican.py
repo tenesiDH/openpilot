@@ -101,19 +101,5 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
   return packer.make_can_msg("MDPS12", 2, values)
 
 def create_ems11(packer, enabled, ems11):
-  values = {
-    "SWI_IGK": ems11["SWI_IGK"],
-    "F_N_ENG": ems11["F_N_ENG"],
-    "ACK_TCS": ems11["ACK_TCS"],
-    "PUC_STAT": ems11["PUC_STAT"],
-    "TQ_COR_STAT": ems11["TQ_COR_STAT"],
-    "RLY_AC": ems11["RLY_AC"],
-    "F_SUB_TQI": ems11["F_SUB_TQI"],
-    "TQI_ACOR": ems11["TQI_ACOR"],
-    "N": ems11["N"],
-    "TQI": ems11["TQI"],
-    "TQFR": ems11["TQFR"],
-    "VS": 62 if enabled else ems11["VS"],
-    "RATIO_TQI_BAS_MAX_STND": ems11["RATIO_TQI_BAS_MAX_STND"],
-  }
-  return packer.make_can_msg("EMS11", 1, values)
+
+  return packer.make_can_msg("EMS11", 1, ems11)
