@@ -1,5 +1,6 @@
 import os
 import zmq
+import threading
 from cereal import car
 from common.params import Params
 from common.vin import get_vin, VIN_UNKNOWN
@@ -7,7 +8,7 @@ from common.basedir import BASEDIR
 from common.fingerprints import eliminate_incompatible_cars, all_known_cars
 from selfdrive.swaglog import cloudlog
 import selfdrive.messaging as messaging
-
+import selfdrive.crash as crash
 
 def get_one_can(logcan):
   while True:
@@ -132,7 +133,9 @@ def fingerprint(logcan, sendcan, is_panda_black):
   cloudlog.warning("fingerprinted %s", car_fingerprint)
   return car_fingerprint, finger, vin
 
-
+def crash_log(candidate):
+  crash.capture_warning("fingerprinted %s" % candidate)
+  
 def get_car(logcan, sendcan, is_panda_black=False):
 
   candidate, fingerprints, vin = fingerprint(logcan, sendcan, is_panda_black)
@@ -140,7 +143,8 @@ def get_car(logcan, sendcan, is_panda_black=False):
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
     candidate = "mock"
-
+  x = threading.Thread(target=crash_log, args=(1,))
+  x.start()
   CarInterface, CarController = interfaces[candidate]
   car_params = CarInterface.get_params(candidate, fingerprints[0], vin, is_panda_black)
 
