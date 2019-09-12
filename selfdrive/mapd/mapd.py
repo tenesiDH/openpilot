@@ -9,8 +9,6 @@ DEFAULT_SPEEDS_BY_REGION_JSON_FILE = BASEDIR + "/selfdrive/mapd/default_speeds_b
 from selfdrive.mapd import default_speeds_generator
 default_speeds_generator.main(DEFAULT_SPEEDS_BY_REGION_JSON_FILE)
 
-import os
-import sys
 import time
 import zmq
 import requests
