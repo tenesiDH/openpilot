@@ -2,9 +2,10 @@
 
 # Add phonelibs openblas to LD_LIBRARY_PATH if import fails
 import selfdrive.crash as crash
+from common.basedir import BASEDIR
 from scipy import spatial
 
-DEFAULT_SPEEDS_BY_REGION_JSON_FILE = "/selfdrive/mapd/default_speeds_by_region.json"
+DEFAULT_SPEEDS_BY_REGION_JSON_FILE = BASEDIR + "/selfdrive/mapd/default_speeds_by_region.json"
 from selfdrive.mapd import default_speeds_generator
 default_speeds_generator.main(DEFAULT_SPEEDS_BY_REGION_JSON_FILE)
 
