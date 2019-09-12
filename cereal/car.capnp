@@ -72,15 +72,18 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     calibrationProgress @47;
     lowBattery @48;
     invalidGiraffeHonda @49;
-    manualSteeringRequired @50;
-    manualSteeringRequiredBlinkersOn @51;
-    vehicleModelInvalid @52;
-    controlsFailed @53;
-    sensorDataInvalid @54;
-    commIssue @55;
-    tooDistracted @56;
-    posenetInvalid @57;
-    soundsUnavailable @58;
+    vehicleModelInvalid @50;
+    controlsFailed @51;
+    sensorDataInvalid @52;
+    commIssue @53;
+    tooDistracted @54;
+    posenetInvalid @55;
+    soundsUnavailable @56;
+    preLaneChangeLeft @57;
+    preLaneChangeRight @58;
+    laneChange @59;
+    manualSteeringRequired @60;
+    manualSteeringRequiredBlinkersOn @61;
   }
 }
 
@@ -126,13 +129,17 @@ struct CarState {
   leftBlinker @20 :Bool;
   rightBlinker @21 :Bool;
   genericToggle @23 :Bool;
-  readdistancelines @26 :Float32;
-  lkMode @29 :Bool;
 
   # lock info
   doorOpen @24 :Bool;
   seatbeltUnlatched @25 :Bool;
-  canValid @28 :Bool;
+  canValid @26 :Bool;
+
+  readdistancelines @27 :Float32;
+  lkMode @28 :Bool;
+
+
+
 
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
@@ -304,6 +311,7 @@ struct CarParams {
   minEnableSpeed @7 :Float32;
   minSteerSpeed @8 :Float32;
   safetyModel @9 :SafetyModel;
+  safetyModelPassive @42 :SafetyModel = noOutput;
   safetyParam @10 :Int16;
 
   steerMaxBP @11 :List(Float32);
@@ -347,6 +355,7 @@ struct CarParams {
   openpilotLongitudinalControl @37 :Bool; # is openpilot doing the longitudinal control?
   carVin @38 :Text; # VIN number queried during fingerprinting
   isPandaBlack @39: Bool;
+  dashcamOnly @41: Bool;
 
   struct LateralPIDTuning {
     kpBP @0 :List(Float32);
@@ -402,6 +411,7 @@ struct CarParams {
     chrysler @9;
     tesla @10;
     subaru @11;
+    gmPassive @12;
   }
 
   enum SteerControlType {

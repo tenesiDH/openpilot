@@ -1,9 +1,9 @@
 import unittest
-#import numpy as np
+import numpy as np
 
 from cereal import log
 import selfdrive.messaging as messaging
-#from selfdrive.config import Conversions as CV
+from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.planner import calc_cruise_accel_limits
 from selfdrive.controls.lib.speed_smoother import speed_smoother
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
@@ -15,9 +15,9 @@ def RW(v_ego, v_l):
   return (v_ego * TR - (v_l - v_ego) * TR + v_ego * v_ego / (2 * G) - v_l * v_l / (2 * G))
 
 
-class FakeSocket(object):
-    def send(self, data):
-        assert data
+class FakePubMaster(object):
+  def send(self, s, data):
+    assert data
 
 
 def run_following_distance_simulation(v_lead, t_end=200.0):
@@ -32,7 +32,8 @@ def run_following_distance_simulation(v_lead, t_end=200.0):
 
   v_cruise_setpoint = v_lead + 10.
 
-  mpc = LongitudinalMpc(1, FakeSocket())
+  pm = FakePubMaster()
+  mpc = LongitudinalMpc(1)
 
   first = True
   while t < t_end:
@@ -61,8 +62,8 @@ def run_following_distance_simulation(v_lead, t_end=200.0):
     mpc.set_cur_state(v_ego, a_ego)
     if first:  # Make sure MPC is converged on first timestep
       for _ in range(20):
-        mpc.update(CS.carState, lead, v_cruise_setpoint)
-    mpc.update(CS.carState, lead, v_cruise_setpoint)
+        mpc.update(pm, CS.carState, lead, v_cruise_setpoint)
+    mpc.update(pm, CS.carState, lead, v_cruise_setpoint)
 
     # Choose slowest of two solutions
     if v_cruise < mpc.v_mpc:
@@ -81,11 +82,10 @@ def run_following_distance_simulation(v_lead, t_end=200.0):
 
 class TestFollowingDistance(unittest.TestCase):
   def test_following_distanc(self):
-    return 1
-    #for speed_mph in np.linspace(10, 100, num=10):
-    #  v_lead = float(speed_mph * CV.MPH_TO_MS)
+    for speed_mph in np.linspace(10, 100, num=10):
+      v_lead = float(speed_mph * CV.MPH_TO_MS)
 
-    #  simulation_steady_state = run_following_distance_simulation(v_lead)
-    #  correct_steady_state = RW(v_lead, v_lead) + 4.0
+      simulation_steady_state = run_following_distance_simulation(v_lead)
+      correct_steady_state = RW(v_lead, v_lead) + 4.0
 
-    #  self.assertAlmostEqual(simulation_steady_state, correct_steady_state, delta=0.1)
+      self.assertAlmostEqual(simulation_steady_state, correct_steady_state, delta=0.1)
