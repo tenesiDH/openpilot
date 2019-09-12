@@ -616,7 +616,7 @@ uint64_t tcnt = 0;
 #define EON_HEARTBEAT_THRESHOLD_IGNITION_ON 5U
 #define EON_HEARTBEAT_THRESHOLD_IGNITION_OFF 2U
 
-// called once per second
+// called 5 times per second (twice heartbeat rate)
 // cppcheck-suppress unusedFunction ; used in headers not included in cppcheck
 void TIM3_IRQHandler(void) {
   if (TIM3->SR != 0) {
@@ -770,8 +770,9 @@ int main(void) {
   }
 #endif
 
-  // 48mhz / 65536 ~= 732 / 732 = 1
-  timer_init(TIM3, 732);
+  // 48mhz / 65536 ~= 732
+  // 146 / 732 = .2 seconds = 5 Hz
+  timer_init(TIM3, 146);
   NVIC_EnableIRQ(TIM3_IRQn);
 
 #ifdef DEBUG
