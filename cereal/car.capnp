@@ -135,8 +135,8 @@ struct CarState {
   seatbeltUnlatched @25 :Bool;
   canValid @26 :Bool;
 
-  readdistancelines @27 :Float32;
-  lkMode @28 :Bool;
+  readdistancelines @28 :Float32;
+  lkMode @29 :Bool;
 
 
 
