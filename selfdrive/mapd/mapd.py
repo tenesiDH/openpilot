@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Add phonelibs openblas to LD_LIBRARY_PATH if import fails
 import selfdrive.crash as crash
