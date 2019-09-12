@@ -68,7 +68,6 @@ frontEncodeIdx: [8061, true, 5.]
 orbFeaturesSummary: [8062, true, 0.]
 driverMonitoring: [8063, true, 5., 1]
 liveParameters: [8064, true, 10.]
-liveMapData: [8065, true, 0.]
 cameraOdometry: [8066, true, 5.]
 pathPlan: [8067, true, 20.]
 kalmanOdometry: [8068, true, 0.]
@@ -79,6 +78,10 @@ carParams: [8071, true, 0.02, 1]
 testModel: [8040, false, 0.]
 testLiveLocation: [8045, false, 0.]
 testJoystick: [8056, false, 0.]
+
+#arne182
+liveTrafficData: [8208, false, 10]
+liveMapData: [8065, false, 10]
 
 # 8080 is reserved for slave testing daemon
 # 8762 is reserved for logserver
