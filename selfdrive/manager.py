@@ -120,6 +120,7 @@ managed_processes = {
   "sensord": ("selfdrive/sensord", ["./start_sensord.py"]),
   "gpsd": ("selfdrive/sensord", ["./start_gpsd.py"]),
   "updated": "selfdrive.updated",
+  "mapd": ("selfdrive/mapd", ["./mapd.py"]),
 }
 daemon_processes = {
   "athenad": "selfdrive.athena.athenad",
@@ -162,6 +163,7 @@ car_started_processes = [
   'ubloxd',
   'gpsd',
   'deleter',
+  'mapd',
 ]
 
 def register_managed_process(name, desc, car_started=False):
