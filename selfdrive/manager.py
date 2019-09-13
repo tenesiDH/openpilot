@@ -120,7 +120,7 @@ managed_processes = {
   "sensord": ("selfdrive/sensord", ["./start_sensord.py"]),
   "gpsd": ("selfdrive/sensord", ["./start_gpsd.py"]),
   "updated": "selfdrive.updated",
-  "mapd": ("selfdrive.mapd", ["./start.py"]),
+  "mapd": ("selfdrive/mapd", ["./start.py"]),
 }
 daemon_processes = {
   "athenad": "selfdrive.athena.athenad",
