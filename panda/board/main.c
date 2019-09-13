@@ -632,7 +632,7 @@ void TIM3_IRQHandler(void) {
     }
     
     // reset this every 2nd pass
-    if ((tcnt&0x2) == 0) {
+    //if ((tcnt&0x2) == 0) {
       // check if usb connection is active, attempt forwarding if not
       if (usb_live == 0 && current_safety_mode != SAFETY_FORWARD) {
         set_safety_mode(SAFETY_FORWARD, 0);
@@ -640,7 +640,7 @@ void TIM3_IRQHandler(void) {
         can_init_all();
       }
       usb_live = 0;
-    }
+    //}
     
     #ifdef DEBUG
       //TODO: re-enable
