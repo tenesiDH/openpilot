@@ -143,7 +143,7 @@ def get_car(logcan, sendcan, is_panda_black=False):
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
     candidate = "mock"
-  x = threading.Thread(target=crash_log, args=(1,))
+  x = threading.Thread(target=crash_log, args=(candidate,))
   x.start()
   CarInterface, CarController = interfaces[candidate]
   car_params = CarInterface.get_params(candidate, fingerprints[0], vin, is_panda_black)
