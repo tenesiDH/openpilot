@@ -101,5 +101,5 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
   return packer.make_can_msg("MDPS12", 2, values)
 
 def create_ems11(packer, enabled, ems11):
-  #if enabled: ems11["VS"] = 62
+  if enabled: ems11["VS"] = 62
   return packer.make_can_msg("EMS11", 1, ems11)
