@@ -771,8 +771,8 @@ int main(void) {
 #endif
 
   // 48mhz / 65536 ~= 732
-  // 146 / 732 = .2 seconds = 5 Hz
-  timer_init(TIM3, 146);
+  // 73 / 732 = .1 seconds = 10 Hz
+  timer_init(TIM3, 73);
   NVIC_EnableIRQ(TIM3_IRQn);
 
 #ifdef DEBUG
