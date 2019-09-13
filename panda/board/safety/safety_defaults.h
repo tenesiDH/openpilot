@@ -69,9 +69,9 @@ static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
     if (bus_num == camera_bus) {
       bus_fwd = 0 + 10;
     }
-    if (bus_num == 1) {
-      bus_fwd = 0 + 20;
-    }
+  }
+  if (bus_num == 1) {
+    bus_fwd = 0 + 20;
   }
   return bus_fwd;
 }
