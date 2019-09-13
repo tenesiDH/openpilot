@@ -483,10 +483,10 @@ void *can_health_thread(void *crap) {
   void *publisher = zmq_socket(context, ZMQ_PUB);
   zmq_bind(publisher, "tcp://*:8011");
 
-  // run at 10hz
+  // run at 20hz
   while (!do_exit) {
     can_health(publisher);
-    usleep(100000);
+    usleep(50000);
   }
   return NULL;
 }
