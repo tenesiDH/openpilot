@@ -33,11 +33,7 @@ static void forward_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
 static int forward_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   UNUSED(to_send);
-  if (enabled1 == 1) {
-      // must be true for fwd_hook to function
-      return 1;
-  }
-  return 0;
+  return 1;
 }
 
 static int forward_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
@@ -50,9 +46,9 @@ static int forward_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
     if (bus_num == hyundai_camera_bus) {
       bus_fwd = 0 + 10;
     }
-    if (bus_num == 1) {
-      bus_fwd = 0 + 20;
-    }
+  }
+  if (bus_num == 1) {
+    bus_fwd = 0 + 20;
   }
   return bus_fwd;
 }
