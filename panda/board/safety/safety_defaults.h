@@ -49,11 +49,7 @@ static void nooutput_init(int16_t param) {
 
 static int nooutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   UNUSED(to_send);
-  if (enabled == 1) {
-      // must be true for fwd_hook to function
-      return 1;
-  }
-  return false;
+  return 1;
 }
 
 static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
