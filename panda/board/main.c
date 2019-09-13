@@ -612,8 +612,8 @@ void __attribute__ ((noinline)) enable_fpu(void) {
 
 uint64_t tcnt = 0;
 
-// go into NOOUTPUT when the EON does not send a heartbeat for this amount of seconds.
-#define EON_HEARTBEAT_THRESHOLD_IGNITION_ON 5U
+// go into NOOUTPUT when the EON does not send a heartbeat for this amount of loops.
+#define EON_HEARTBEAT_THRESHOLD_IGNITION_ON 2U
 #define EON_HEARTBEAT_THRESHOLD_IGNITION_OFF 2U
 
 // called 5 times per second (twice heartbeat rate)
