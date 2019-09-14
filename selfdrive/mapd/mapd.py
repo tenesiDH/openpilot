@@ -135,7 +135,6 @@ def mapsd_thread():
   global last_gps
   context = zmq.Context()
   poller = zmq.Poller()
-  gps_sock = messaging.sub_sock(context, 8026, conflate=True)
   gps_external_sock = messaging.sub_sock(context, 8032, poller, conflate=True)
   map_data_sock = messaging.pub_sock(context, 8065)
   traffic_data_sock = messaging.sub_sock(context, 8208, poller, conflate=True)
@@ -156,7 +155,6 @@ def mapsd_thread():
   speedLimittrafficvalid = False
   
   while True:
-    gps = messaging.recv_one(gps_sock)
     gps_ext = None
     traffic = None
     for socket, event in poller.poll(0):
@@ -181,7 +179,7 @@ def mapsd_thread():
     if gps_ext is not None:
       gps = gps_ext.gpsLocationExternal
     else:
-      gps = gps.gpsLocation
+      continue
 
     save_gps_data(gps)
 
