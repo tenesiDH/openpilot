@@ -24,3 +24,4 @@ python3 -m pip install requests
 python3 -m pip install pyzmq
 python3 -m pip install pycapnp
 python3 -m pip install cffi
+python3 -m pip install pyximport
