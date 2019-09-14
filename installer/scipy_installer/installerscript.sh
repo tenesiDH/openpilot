@@ -24,4 +24,5 @@ python3 -m pip install requests
 python3 -m pip install pyzmq
 python3 -m pip install pycapnp
 python3 -m pip install cffi
-python3 -m pip install pyximport
+mkdir /system/comma/usr/lib/python3.7/site-packages/pyximport
+cp -r /system/comma/usr/lib/python2.7/site-packages/pyximport/. /system/comma/usr/lib/python3.7/site-packages/pyximport
