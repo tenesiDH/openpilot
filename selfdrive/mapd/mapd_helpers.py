@@ -391,7 +391,7 @@ class Way:
               print("backward")
               if way_pts[count, 0] > 0:
                 speed_ahead_dist = way_pts[count, 0]
-                print speed_ahead_dist
+                print(speed_ahead_dist)
                 speed_ahead = 5/3.6
                 if n.tags['highway']=='stop':
                   speed_ahead = 0
