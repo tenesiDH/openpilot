@@ -13,7 +13,7 @@ import requests
 import threading
 import numpy as np
 import overpy
-from common.params import Params
+#from common.params import Params
 from collections import defaultdict
 
 from common.transformations.coordinates import geodetic2ecef
@@ -332,8 +332,6 @@ def mapsd_thread():
 
 
 def main(gctx=None):
-  params = Params()
-  dongle_id = params.get("DongleId")
 
   main_thread = threading.Thread(target=mapsd_thread)
   main_thread.daemon = True
