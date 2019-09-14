@@ -14,6 +14,8 @@ from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
 
+NO_CURVATURE_SPEED = 90.0
+
 MAX_SPEED = 255.0
 
 LON_MPC_STEP = 0.2  # first step is 0.2s
@@ -22,8 +24,8 @@ AWARENESS_DECEL = -0.2     # car smoothly decel at .2m/s^2 when user is distract
 
 # lookup tables VS speed to determine min and max accels in cruise
 # make sure these accelerations are smaller than mpc limits
-_A_CRUISE_MIN_V  = [-1.0, -.8, -.67, -.5, -.30]
-_A_CRUISE_MIN_BP = [   0., 5.,  10., 20.,  40.]
+_A_CRUISE_MIN_V  = [-0.8, -0.7, -0.6, -0.5, -0.3]
+_A_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 
 # need fast accel at very low speed for stop and go
 # make sure these accelerations are smaller than mpc limits
@@ -32,8 +34,8 @@ _A_CRUISE_MAX_V_FOLLOWING = [1.6, 1.6, 1.2, .7, .3]
 _A_CRUISE_MAX_BP = [0.,  5., 10., 20., 40.]
 
 # Lookup table for turns
-_A_TOTAL_MAX_V = [1.5, 1.9, 3.2]
-_A_TOTAL_MAX_BP = [0., 20., 40.]
+_A_TOTAL_MAX_V = [2.3, 3.0, 3.9]
+_A_TOTAL_MAX_BP = [0., 25., 55.]
 
 
 # Model speed kalman stuff
@@ -64,9 +66,12 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 
   a_total_max = interp(v_ego, _A_TOTAL_MAX_BP, _A_TOTAL_MAX_V)
   a_y = v_ego**2 * angle_steers * CV.DEG_TO_RAD / (CP.steerRatio * CP.wheelbase)
-  a_x_allowed = math.sqrt(max(a_total_max**2 - a_y**2, 0.))
-
-  return [a_target[0], min(a_target[1], a_x_allowed)]
+  a_x_allowed = a_total_max - a_y
+  
+  a_target[1] = min(a_target[1], a_x_allowed)
+  a_target[0] = min(a_target[0], a_target[1])
+  
+  return a_target
 
 
 class Planner(object):
@@ -124,6 +129,7 @@ class Planner(object):
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
+    speed_ahead_distance = 250
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -135,7 +141,11 @@ class Planner(object):
 
     enabled = (long_control_state == LongCtrlState.pid) or (long_control_state == LongCtrlState.stopping)
     following = lead_1.status and lead_1.dRel < 45.0 and lead_1.vLeadK > v_ego and lead_1.aLeadK > 0.0
-
+    
+    v_speedlimit = NO_CURVATURE_SPEED
+    v_curvature = NO_CURVATURE_SPEED
+    v_speedlimit_ahead = NO_CURVATURE_SPEED
+    
     if len(sm['model'].path.poly):
       path = list(sm['model'].path.poly)
 
@@ -153,7 +163,42 @@ class Planner(object):
       model_speed = max(20.0 * CV.MPH_TO_MS, model_speed) # Don't slow down below 20mph
     else:
       model_speed = MAX_SPEED
-
+    offset = 0.0
+    if sm['liveMapData'].speedLimitValid:
+      speed_limit = sm['liveMapData'].speedLimit
+      v_speedlimit = speed_limit + offset
+    else:
+      speed_limit = None
+    if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance:
+      distanceatlowlimit = 50
+      if sm['liveMapData'].speedLimitAhead < 21/3.6:
+        distanceatlowlimit = speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*2
+        if distanceatlowlimit < 50:
+          distanceatlowlimit = 0
+        distanceatlowlimit = min(distanceatlowlimit,100)
+        speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*5
+        speed_ahead_distance = min(speed_ahead_distance,300)
+        speed_ahead_distance = max(speed_ahead_distance,50)
+      if speed_limit is not None and sm['liveMapData'].speedLimitAheadDistance > distanceatlowlimit and v_ego + 3 < sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*sm['liveMapData'].speedLimitAheadDistance/speed_ahead_distance:
+        speed_limit_ahead = sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*(sm['liveMapData'].speedLimitAheadDistance - distanceatlowlimit)/(speed_ahead_distance - distanceatlowlimit)
+      else:
+        speed_limit_ahead = sm['liveMapData'].speedLimitAhead
+      v_speedlimit_ahead = speed_limit_ahead + offset
+    if sm['liveMapData'].curvatureValid:
+      curvature = abs(sm['liveMapData'].curvature)
+      radius = 1/max(1e-4, curvature)
+      if radius > 500:
+        c=0.7 # 0.7 at 1000m = 95 kph
+      elif radius > 250: 
+        c = 2.7-1/250*radius # 1.7 at 264m 76 kph
+      else:
+        c= 3.0 - 13/2500 *radius # 3.0 at 15m 24 kph
+      v_curvature = math.sqrt(c*radius)
+      v_curvature = min(NO_CURVATURE_SPEED, v_curvature)
+    decel_for_turn = bool(v_curvature < min([v_cruise_setpoint, v_speedlimit, v_ego + 1.]))
+    v_cruise_setpoint = min([v_cruise_setpoint, v_curvature, v_speedlimit, v_speedlimit_ahead])
+    
+    
     # Calculate speed for normal cruise control
     if enabled:
       accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following)]
@@ -164,7 +209,19 @@ class Planner(object):
         # if required so, force a smooth deceleration
         accel_limits_turns[1] = min(accel_limits_turns[1], AWARENESS_DECEL)
         accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
-
+        
+      if decel_for_turn and sm['liveMapData'].distToTurn < speed_ahead_distance:
+        time_to_turn = max(1.0, sm['liveMapData'].distToTurn / max((v_ego + v_curvature)/2, 1.))
+        required_decel = min(0, (v_curvature - v_ego) / time_to_turn)
+        accel_limits[0] = max(accel_limits[0], required_decel)
+      if v_speedlimit_ahead < v_speedlimit and self.longitudinalPlanSource =='cruise' and v_ego > v_speedlimit_ahead:
+        if sm['liveMapData'].speedLimitAheadDistance > 1:
+          required_decel = min(0, (v_speedlimit_ahead*v_speedlimit_ahead - v_ego*v_ego)/(sm['liveMapData'].speedLimitAheadDistance*2))
+          required_decel = max(required_decel, -3.0)
+          accel_limits[0] = required_decel
+          accel_limits[1] = required_decel
+          self.a_acc_start = required_decel
+      
       self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,
                                                     accel_limits_turns[1], accel_limits_turns[0],
