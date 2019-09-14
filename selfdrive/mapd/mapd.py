@@ -18,7 +18,6 @@ from common.params import Params
 from collections import defaultdict
 
 from common.transformations.coordinates import geodetic2ecef
-from selfdrive.services import service_list
 import selfdrive.messaging as messaging
 from selfdrive.mapd.mapd_helpers import MAPS_LOOKAHEAD_DISTANCE, Way, circle_through_points
 from selfdrive.version import version, dirty
@@ -137,10 +136,10 @@ def mapsd_thread():
   global last_gps
 
   poller = zmq.Poller()
-  gps_sock = messaging.sub_sock(service_list['gpsLocation'].port, conflate=True)
-  gps_external_sock = messaging.sub_sock(service_list['gpsLocationExternal'].port, poller, conflate=True)
-  map_data_sock = messaging.pub_sock(service_list['liveMapData'].port)
-  traffic_data_sock = messaging.sub_sock(service_list['liveTrafficData'].port, poller, conflate=True)
+  gps_sock = messaging.sub_sock("8026", conflate=True)
+  gps_external_sock = messaging.sub_sock("8032", poller, conflate=True)
+  map_data_sock = messaging.pub_sock("8065")
+  traffic_data_sock = messaging.sub_sock("8208", poller, conflate=True)
 
   cur_way = None
   curvature_valid = False
