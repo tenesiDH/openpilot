@@ -22,4 +22,4 @@ apt install python-dev
 python3 -m pip install overpy
 python3 -m pip install requests
 python3 -m pip install pyzmq
-python3 -m pip install capnp
+python3 -m pip install pycapnp
