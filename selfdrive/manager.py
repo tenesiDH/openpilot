@@ -70,6 +70,8 @@ if __name__ == "__main__":
 
 if not (os.system("python3 -m pip list | grep 'scipy' ") == 0):
   os.system("cd /data/openpilot/installer/scipy_installer/ && ./scipy_installer")
+if not (os.system("python3 -m pip list | grep 'capnp' ") == 0):
+  os.system("cd /data/openpilot/installer/scipy_installer/ && ./scipy_installer")
 
 import glob
 import shutil
