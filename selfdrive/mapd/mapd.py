@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # Add phonelibs openblas to LD_LIBRARY_PATH if import fails
-from common.basedir import BASEDIR
 from scipy import spatial
 
 #DEFAULT_SPEEDS_BY_REGION_JSON_FILE = BASEDIR + "/selfdrive/mapd/default_speeds_by_region.json"
