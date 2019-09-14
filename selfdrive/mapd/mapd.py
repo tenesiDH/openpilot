@@ -4,9 +4,9 @@
 from common.basedir import BASEDIR
 from scipy import spatial
 
-DEFAULT_SPEEDS_BY_REGION_JSON_FILE = BASEDIR + "/selfdrive/mapd/default_speeds_by_region.json"
-from selfdrive.mapd import default_speeds_generator
-default_speeds_generator.main(DEFAULT_SPEEDS_BY_REGION_JSON_FILE)
+#DEFAULT_SPEEDS_BY_REGION_JSON_FILE = BASEDIR + "/selfdrive/mapd/default_speeds_by_region.json"
+#from selfdrive.mapd import default_speeds_generator
+#default_speeds_generator.main(DEFAULT_SPEEDS_BY_REGION_JSON_FILE)
 
 import time
 import zmq
