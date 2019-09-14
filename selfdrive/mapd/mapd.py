@@ -20,7 +20,6 @@ from collections import defaultdict
 from common.transformations.coordinates import geodetic2ecef
 import selfdrive.mapd.messaging as messaging
 from selfdrive.mapd.mapd_helpers import MAPS_LOOKAHEAD_DISTANCE, Way, circle_through_points
-from selfdrive.version import version, dirty
 
 OVERPASS_API_URL = "https://z.overpass-api.de/api/interpreter"
 OVERPASS_HEADERS = {
