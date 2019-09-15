@@ -195,6 +195,12 @@ class Planner(object):
         c= 3.0 - 13/2500 *radius # 3.0 at 15m 24 kph
       v_curvature = math.sqrt(c*radius)
       v_curvature = min(NO_CURVATURE_SPEED, v_curvature)
+    print v_cruise_setpoint
+    print v_speedlimit
+    print v_ego
+    print v_cruise_setpoint
+    print v_curvature
+    print v_speedlimit_ahead
     decel_for_turn = v_curvature < min([v_cruise_setpoint, v_speedlimit, v_ego + 1.])
     v_cruise_setpoint = min([v_cruise_setpoint, v_curvature, v_speedlimit, v_speedlimit_ahead])
     
