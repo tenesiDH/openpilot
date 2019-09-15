@@ -196,7 +196,7 @@ class Planner(object):
       v_curvature_map = math.sqrt(c*radius)
       v_curvature_map = min(NO_CURVATURE_SPEED, v_curvature)
     
-    decel_for_turn = v_curvature < min([v_cruise_setpoint, v_speedlimit, v_ego + 1.])
+    decel_for_turn = bool(v_curvature_map < min([v_cruise_setpoint, v_speedlimit, v_ego + 1.]))
     v_cruise_setpoint = min([v_cruise_setpoint, v_curvature_map, v_speedlimit, v_speedlimit_ahead])
     
     
