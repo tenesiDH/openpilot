@@ -143,7 +143,7 @@ class Planner(object):
     following = lead_1.status and lead_1.dRel < 45.0 and lead_1.vLeadK > v_ego and lead_1.aLeadK > 0.0
     
     v_speedlimit = NO_CURVATURE_SPEED
-    v_curvature = NO_CURVATURE_SPEED
+    v_curvature_map = NO_CURVATURE_SPEED
     v_speedlimit_ahead = NO_CURVATURE_SPEED
     
     if len(sm['model'].path.poly):
@@ -193,16 +193,11 @@ class Planner(object):
         c = 2.7-1/250*radius # 1.7 at 264m 76 kph
       else:
         c= 3.0 - 13/2500 *radius # 3.0 at 15m 24 kph
-      v_curvature = math.sqrt(c*radius)
-      v_curvature = min(NO_CURVATURE_SPEED, v_curvature)
-    cloudlog.warning(v_cruise_setpoint)
-    cloudlog.warning(v_speedlimit)
-    cloudlog.warning(v_ego)
-    cloudlog.warning(v_cruise_setpoint)
-    cloudlog.warning(v_curvature)
-    cloudlog.warning(v_speedlimit_ahead)
+      v_curvature_map = math.sqrt(c*radius)
+      v_curvature_map = min(NO_CURVATURE_SPEED, v_curvature)
+    
     decel_for_turn = v_curvature < min([v_cruise_setpoint, v_speedlimit, v_ego + 1.])
-    v_cruise_setpoint = min([v_cruise_setpoint, v_curvature, v_speedlimit, v_speedlimit_ahead])
+    v_cruise_setpoint = min([v_cruise_setpoint, v_curvature_map, v_speedlimit, v_speedlimit_ahead])
     
     
     # Calculate speed for normal cruise control
