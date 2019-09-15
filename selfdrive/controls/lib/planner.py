@@ -164,37 +164,40 @@ class Planner(object):
     else:
       model_speed = MAX_SPEED
     offset = 0.0
-    if sm['liveMapData'].speedLimitValid:
-      speed_limit = sm['liveMapData'].speedLimit
-      v_speedlimit = speed_limit + offset
-    else:
-      speed_limit = None
-    if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance:
-      distanceatlowlimit = 50
-      if sm['liveMapData'].speedLimitAhead < 21/3.6:
-        distanceatlowlimit = speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*2
-        if distanceatlowlimit < 50:
-          distanceatlowlimit = 0
-        distanceatlowlimit = min(distanceatlowlimit,100)
-        speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*5
-        speed_ahead_distance = min(speed_ahead_distance,300)
-        speed_ahead_distance = max(speed_ahead_distance,50)
-      if speed_limit is not None and sm['liveMapData'].speedLimitAheadDistance > distanceatlowlimit and v_ego + 3 < sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*sm['liveMapData'].speedLimitAheadDistance/speed_ahead_distance:
-        speed_limit_ahead = sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*(sm['liveMapData'].speedLimitAheadDistance - distanceatlowlimit)/(speed_ahead_distance - distanceatlowlimit)
+    try:
+      if sm['liveMapData'].speedLimitValid:
+        speed_limit = sm['liveMapData'].speedLimit
+        v_speedlimit = speed_limit + offset
       else:
-        speed_limit_ahead = sm['liveMapData'].speedLimitAhead
-      v_speedlimit_ahead = speed_limit_ahead + offset
-    if sm['liveMapData'].curvatureValid:
-      curvature = abs(sm['liveMapData'].curvature)
-      radius = 1/max(1e-4, curvature)
-      if radius > 500:
-        c=0.7 # 0.7 at 1000m = 95 kph
-      elif radius > 250: 
-        c = 2.7-1/250*radius # 1.7 at 264m 76 kph
-      else:
-        c= 3.0 - 13/2500 *radius # 3.0 at 15m 24 kph
-      v_curvature_map = math.sqrt(c*radius)
-      v_curvature_map = min(NO_CURVATURE_SPEED, v_curvature)
+        speed_limit = None
+      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance:
+        distanceatlowlimit = 50
+        if sm['liveMapData'].speedLimitAhead < 21/3.6:
+          distanceatlowlimit = speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*2
+          if distanceatlowlimit < 50:
+            distanceatlowlimit = 0
+          distanceatlowlimit = min(distanceatlowlimit,100)
+          speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*5
+          speed_ahead_distance = min(speed_ahead_distance,300)
+          speed_ahead_distance = max(speed_ahead_distance,50)
+        if speed_limit is not None and sm['liveMapData'].speedLimitAheadDistance > distanceatlowlimit and v_ego + 3 < sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*sm['liveMapData'].speedLimitAheadDistance/speed_ahead_distance:
+          speed_limit_ahead = sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*(sm['liveMapData'].speedLimitAheadDistance - distanceatlowlimit)/(speed_ahead_distance - distanceatlowlimit)
+        else:
+          speed_limit_ahead = sm['liveMapData'].speedLimitAhead
+        v_speedlimit_ahead = speed_limit_ahead + offset
+      if sm['liveMapData'].curvatureValid:
+        curvature = abs(sm['liveMapData'].curvature)
+        radius = 1/max(1e-4, curvature)
+        if radius > 500:
+          c=0.7 # 0.7 at 1000m = 95 kph
+        elif radius > 250: 
+          c = 2.7-1/250*radius # 1.7 at 264m 76 kph
+        else:
+          c= 3.0 - 13/2500 *radius # 3.0 at 15m 24 kph
+        v_curvature_map = math.sqrt(c*radius)
+        v_curvature_map = min(NO_CURVATURE_SPEED, v_curvature)
+    except KeyError:
+      pass
     
     decel_for_turn = bool(v_curvature_map < min([v_cruise_setpoint, v_speedlimit, v_ego + 1.]))
     v_cruise_setpoint = min([v_cruise_setpoint, v_curvature_map, v_speedlimit, v_speedlimit_ahead])
