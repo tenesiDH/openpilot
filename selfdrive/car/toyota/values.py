@@ -86,9 +86,10 @@ ECU_FINGERPRINT = {
 }
 
 
-def check_ecu_msgs(fingerprint, ecu):
-  # return True if fingerprint contains messages normally sent by a given ecu
-  return ECU_FINGERPRINT[ecu] in fingerprint
+def check_ecu_msgs(fingerprint, ecu, car):
+  # return True if the reference car fingerprint doesn't contain the ecu fingerprint msg or
+  # fingerprint contains messages normally sent by a given ecu
+  return any(ECU_FINGERPRINT[ecu] not in finger for finger in FINGERPRINTS[car]) or ECU_FINGERPRINT[ecu] in fingerprint
 
 
 FINGERPRINTS = {
