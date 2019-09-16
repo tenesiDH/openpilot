@@ -155,7 +155,7 @@ class CarInterface(object):
       ret.wheelbase = 2.80 # in spec
       ret.steerRatio = 13.3 # in spec
       tire_stiffness_factor = 0.444 # from camry
-      ret.mass = 3736.8 * CV.LB_TO_KG + std_cargo # in spec, mean of is300 (1680 kg) / is300h (1720 kg) / is350 (1685 kg)
+      ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG # in spec, mean of is300 (1680 kg) / is300h (1720 kg) / is350 (1685 kg)
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.04]]
       ret.lateralTuning.pid.kf = 0.00006 # from camry
       
