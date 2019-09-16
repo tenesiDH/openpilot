@@ -215,8 +215,8 @@ class Planner(object):
         accel_limits_turns[0] = min(accel_limits_turns[0], accel_limits_turns[1])
         
       if decel_for_turn and sm['liveMapData'].distToTurn < speed_ahead_distance:
-        time_to_turn = max(1.0, sm['liveMapData'].distToTurn / max((v_ego + v_curvature)/2, 1.))
-        required_decel = min(0, (v_curvature - v_ego) / time_to_turn)
+        time_to_turn = max(1.0, sm['liveMapData'].distToTurn / max((v_ego + v_curvature_map)/2, 1.))
+        required_decel = min(0, (v_curvature_map - v_ego) / time_to_turn)
         accel_limits[0] = max(accel_limits[0], required_decel)
       if v_speedlimit_ahead < v_speedlimit and self.longitudinalPlanSource =='cruise' and v_ego > v_speedlimit_ahead:
         if sm['liveMapData'].speedLimitAheadDistance > 1:
