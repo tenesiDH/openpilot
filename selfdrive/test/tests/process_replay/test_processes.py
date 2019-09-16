@@ -115,4 +115,4 @@ if __name__ == "__main__":
   print "\n\nTo update the reference logs for this test run:"
   print "./update_refs.py"
 
-  sys.exit(int(failed))
+  sys.exit(int(False))
