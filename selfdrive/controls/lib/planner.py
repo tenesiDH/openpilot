@@ -195,7 +195,7 @@ class Planner(object):
         else:
           c= 3.0 - 13/2500 *radius # 3.0 at 15m 24 kph
         v_curvature_map = math.sqrt(c*radius)
-        v_curvature_map = min(NO_CURVATURE_SPEED, v_curvature)
+        v_curvature_map = min(NO_CURVATURE_SPEED, v_curvature_map)
     except KeyError:
       pass
     
