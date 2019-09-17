@@ -212,7 +212,7 @@ class CarInterface(object):
     elif candidate == CAR.LEXUS_IS:
       stop_and_go = False
       ret.safetyParam = 66
-      ret.wheelbase = 2.455
+      ret.wheelbase = 2.79908
       ret.steerRatio = 13.3
       tire_stiffness_factor = 0.444
       ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG
@@ -222,7 +222,7 @@ class CarInterface(object):
     elif candidate == CAR.OLD_CAR:
       stop_and_go = False
       ret.safetyParam = 100
-      ret.wheelbase = 2.79908
+      ret.wheelbase = 2.455
       ret.steerRatio = 17.
       tire_stiffness_factor = 0.444
       ret.mass = 6200.0 * CV.LB_TO_KG + STD_CARGO_KG
