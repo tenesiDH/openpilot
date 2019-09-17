@@ -1,7 +1,9 @@
 from common.numpy_fast import interp
 import numpy as np
+from selfdrive.kegman_conf import kegman_conf
 
-CAMERA_OFFSET = 0.06  # m from center car to camera
+kegman = kegman_conf()
+CAMERA_OFFSET = float(kegman.conf['cameraOffset'])  # m from center car to camera
 
 def compute_path_pinv(l=50):
   deg = 3
@@ -26,7 +28,7 @@ def calc_d_poly(l_poly, r_poly, p_poly, l_prob, r_prob, lane_width):
   path_from_right_lane = r_poly.copy()
   path_from_right_lane[3] += lane_width / 2.0
 
-  lr_prob = l_prob * r_prob
+  lr_prob = l_prob + r_prob - l_prob * r_prob
 
   d_poly_lane = (l_prob * path_from_left_lane + r_prob * path_from_right_lane) / (l_prob + r_prob + 0.0001)
   return lr_prob * d_poly_lane + (1.0 - lr_prob) * p_poly
