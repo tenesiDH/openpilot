@@ -26,13 +26,13 @@ STOPPING_DISTANCE = 2  # increase distance from lead car when stopped
 
 # City braking profile changes (makes the car brake harder because it wants to be farther from the lead car - increase to brake harder)
 ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, 2.5]
-ONE_BAR_PROFILE_BP = [0, 3.75]
+ONE_BAR_PROFILE_BP = [0, 2.75]
 
 TWO_BAR_PROFILE = [TWO_BAR_DISTANCE, 2.5]
-TWO_BAR_PROFILE_BP = [0, 4.0]
+TWO_BAR_PROFILE_BP = [0, 3.0]
 
 THREE_BAR_PROFILE = [THREE_BAR_DISTANCE, 2.5]
-THREE_BAR_PROFILE_BP = [0.0, 5.0]
+THREE_BAR_PROFILE_BP = [0.0, 4.0]
 
 # Highway braking profiles
 H_ONE_BAR_PROFILE = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+0.3]
@@ -157,6 +157,9 @@ class LongitudinalMpc(object):
       self.oneBarBP = [float(kegman.conf['1barBP0']), float(kegman.conf['1barBP1'])]
       self.twoBarBP = [float(kegman.conf['2barBP0']), float(kegman.conf['2barBP1'])]
       self.threeBarBP = [float(kegman.conf['3barBP0']), float(kegman.conf['3barBP1'])]
+      self.oneBarProfile = [ONE_BAR_DISTANCE, float(kegman.conf['1barMax'])]
+      self.twoBarProfile = [TWO_BAR_DISTANCE, float(kegman.conf['2barMax'])]
+      self.threeBarProfile = [THREE_BAR_DISTANCE, float(kegman.conf['3barMax'])]
       self.bp_counter = 0  
       
       
@@ -165,7 +168,7 @@ class LongitudinalMpc(object):
     if CS.readdistancelines == 1:
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
       if self.street_speed:
-        TR = interp(-self.v_rel, self.oneBarBP, ONE_BAR_PROFILE)  
+        TR = interp(-self.v_rel, self.oneBarBP, self.oneBarProfile)  
       else:
         TR = interp(-self.v_rel, H_ONE_BAR_PROFILE_BP, H_ONE_BAR_PROFILE) 
       if CS.readdistancelines != self.lastTR:
@@ -175,7 +178,7 @@ class LongitudinalMpc(object):
     elif CS.readdistancelines == 2:
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
       if self.street_speed:
-        TR = interp(-self.v_rel, self.twoBarBP, TWO_BAR_PROFILE)
+        TR = interp(-self.v_rel, self.twoBarBP, self.twoBarProfile)
       else:
         TR = interp(-self.v_rel, H_TWO_BAR_PROFILE_BP, H_TWO_BAR_PROFILE)
       if CS.readdistancelines != self.lastTR:
@@ -185,7 +188,7 @@ class LongitudinalMpc(object):
     elif CS.readdistancelines == 3:
       if self.street_speed:
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
-        TR = interp(-self.v_rel, self.threeBarBP, THREE_BAR_PROFILE)
+        TR = interp(-self.v_rel, self.threeBarBP, self.threeBarProfile)
       else:
         TR = interp(-self.v_rel, H_THREE_BAR_PROFILE_BP, H_THREE_BAR_PROFILE)
       if CS.readdistancelines != self.lastTR:
