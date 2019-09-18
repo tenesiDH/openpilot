@@ -73,6 +73,14 @@ class LongitudinalMpc(object):
     self.last_cloudlog_t = 0.0
     
     self.bp_counter = 0  
+    
+    kegman = kegman_conf()
+    self.oneBarBP = [float(kegman.conf['1barBP0']), float(kegman.conf['1barBP1'])]
+    self.twoBarBP = [float(kegman.conf['2barBP0']), float(kegman.conf['2barBP1'])]
+    self.threeBarBP = [float(kegman.conf['3barBP0']), float(kegman.conf['3barBP1'])]
+    self.oneBarProfile = [ONE_BAR_DISTANCE, float(kegman.conf['1barMax'])]
+    self.twoBarProfile = [TWO_BAR_DISTANCE, float(kegman.conf['2barMax'])]
+    self.threeBarProfile = [THREE_BAR_DISTANCE, float(kegman.conf['3barMax'])]
 
   def send_mpc_solution(self, pm, qp_iterations, calculation_time):
     qp_iterations = max(0, qp_iterations)
