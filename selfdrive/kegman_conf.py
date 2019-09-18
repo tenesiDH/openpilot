@@ -54,12 +54,12 @@ class kegman_conf():
         self.element_updated = True
 	
       if "1barBP0" not in self.config:
-        self.config.update({"1barBP0":"0.0"})
+        self.config.update({"1barBP0":"-0.25"})
 	self.config.update({"1barBP1":"2.75"})
-	self.config.update({"2barBP0":"0.0"})
+	self.config.update({"2barBP0":"-0.25"})
 	self.config.update({"2barBP1":"3.0"})
 	self.config.update({"3barBP0":"0.0"})
-	self.config.update({"3barBP1":"5.0"})
+	self.config.update({"3barBP1":"4.0"})
         self.element_updated = True
 
 
@@ -78,8 +78,8 @@ class kegman_conf():
                      "wheelTouchSeconds":"180", "battPercOff":"25", "carVoltageMinEonShutdown":"11800", \
                      "brakeStoppingTarget":"0.25", "tuneGernby":"1", \
                      "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5", "deadzone":"0.0", \
-		     "1barBP0":"0.0", "1barBP1":"10.0", "2barBP0":"0.0", "2barBP1":"10.0", "3barBP0":"0.0", \
-		     "3barBP1":"10.0"}
+		     "1barBP0":"0.0", "1barBP1":"2.75", "2barBP0":"0.0", "2barBP1":"3.0", "3barBP0":"0.0", \
+		     "3barBP1":"4.0"}
 
       self.write_config(self.config)
     return self.config
