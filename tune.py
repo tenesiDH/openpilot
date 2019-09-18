@@ -135,7 +135,30 @@ while True:
     kegman.conf['liveParams'] = "1"
     
   if float(kegman.conf['deadzone']) < 0:
-    kegman.conf['deadzone'] = "0"  
+    kegman.conf['deadzone'] = "0"
+    
+  if float(kegman.conf['1barBP0']) < -0.75:
+    kegman.conf['1barBP0'] = "-0.5"  
+    
+  if float(kegman.conf['1barBP0']) > 0.75:
+    kegman.conf['1barBP0'] = "0.5"    
+    
+  if float(kegman.conf['1barBP1']) < float(kegman.conf['1barBP0']):
+    kegman.conf['1barBP1'] = float(kegman.conf['1barBP0'])   
+    
+  if float(kegman.conf['1barBP1']) > 8:
+    kegman.conf['1barBP1'] = "8"
+    
+  if float(kegman.conf['1barMax']) < :
+    kegman.conf['1barBP1'] = "0.9"   
+    
+  if float(kegman.conf['1barMax']) > 8:
+    kegman.conf['1barBP1'] = "8"  
+    
+    
+    
+  "1barBP0", "1barBP1", "1barMax", "2barBP0", "2barBP1", \
+         "2barMax", "3barBP0", "3barBP1", "3barMax"]
 
 
   if write_json:
