@@ -10,7 +10,7 @@ from selfdrive.controls.lib.drive_helpers import MPC_COST_LAT
 from selfdrive.controls.lib.lane_planner import LanePlanner
 import selfdrive.messaging as messaging
 
-LOG_MPC = os.environ.get('LOG_MPC', False)
+LOG_MPC = os.environ.get('LOG_MPC', True)
 
 
 def calc_states_after_delay(states, v_ego, steer_angle, curvature_factor, steer_ratio, delay):

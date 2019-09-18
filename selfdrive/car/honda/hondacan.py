@@ -68,6 +68,11 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, is_metric, idx, 
   bus_lkas = get_lkas_cmd_bus(car_fingerprint, is_panda_black)
 
   if car_fingerprint not in HONDA_BOSCH:
+    if is_metric:
+      speed_units = 2
+    else:
+      speed_units = 3
+      
     acc_hud_values = {
       'PCM_SPEED': pcm_speed * CV.MS_TO_KPH,
       'PCM_GAS': hud.pcm_accel,
@@ -77,7 +82,7 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, is_metric, idx, 
       'SET_ME_X01': 0x01,
       'HUD_DISTANCE_3': 1,
       'HUD_DISTANCE': hud.dist_lines,    # max distance setting on display
-      'IMPERIAL_UNIT': int(not is_metric),
+      'IMPERIAL_UNIT': speed_units,
       'SET_ME_X01_2': 1,
     }
     commands.append(packer.make_can_msg("ACC_HUD", bus_pt, acc_hud_values, idx))

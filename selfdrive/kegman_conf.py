@@ -48,6 +48,10 @@ class kegman_conf():
       if "leadDistance" not in self.config:
         self.config.update({"leadDistance":"5"})
         self.element_updated = True
+	
+      if "deadzone" not in self.config:
+        self.config.update({"deadzone":"0.0"})
+        self.element_updated = True
 
 
 
@@ -65,7 +69,7 @@ class kegman_conf():
       self.config = {"cameraOffset":"0.06", "lastTrMode":"1", "battChargeMin":"60", "battChargeMax":"70", \
                      "wheelTouchSeconds":"180", "battPercOff":"25", "carVoltageMinEonShutdown":"11800", \
                      "brakeStoppingTarget":"0.25", "tuneGernby":"1", \
-                     "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5"}
+                     "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5", "deadzone":"0.0"}
 
       self.write_config(self.config)
     return self.config
