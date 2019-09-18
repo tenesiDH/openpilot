@@ -41,7 +41,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   // sample speed
   if (addr == 0xb4) {
     // Middle bytes needed
-    ego_speed_toyota = GET_BYTE(to_send, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
+    ego_speed_toyota = GET_BYTE(to_push, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
   }// Special thanks to Willem Melching for the code
   // get eps motor torque (0.66 factor in dbc)
   if (addr == 0x260) {
