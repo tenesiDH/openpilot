@@ -135,7 +135,7 @@ class CarController(object):
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
     
     if CS.CP.enableGasInterceptor:
-      if self.CS.pedal_gas > 15:
+      if CS.pedal_gas > 15:
         apply_accel = max(apply_accel, 0.0)
     else:
       if CS.pedal_gas > 0:
