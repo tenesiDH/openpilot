@@ -149,16 +149,6 @@ class CarInterface(object):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
       ret.lateralTuning.pid.kf = 0.00006
       
-    elif candidate == CAR.LEXUS_ISH:
-      stop_and_go = True
-      ret.safetyParam = 66
-      ret.wheelbase = 2.80 # in spec
-      ret.steerRatio = 13.3 # in spec
-      tire_stiffness_factor = 0.444 # from camry
-      ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG # in spec, mean of is300 (1680 kg) / is300h (1720 kg) / is350 (1685 kg)
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.04]]
-      ret.lateralTuning.pid.kf = 0.00006 # from camry
-      
     elif candidate in [CAR.HIGHLANDER, CAR.HIGHLANDERH]:
       stop_and_go = True
       ret.safetyParam = 73
@@ -228,9 +218,22 @@ class CarInterface(object):
       ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.3], [0.05]]
       ret.lateralTuning.pid.kf = 0.00006
+      
+    elif candidate == CAR.OLD_CAR:
+      stop_and_go = False
+      ret.safetyParam = 100
+      ret.wheelbase = 2.455
+      ret.steerRatio = 17.
+      tire_stiffness_factor = 0.444
+      ret.mass = 6200.0 * CV.LB_TO_KG + STD_CARGO_KG
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1], [0.04]]
+      ret.lateralTuning.pid.kf = 0.00004
 
     ret.steerRateCost = 1.
-    ret.centerToFront = ret.wheelbase * 0.44
+    if candidate == CAR.OLD_CAR:
+      ret.centerToFront = ret.wheelbase * 0.5
+    else:
+      ret.centerToFront = ret.wheelbase * 0.44
 
     #detect the Pedal address
     ret.enableGasInterceptor = 0x201 in fingerprint
