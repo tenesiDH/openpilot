@@ -143,7 +143,7 @@ while True:
   if float(kegman.conf['1barBP0']) > 0.5:
     kegman.conf['1barBP0'] = "0.5"    
     
-  if float(kegman.conf['1barBP1']) < 0.5
+  if float(kegman.conf['1barBP1']) < 0.5:
     kegman.conf['1barBP1'] = "0.5"
     
   if float(kegman.conf['1barBP1']) > 8:
