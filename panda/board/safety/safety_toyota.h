@@ -19,7 +19,6 @@ const int TOYOTA_MIN_ACCEL = -3000;       // 3.0 m/s2
 const int TOYOTA_GAS_INTERCEPTOR_THRESHOLD = 475;  // ratio between offset and gain from dbc file
 
 // global actuation limit states
-int long_controls_allowed = 1;
 int toyota_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TORQUE_EPS in %: see dbc file
 int toyota_gas_pressed = 0;
 
