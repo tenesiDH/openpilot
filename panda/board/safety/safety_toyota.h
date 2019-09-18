@@ -40,7 +40,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
   // sample speed
-  if ((addr == 0xb4) {
+  if (addr == 0xb4) {
     // Middle bytes needed
     ego_speed_toyota = GET_BYTE(to_send, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
   }// Special thanks to Willem Melching for the code
