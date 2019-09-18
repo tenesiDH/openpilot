@@ -152,8 +152,44 @@ while True:
   if float(kegman.conf['1barMax']) < 0.9:
     kegman.conf['1barMax'] = "0.9"   
     
-  if float(kegman.conf['1barMax']) > 8:
-    kegman.conf['1barBP1'] = "8"  
+  if float(kegman.conf['1barMax']) > 2.5:
+    kegman.conf['1barBP1'] = "2.5"
+    
+  if float(kegman.conf['2barBP0']) < -0.5:
+    kegman.conf['2barBP0'] = "-0.5"  
+    
+  if float(kegman.conf['2barBP0']) > 0.5:
+    kegman.conf['2barBP0'] = "0.5"    
+    
+  if float(kegman.conf['2barBP1']) < 0.5:
+    kegman.conf['2barBP1'] = "0.5"
+    
+  if float(kegman.conf['2barBP1']) > 8:
+    kegman.conf['2barBP1'] = "8"
+    
+  if float(kegman.conf['2barMax']) < 1.3:
+    kegman.conf['2barMax'] = "1.3"   
+    
+  if float(kegman.conf['3barMax']) > 2.5:
+    kegman.conf['3barBP1'] = "2.5"
+    
+  if float(kegman.conf['3barBP0']) < -0.5:
+    kegman.conf['3barBP0'] = "-0.5"  
+    
+  if float(kegman.conf['3barBP0']) > 0.5:
+    kegman.conf['3barBP0'] = "0.5"    
+    
+  if float(kegman.conf['3barBP1']) < 0.5:
+    kegman.conf['3barBP1'] = "0.5"
+    
+  if float(kegman.conf['3barBP1']) > 8:
+    kegman.conf['3barBP1'] = "8"
+    
+  if float(kegman.conf['3barMax']) < 1.8:
+    kegman.conf['3barMax'] = "1.8"   
+    
+  if float(kegman.conf['3barMax']) > 2.5:
+    kegman.conf['3barBP1'] = "2.5"  
     
     
     
