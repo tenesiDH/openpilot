@@ -157,8 +157,8 @@ while True:
     
     
     
-  "1barBP0", "1barBP1", "1barMax", "2barBP0", "2barBP1", \
-         "2barMax", "3barBP0", "3barBP1", "3barMax"]
+# "1barBP0", "1barBP1", "1barMax", "2barBP0", "2barBP1", \
+#        "2barMax", "3barBP0", "3barBP1", "3barMax"]
 
 
   if write_json:
