@@ -163,7 +163,7 @@ class Planner(object):
       model_speed = max(20.0 * CV.MPH_TO_MS, model_speed) # Don't slow down below 20mph
     else:
       model_speed = MAX_SPEED
-    offset = 10.0
+    offset = 4.47
     try:
       if sm['liveMapData'].speedLimitValid:
         speed_limit = sm['liveMapData'].speedLimit
