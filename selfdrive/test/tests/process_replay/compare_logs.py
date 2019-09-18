@@ -38,7 +38,7 @@ def remove_ignored_fields(msg, ignore):
   return msg.as_reader()
 
 def compare_logs(log1, log2, ignore=[]):
-  'assert len(log1) == len(log2), "logs are not same length"
+  #assert len(log1) == len(log2), "logs are not same length"
 
   ignore_fields = [k for k, v in ignore]
   diff = []
