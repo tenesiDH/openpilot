@@ -133,7 +133,16 @@ class CarController(object):
 
     apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady, enabled)
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
-
+    
+    if CS.CP.enableGasInterceptor:
+      if self.CS.pedal_gas > 15:
+        apply_accel = max(apply_accel, 0.0)
+    else:
+      if CS.pedal_gas > 0:
+        apply_accel = max(apply_accel, 0.0)
+    if CS.brake_pressed != 0:
+      apply_accel = min(apply_accel, 0.0)
+      
     # steer torque
     apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
 
