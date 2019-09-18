@@ -9,6 +9,7 @@ from selfdrive.controls.lib.radar_helpers import _LEAD_ACCEL_TAU
 from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
 from selfdrive.controls.lib.drive_helpers import MPC_COST_LONG
 import math
+from selfdrive.kegman_conf import kegman_conf
 
 
 # One, two and three bar distances (in s)
@@ -146,12 +147,23 @@ class LongitudinalMpc(object):
     else:
       self.street_speed = 0
 
+      
+    # Live Tuning of breakpoints for braking profile change
+    self.bp_counter += 1
+    if self.bp_counter % 500 == 0:
+      kegman = kegman_conf()
+      self.oneBarBP = [float(kegman.conf['1barBP0']), float(kegman.conf['1barBP1'])]
+      self.twoBarBP = [float(kegman.conf['2barBP0']), float(kegman.conf['2barBP1'])]
+      self.threeBarBP = [float(kegman.conf['3barBP0']), float(kegman.conf['3barBP1'])]
+      self.bp_counter = 0  
+      
+      
     # Calculate mpc
     # Adjust distance from lead car when distance button pressed 
     if CS.readdistancelines == 1:
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
       if self.street_speed:
-        TR = interp(-self.v_rel, ONE_BAR_PROFILE_BP, ONE_BAR_PROFILE)  
+        TR = interp(-self.v_rel, self.oneBarBP, ONE_BAR_PROFILE)  
       else:
         TR = interp(-self.v_rel, H_ONE_BAR_PROFILE_BP, H_ONE_BAR_PROFILE) 
       if CS.readdistancelines != self.lastTR:
@@ -161,7 +173,7 @@ class LongitudinalMpc(object):
     elif CS.readdistancelines == 2:
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
       if self.street_speed:
-        TR = interp(-self.v_rel, TWO_BAR_PROFILE_BP, TWO_BAR_PROFILE)
+        TR = interp(-self.v_rel, self.twoBarBP, TWO_BAR_PROFILE)
       else:
         TR = interp(-self.v_rel, H_TWO_BAR_PROFILE_BP, H_TWO_BAR_PROFILE)
       if CS.readdistancelines != self.lastTR:
@@ -171,7 +183,7 @@ class LongitudinalMpc(object):
     elif CS.readdistancelines == 3:
       if self.street_speed:
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
-        TR = interp(-self.v_rel, THREE_BAR_PROFILE_BP, THREE_BAR_PROFILE)
+        TR = interp(-self.v_rel, self.threeBarBP, THREE_BAR_PROFILE)
       else:
         TR = interp(-self.v_rel, H_THREE_BAR_PROFILE_BP, H_THREE_BAR_PROFILE)
       if CS.readdistancelines != self.lastTR:
