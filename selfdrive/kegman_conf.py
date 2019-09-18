@@ -63,6 +63,13 @@ class kegman_conf():
         self.element_updated = True
 
 
+      if "1barMax" not in self.config:
+        self.config.update({"1barMax":"2.5"})
+	self.config.update({"2barMax":"2.5"})
+	self.config.update({"3barMax":"2.5"})
+        self.element_updated = True
+
+
       # Force update battery charge limits to higher values for Big Model
       #if self.config['battChargeMin'] != "75":
       #  self.config.update({"battChargeMin":"75"})
@@ -79,7 +86,7 @@ class kegman_conf():
                      "brakeStoppingTarget":"0.25", "tuneGernby":"1", \
                      "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5", "deadzone":"0.0", \
 		     "1barBP0":"0.0", "1barBP1":"2.75", "2barBP0":"0.0", "2barBP1":"3.0", "3barBP0":"0.0", \
-		     "3barBP1":"4.0"}
+		     "3barBP1":"4.0", "1barMax":"2.5", "2barMax":"2.5", "3barMax":"2.5"}
 
       self.write_config(self.config)
     return self.config
