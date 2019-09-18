@@ -82,6 +82,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     preLaneChangeLeft @57;
     preLaneChangeRight @58;
     laneChange @59;
+    manualSteeringRequired @60;
+    manualSteeringRequiredBlinkersOn @61;
   }
 }
 
@@ -132,6 +134,12 @@ struct CarState {
   doorOpen @24 :Bool;
   seatbeltUnlatched @25 :Bool;
   canValid @26 :Bool;
+
+  readdistancelines @28 :Float32;
+  lkMode @29 :Bool;
+
+
+
 
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
