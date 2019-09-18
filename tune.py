@@ -41,7 +41,8 @@ button_delay = 0.2
 kegman = kegman_conf()
 #kegman.conf['tuneGernby'] = "1"
 #kegman.write_config(kegman.conf)
-param = ["tuneGernby", "deadzone", "Kp", "Ki", "1barBP1", "2barBP1", "3barBP1"]
+param = ["tuneGernby", "deadzone", "Kp", "Ki", "1barBP0", "1barBP1", "1barMax", "2barBP0", "2barBP1", \
+         "2barMax", "3barBP0", "3barBP1", "3barMax"]
 
 j = 0
 while True:
