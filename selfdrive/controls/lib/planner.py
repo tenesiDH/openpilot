@@ -299,7 +299,11 @@ class Planner(object):
     plan_send.plan.vTargetFuture = float(self.v_acc_future)
     plan_send.plan.hasLead = self.mpc1.prev_lead_status
     plan_send.plan.longitudinalPlanSource = self.longitudinalPlanSource
-
+    
+    plan_send.plan.vCurvature = float(v_curvature_map)
+    plan_send.plan.decelForTurn = bool(decel_for_turn or v_speedlimit_ahead < min([v_speedlimit, v_ego + 1.]))
+    plan_send.plan.mapValid = True
+    
     radar_valid = not (radar_dead or radar_fault)
     plan_send.plan.radarValid = bool(radar_valid)
     plan_send.plan.radarCanError = bool(radar_can_error)

@@ -280,15 +280,15 @@ class CarInterface(object):
     ret.startAccel = 0.0
 
     if ret.enableGasInterceptor:
-      ret.gasMaxBP = [0., 9., 35]
+      ret.gasMaxBP = [0., 9., 55]
       ret.gasMaxV = [0.2, 0.5, 0.7]
-      ret.longitudinalTuning.kpV = [1.2, 0.8, 0.5]
-      ret.longitudinalTuning.kiV = [0.18, 0.12]
+      ret.longitudinalTuning.kpV = [1.0, 0.66, 0.42] # braking tune
+      ret.longitudinalTuning.kiV = [0.135, 0.09]
     else:
-      ret.gasMaxBP = [0.]
-      ret.gasMaxV = [0.5]
-      ret.longitudinalTuning.kpV = [3.6, 2.4, 1.5]
-      ret.longitudinalTuning.kiV = [0.54, 0.36]
+      ret.gasMaxBP = [0., 9., 55]
+      ret.gasMaxV = [0.2, 0.5, 0.7]
+      ret.longitudinalTuning.kpV = [0.325, 0.325, 0.325]  # braking tune from rav4h
+      ret.longitudinalTuning.kiV = [0.001, 0.0010]
 
     return ret
 
@@ -344,7 +344,10 @@ class CarInterface(object):
     ret.steeringPressed = self.CS.steer_override
 
     # cruise state
-    ret.cruiseState.enabled = self.CS.pcm_acc_active
+    if not self.cruise_enabled_prev:
+      ret.cruiseState.enabled = self.CS.pcm_acc_active
+    else:
+      ret.cruiseState.enabled = bool(self.CS.main_on)
     ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
     ret.cruiseState.available = bool(self.CS.main_on)
     ret.cruiseState.speedOffset = 0.
@@ -383,12 +386,17 @@ class CarInterface(object):
     events = []
     if self.cp_cam.can_valid:
       self.forwarding_camera = True
-
+      
+    if ret.cruiseState.enabled and not self.cruise_enabled_prev:
+      disengage_event = True
+    else:
+      disengage_event = False
+      
     if not ret.gearShifter == GearShifter.drive and self.CP.enableDsu:
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if ret.doorOpen:
+    if ret.doorOpen and disengage_event:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if ret.seatbeltUnlatched:
+    if ret.seatbeltUnlatched and disengage_event:
       events.append(create_event('seatbeltNotLatched', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if self.CS.esp_disabled and self.CP.enableDsu:
       events.append(create_event('espDisabled', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
@@ -416,11 +424,11 @@ class CarInterface(object):
       events.append(create_event('pcmDisable', [ET.USER_DISABLE]))
 
     # disable on pedals rising edge or when brake is pressed and speed isn't zero
-    if (ret.gasPressed and not self.gas_pressed_prev) or \
-       (ret.brakePressed and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
+    if ((ret.gasPressed and not self.gas_pressed_prev) or \
+       (ret.brakePressed and (not self.brake_pressed_prev or ret.vEgo > 0.001))) and disengage_event:
       events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
-    if ret.gasPressed:
+    if ret.gasPressed and disengage_event:
       events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
 
     ret.events = events

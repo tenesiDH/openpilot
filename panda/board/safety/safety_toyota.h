@@ -13,13 +13,14 @@ const int TOYOTA_MAX_RT_DELTA = 375;      // max delta torque allowed for real t
 const uint32_t TOYOTA_RT_INTERVAL = 250000;    // 250ms between real time checks
 
 // longitudinal limits
-const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s2
+const int TOYOTA_MAX_ACCEL = 3000;        // 3.0 m/s2
 const int TOYOTA_MIN_ACCEL = -3000;       // 3.0 m/s2
 
 const int TOYOTA_GAS_INTERCEPTOR_THRESHOLD = 475;  // ratio between offset and gain from dbc file
 
 // global actuation limit states
 int toyota_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TORQUE_EPS in %: see dbc file
+int toyota_gas_pressed = 0;
 
 // states
 int toyota_giraffe_switch_1 = 0;          // is giraffe switch 1 high?
@@ -29,6 +30,7 @@ int toyota_rt_torque_last = 0;            // last desired torque for real time c
 uint32_t toyota_ts_last = 0;
 int toyota_cruise_engaged_last = 0;       // cruise state
 int toyota_gas_prev = 0;
+int ego_speed_toyota = 0;                 // speed
 struct sample_t toyota_torque_meas;       // last 3 motor torques produced by the eps
 
 
@@ -36,7 +38,11 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
   int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
-
+  // sample speed
+  if (addr == 0xb4) {
+    // Middle bytes needed
+    ego_speed_toyota = 0;//GET_BYTE(to_push, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
+  }// Special thanks to Willem Melching for the code
   // get eps motor torque (0.66 factor in dbc)
   if (addr == 0x260) {
     int torque_meas_new = (GET_BYTE(to_push, 5) << 8) | GET_BYTE(to_push, 6);
@@ -54,9 +60,9 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   }
 
   // enter controls on rising edge of ACC, exit controls on ACC off
-  if (addr == 0x1D2) {
-    // 5th bit is CRUISE_ACTIVE
-    int cruise_engaged = GET_BYTE(to_push, 0) & 0x20;
+  if (addr == 0x1D3) {
+    // 15th bit is MAIN_ON
+    int cruise_engaged = GET_BYTE(to_push, 0) & 0x8000;
     if (!cruise_engaged) {
       controls_allowed = 0;
     }
@@ -73,7 +79,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     if ((gas_interceptor > TOYOTA_GAS_INTERCEPTOR_THRESHOLD) &&
         (gas_interceptor_prev <= TOYOTA_GAS_INTERCEPTOR_THRESHOLD) &&
         long_controls_allowed) {
-      controls_allowed = 0;
+      toyota_gas_pressed = 1;
     }
     gas_interceptor_prev = gas_interceptor;
   }
@@ -82,7 +88,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if (addr == 0x2C1) {
     int gas = GET_BYTE(to_push, 6) & 0xFF;
     if ((gas > 0) && (toyota_gas_prev == 0) && !gas_interceptor_detected && long_controls_allowed) {
-      controls_allowed = 0;
+      toyota_gas_pressed = 1;
     }
     toyota_gas_prev = gas;
   }
@@ -116,7 +122,7 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     if (addr == 0x200) {
       if (!controls_allowed || !long_controls_allowed) {
         if (GET_BYTE(to_send, 0) || GET_BYTE(to_send, 1)) {
-          tx = 0;
+          toyota_gas_pressed = 1;
         }
       }
     }
@@ -144,8 +150,12 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
       uint32_t ts = TIM2->CNT;
 
-      if (controls_allowed) {
-
+      if (long_controls_allowed) {
+        if (ego_speed_toyota > 4500){
+            violation |= max_limit_check(desired_torque, 805, -805);
+        } else {
+            violation = 1;
+        }
         // *** global torque limit check ***
         violation |= max_limit_check(desired_torque, TOYOTA_MAX_TORQUE, -TOYOTA_MAX_TORQUE);
 
@@ -168,12 +178,12 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       }
 
       // no torque if controls is not allowed
-      if (!controls_allowed && (desired_torque != 0)) {
-        violation = 1;
-      }
+      //if (!controls_allowed && (desired_torque != 0)) {
+      //  violation = 1;
+      //}
 
       // reset to 0 if either controls is not allowed or there's a violation
-      if (violation || !controls_allowed) {
+      if (violation ) {
         toyota_desired_torque_last = 0;
         toyota_rt_torque_last = 0;
         toyota_ts_last = ts;
@@ -191,6 +201,7 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
 static void toyota_init(int16_t param) {
   controls_allowed = 0;
+  long_controls_allowed = 1;
   toyota_giraffe_switch_1 = 0;
   toyota_camera_forwarded = 0;
   toyota_dbc_eps_torque_factor = param;
