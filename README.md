@@ -3,9 +3,6 @@ This is a fork of comma's openpilot: https://github.com/commaai/openpilot, and c
 <b>NOTE:  If you upgrade to 0.6 you cannot go back to 0.5.xx without reflashing your NEOS!</b>
 Here's how to flash back to v9 NEOS if you want to downgrade (it's not that bad)
 
-<b>Thanks to @arne182, you can downgrade NEOS with one command:</b>
-pkill ai.comma.plus.frame && pkill ai.comma.plus.offroad && cd /data && wget  https://raw.githubusercontent.com/commaai/eon-neos/45ce1790dd5f4ef8ef5987fa198a904b69b9ce53/update.json && /data/openpilot/installer/updater/updater file:///data/update.json
-
 <b>Manual Instructions to flash back to v9 NEOS for downgrading back to 0.5.xx:</b>
 - the boot and system image files for v9 NEOS - are in #hw-unofficial - look for the 0.5.13 - they are pinned messages (click pin icon at top)
 - download android fastboot
@@ -25,7 +22,7 @@ pkill ai.comma.plus.frame && pkill ai.comma.plus.offroad && cd /data && wget  ht
 - reboot
 - enjoy
 
-<b>NOTE:</b> If you have upgraded at any time to v0.5.10 and you want to go back to a branch with v0.5.9 or v0.5.8, then you have to SSH into the Eon and edit the file /data/params/d/ControlsParams and rename "angle_model_bias" to "angle_offset" or your car will have Dash Errors and you'll be scratching your head for hours! 
+<b>NOTE:</b> If you have upgraded at any time to v0.5.10, v0.6.x and you want to go back to a branch with v0.5.9 or v0.5.8, then you have to SSH into the Eon and edit the file /data/params/d/ControlsParams and rename "angle_model_bias" to "angle_offset" or your car will have Dash Errors and you'll be scratching your head for hours! 
 
 <b>Pedal Users:</b> Also note that you need to flash your Pedal to go to v0.5.10.  If you want to go back to 0.5.9 or 0.5.8 you need to flash your pedal back to 0.5.9.  Instructions are here:  https://medium.com/@jfrux/comma-pedal-updating-the-firmware-over-can-fa438a3cf910.  Also. After you flash your Pedal..  All hell will break loose on your dash.  Traction control error, Power Steering Error, Trailer Error, OMFG the sky is falling error etc.  DON'T PANIC.  Just drive around a bit and it will disappear after about 2-3 restarts of the car.  Don't rush it I believe it's time dependent as well.  Just drive as normal.  They'll go away.
 
@@ -62,7 +59,17 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
-- <b>Toggle Comma's live tuning</b>:  Comma live tunes things like alignment, steerRatio etc.  But sometimes it doesn't converge to the right value and throws lane centering off during turns.  This allows you to use /data/openpilot/.tune.sh to toggle the auto-tune to off when the car feels right so that it doesn't tune the car any further than necessary.
+- <b> New! Live long tuning for city speeds < 19.44 m/s </b>:  Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.  
+  
+There are 3 parameters for one two and three bar distance intervals
+xbarBP0 - is how soon it should start braking - a smaller (or negative) value means your car will brake sooner when the lead car slows, a larger value means your car will start braking later
+xbarBP1 - is the approach speed in m/s at which your car gets to max distance setting (in s)
+xbarMax - is the maxiimum distance which is reached when your approach speed reachs xbarBP1
+the smaller XbarBP1 is, the sooner you get to max distance / max braking and the harder you brake
+the larger xbarMax is, the harder you brake
+where  X is the distance interval (bars)
+
+- <b>(Not functional in 0.6.x yet) Toggle Comma's live tuning</b>:  Comma live tunes things like alignment, steerRatio etc.  But sometimes it doesn't converge to the right value and throws lane centering off during turns.  This allows you to use /data/openpilot/.tune.sh to toggle the auto-tune to off when the car feels right so that it doesn't tune the car any further than necessary.
 
 - <b>Highway speed braking profiles</b>:  Added highway braking profiles so that you won't follow so closely at speeds > 70 kph.  This affects kegman-0.5.8-gold, kegman-0.5.11, kegman-plusGernbySteering-0.5.11, kegman-0.12, kegman-0.13-stockUI, kegman-0.6 kegman-plusGernbySteering-0.6 branches only.
   
