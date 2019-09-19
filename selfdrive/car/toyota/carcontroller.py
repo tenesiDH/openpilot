@@ -139,6 +139,7 @@ class CarController(object):
         apply_accel = max(apply_accel, 0.0)
       if CS.brake_lights:
         apply_gas = 0.
+        apply_accel = min(apply_accel, 0.0)
     else:
       if CS.pedal_gas > 0:
         apply_accel = max(apply_accel, 0.0)
