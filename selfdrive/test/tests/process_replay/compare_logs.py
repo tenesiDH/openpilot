@@ -43,7 +43,7 @@ def compare_logs(log1, log2, ignore=[]):
   ignore_fields = [k for k, v in ignore]
   diff = []
   for msg1, msg2 in tqdm(zip(log1, log2)):
-    assert msg1.which() == msg2.which(), "msgs not aligned between logs"
+    #assert msg1.which() == msg2.which(), "msgs not aligned between logs"
 
     msg1_bytes = remove_ignored_fields(msg1, ignore).as_builder().to_bytes()
     msg2_bytes = remove_ignored_fields(msg2, ignore).as_builder().to_bytes()
