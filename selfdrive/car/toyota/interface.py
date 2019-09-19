@@ -405,7 +405,7 @@ class CarInterface(object):
     if ret.gearShifter == GearShifter.reverse and self.CP.enableDsu:
       events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     if self.CS.steer_error:
-      events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
+      events.append(create_event('steerTempUnavailable', [ET.WARNING]))
     if self.CS.low_speed_lockout and self.CP.enableDsu:
       events.append(create_event('lowSpeedLockout', [ET.NO_ENTRY, ET.PERMANENT]))
     if ret.vEgo < self.CP.minEnableSpeed and self.CP.enableDsu:
