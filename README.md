@@ -61,13 +61,26 @@ I will attempt to detail the changes in each of the branches here:
 List of changes and tweaks (latest changes at the top):
 - <b> New! Live long tuning for city speeds < 19.44 m/s </b>:  Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.  
   
-There are 3 parameters for one two and three bar distance intervals
+<b>Be careful and ready to take over at any time when doing this!!!</b>  The "distance" in s is the target distance the car will try to maintain.  The default distancces are 0.9s, 1.3s, 1.8s for 1,2 and 3 bar intervals.  I manipulate this value to pass to the MPC to scale the behavior which leads to harder braking or sooner braking or softer braking.  Essentially when you are approaching a car, the distance changes depending on your approach speed.  When the lead car pulls away, the distance returns to whatever your bar setting is
+  
+There are 3 parameters for one two and three bar distance intervals:
 xbarBP0 - is how soon it should start braking - a smaller (or negative) value means your car will brake sooner when the lead car slows, a larger value means your car will start braking later
+
 xbarBP1 - is the approach speed in m/s at which your car gets to max distance setting (in s)
-xbarMax - is the maxiimum distance which is reached when your approach speed reachs xbarBP1
+
+xbarMax - is the maximum distance which is reached when your approach speed reachs xbarBP1
 the smaller XbarBP1 is, the sooner you get to max distance / max braking and the harder you brake
 the larger xbarMax is, the harder you brake
+
 where  X is the distance interval (bars)
+
+Example:
+1BarBP0 = -0.25 start to increase braking when approach speed is -0.25 m/s (this actually means the car is slightly pulling away)
+1BarBP1 = 3 - the relative approach speed in m/s when maximum distance is applied
+1BarMax = 2.5 - maximum distance in (s)  (Hint if you're slowing down way back from a slowed lead vehicle, reduce this number and reduce BP1 as well)
+
+Everything inbetween -0.25 m/s and 3 m/s is interpolated, which adjusts the distance smoothly as you slow down depending on the lead car approach relative speed.  
+
 
 - <b>(Not functional in 0.6.x yet) Toggle Comma's live tuning</b>:  Comma live tunes things like alignment, steerRatio etc.  But sometimes it doesn't converge to the right value and throws lane centering off during turns.  This allows you to use /data/openpilot/.tune.sh to toggle the auto-tune to off when the car feels right so that it doesn't tune the car any further than necessary.
 
