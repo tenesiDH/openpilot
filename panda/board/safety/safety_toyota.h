@@ -41,7 +41,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   // sample speed
   if (addr == 0xb4) {
     // Middle bytes needed
-    ego_speed_toyota = 0;//GET_BYTE(to_push, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
+    ego_speed_toyota = (GET_BYTES_48(to_push) >> 8) & 0xFFFF;//GET_BYTE(to_push, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
   }// Special thanks to Willem Melching for the code
   // get eps motor torque (0.66 factor in dbc)
   if (addr == 0x260) {
@@ -62,7 +62,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   // enter controls on rising edge of ACC, exit controls on ACC off
   if (addr == 0x1D3) {
     // 15th bit is MAIN_ON
-    int cruise_engaged = GET_BYTE(to_push, 0) & 0x8000;
+    int cruise_engaged = GET_BYTES_04(to_push) & 0x8000;
     if (!cruise_engaged) {
       controls_allowed = 0;
     }
@@ -151,13 +151,16 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       uint32_t ts = TIM2->CNT;
 
       if (long_controls_allowed) {
-        if (ego_speed_toyota > 4500){
-            violation |= max_limit_check(desired_torque, 805, -805);
+        if (!toyota_cruise_engaged_last){
+          if (ego_speed_toyota > 4500){
+              violation |= max_limit_check(desired_torque, 805, -805);
+          } else {
+              violation = 1;
+          }
         } else {
-            violation = 1;
-        }
         // *** global torque limit check ***
-        violation |= max_limit_check(desired_torque, TOYOTA_MAX_TORQUE, -TOYOTA_MAX_TORQUE);
+          violation |= max_limit_check(desired_torque, TOYOTA_MAX_TORQUE, -TOYOTA_MAX_TORQUE);
+        }
 
         // *** torque rate limit check ***
         violation |= dist_to_meas_check(desired_torque, toyota_desired_torque_last,
