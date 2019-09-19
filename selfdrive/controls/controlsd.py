@@ -113,7 +113,7 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
     mismatch_counter = 0
 
   if sm.updated['health']:
-    controls_allowed = True # sm['health'].controlsAllowed
+    controls_allowed = sm['health'].controlsAllowed
     if not controls_allowed and enabled:
       mismatch_counter += 1
     if mismatch_counter >= 2:
