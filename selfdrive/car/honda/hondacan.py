@@ -1,6 +1,7 @@
 import struct
 from selfdrive.config import Conversions as CV
 from selfdrive.car.honda.values import CAR, HONDA_BOSCH
+from common.params import Params
 
 # *** Honda specific ***
 def can_cksum(mm):
@@ -68,7 +69,8 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, is_metric, idx, 
   bus_lkas = get_lkas_cmd_bus(car_fingerprint, is_panda_black)
 
   if car_fingerprint not in HONDA_BOSCH:
-    if is_metric:
+    is_eon_metric = Params().get("IsMetric") == "1"
+    if is_eon_metric:
       speed_units = 2
     else:
       speed_units = 3
