@@ -1,5 +1,6 @@
 import numpy as np
 from cereal import car
+from common.numpy_fast import interp
 from common.kalman.simple_kalman import KF1D
 from selfdrive.can.can_define import CANDefine
 from selfdrive.can.parser import CANParser
