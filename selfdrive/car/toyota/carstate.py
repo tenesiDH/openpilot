@@ -106,6 +106,7 @@ class CarState(object):
     self.init_angle_offset = False
     
     self.acc_slow_on = False
+    self.pcm_acc_status = False
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
