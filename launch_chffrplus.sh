@@ -11,18 +11,21 @@ if [ -z "$PASSIVE" ]; then
 fi
 
 function launch {
-  # apply update
-  if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then
-    git reset --hard @{u} &&
-    git clean -xdf &&
-
-    # Touch all files on release2 after checkout to prevent rebuild
-    BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if [[ "$BRANCH" == "release2" ]]; then
+  # apply update only if no_ota_updates does not exist in /data directory
+  file="/data/no_ota_updates"
+  if ! [ -f "$file" ]; then
+    if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then
+      git reset --hard @{u} &&
+      git clean -xdf &&
+      
+      # Touch all files on release2 after checkout to prevent rebuild
+      BRANCH=$(git rev-parse --abbrev-ref HEAD)
+      if [[ "$BRANCH" == "release2" ]]; then
         touch **
+      fi # Touch all files on release2 after checkout to prevent rebuild
+      
+      exec "${BASH_SOURCE[0]}"
     fi
-
-    exec "${BASH_SOURCE[0]}"
   fi
 
   # no cpu rationing for now
