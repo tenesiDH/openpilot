@@ -13,7 +13,7 @@ VisualAlert = car.CarControl.HUDControl.VisualAlert
 
 # Accel limits
 ACCEL_HYST_GAP = 0.02  # don't change accel command for small oscilalitons within this value
-ACCEL_MAX = 1.5  # 1.5 m/s2
+ACCEL_MAX = 3.0  # 3   m/s2
 ACCEL_MIN = -3.0 # 3   m/s2
 ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
 
@@ -135,19 +135,42 @@ class CarController(object):
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
     
     if CS.CP.enableGasInterceptor:
-      if CS.pedal_gas > 15:
-        apply_accel = max(apply_accel, 0.0)
+      if CS.pedal_gas > 15.0:
+        apply_accel = max(apply_accel, 0.06)
+      if CS.brake_lights:
+        apply_gas = 0.0
+        apply_accel = min(apply_accel, 0.00)
     else:
-      if CS.pedal_gas > 0:
+      if CS.pedal_gas > 0.0:
         apply_accel = max(apply_accel, 0.0)
-    if CS.brake_lights:
-      apply_accel = min(apply_accel, 0.0)
+      if CS.brake_lights:
+        apply_accel = min(apply_accel, 0.0)
       
     # steer torque
     apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
-
+    
+    if abs(CS.angle_steers) > 200:
+      apply_steer = 0
+      
     apply_steer = apply_toyota_steer_torque_limits(apply_steer, self.last_steer, CS.steer_torque_motor, SteerLimitParams)
-
+    
+    if apply_steer == 0 and self.last_steer == 0:
+      apply_steer_req = 0
+      
+    if not enabled and right_lane_depart and CS.v_ego > 12.5 and not CS.right_blinker_on:
+      apply_steer = self.last_steer + 3
+      apply_steer = min(apply_steer , 800)
+      #print "right"
+      #print apply_steer
+      apply_steer_req = 1
+      
+    if not enabled and left_lane_depart and CS.v_ego > 12.5 and not CS.left_blinker_on:
+      apply_steer = self.last_steer - 3
+      apply_steer = max(apply_steer , -800)
+      #print "left"
+      #print apply_steer
+      apply_steer_req = 1
+      
     # only cut torque when steer state is a known fault
     if CS.steer_state in [9, 25]:
       self.last_fault_frame = frame

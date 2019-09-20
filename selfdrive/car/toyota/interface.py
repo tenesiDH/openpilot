@@ -282,8 +282,8 @@ class CarInterface(object):
     if ret.enableGasInterceptor:
       ret.gasMaxBP = [0., 9., 55]
       ret.gasMaxV = [0.2, 0.5, 0.7]
-      ret.longitudinalTuning.kpV = [1.0, 0.66, 0.42] # braking tune
-      ret.longitudinalTuning.kiV = [0.135, 0.09]
+      ret.longitudinalTuning.kpV = [0.50, 0.4, 0.3] # braking tune
+      ret.longitudinalTuning.kiV = [0.0135, 0.01]
     else:
       ret.gasMaxBP = [0., 9., 55]
       ret.gasMaxV = [0.2, 0.5, 0.7]
@@ -348,6 +348,8 @@ class CarInterface(object):
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     else:
       ret.cruiseState.enabled = bool(self.CS.main_on)
+    if self.CS.v_ego < 3:
+      ret.cruiseState.enabled = self.CS.pcm_acc_active
     ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
     ret.cruiseState.available = bool(self.CS.main_on)
     ret.cruiseState.speedOffset = 0.
@@ -405,7 +407,7 @@ class CarInterface(object):
     if ret.gearShifter == GearShifter.reverse and self.CP.enableDsu:
       events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     if self.CS.steer_error:
-      events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
+      events.append(create_event('steerTempUnavailable', [ET.WARNING]))
     if self.CS.low_speed_lockout and self.CP.enableDsu:
       events.append(create_event('lowSpeedLockout', [ET.NO_ENTRY, ET.PERMANENT]))
     if ret.vEgo < self.CP.minEnableSpeed and self.CP.enableDsu:
