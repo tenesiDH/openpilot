@@ -198,7 +198,7 @@ class CarState(object):
     if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
       if self.v_ego < 11.38:
         self.acc_slow_on = True
-        self.setspeedoffset = min(max(int(41.0-self.v_ego*3.6),34.0),0.0)
+        self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
       else:
         self.acc_slow_on = False
     if self.acc_slow_on and self.CP.carFingerprint != CAR.OLD_CAR:
