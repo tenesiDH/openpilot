@@ -104,7 +104,8 @@ class CarState(object):
     self.right_blinker_on = 0
     self.angle_offset = 0.
     self.init_angle_offset = False
-
+    
+    self.acc_slow_on = False
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
@@ -192,6 +193,13 @@ class CarState(object):
     else:
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
+    if self.acc_slow_on and self.CP.carFingerprint != CAR.OLD_CAR:
+      self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - 34.0)
+    if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
+      if self.v_ego < 11.38:
+        self.acc_slow_on = True
+      else:
+        self.acc_slow_on = False
     self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
     self.pcm_acc_active = bool(cp.vl["PCM_CRUISE"]['CRUISE_ACTIVE'])
     self.brake_lights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or self.brake_pressed)
