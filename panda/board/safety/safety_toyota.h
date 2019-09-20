@@ -61,6 +61,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
   // enter controls on rising edge of ACC, exit controls on ACC off
   if (ego_speed_toyota < 700){
+    if (addr == 0x1D3) {
       // 5th bit is CRUISE_ACTIVE
       int cruise_engaged = GET_BYTE(to_push, 0) & 0x20;
       if (!cruise_engaged) {
@@ -70,6 +71,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
         controls_allowed = 1;
       }
       toyota_cruise_engaged_last = cruise_engaged;
+    }
   } else {
     if (addr == 0x1D3) {
       // 15th bit is MAIN_ON
@@ -81,6 +83,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
         controls_allowed = 1;
       }
       toyota_cruise_engaged_last = cruise_engaged;
+    }
   }
 
   // exit controls on rising edge of interceptor gas press
