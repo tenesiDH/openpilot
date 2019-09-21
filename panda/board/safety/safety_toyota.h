@@ -60,16 +60,30 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   }
 
   // enter controls on rising edge of ACC, exit controls on ACC off
-  if (addr == 0x1D3) {
-    // 15th bit is MAIN_ON
-    int cruise_engaged = GET_BYTES_04(to_push) & 0x8000;
-    if (!cruise_engaged) {
-      controls_allowed = 0;
+  if (ego_speed_toyota < 700){
+    if (addr == 0x1D2) {
+      // 5th bit is CRUISE_ACTIVE
+      int cruise_engaged = GET_BYTE(to_push, 0) & 0x20;
+      if (!cruise_engaged) {
+        controls_allowed = 0;
+      }
+      if (cruise_engaged && !toyota_cruise_engaged_last) {
+        controls_allowed = 1;
+      }
+      toyota_cruise_engaged_last = cruise_engaged;
     }
-    if (cruise_engaged && !toyota_cruise_engaged_last) {
-      controls_allowed = 1;
+  } else {
+    if (addr == 0x1D3) {
+      // 15th bit is MAIN_ON
+      int cruise_engaged = GET_BYTES_04(to_push) & 0x8000;
+      if (!cruise_engaged) {
+        controls_allowed = 0;
+      }
+      if (cruise_engaged && !toyota_cruise_engaged_last) {
+        controls_allowed = 1;
+      }
+      toyota_cruise_engaged_last = cruise_engaged;
     }
-    toyota_cruise_engaged_last = cruise_engaged;
   }
 
   // exit controls on rising edge of interceptor gas press

@@ -1,5 +1,6 @@
 import numpy as np
 from cereal import car
+from common.numpy_fast import interp
 from common.kalman.simple_kalman import KF1D
 from selfdrive.can.can_define import CANDefine
 from selfdrive.can.parser import CANParser
@@ -104,7 +105,16 @@ class CarState(object):
     self.right_blinker_on = 0
     self.angle_offset = 0.
     self.init_angle_offset = False
-
+    
+    self.acc_slow_on = False
+    self.pcm_acc_status = False
+    self.setspeedoffset = 34.0
+    self.Angles = np.zeros(250)
+    self.Angles_later = np.zeros(250)
+    self.Angle_counter = 0
+    self.Angle = [0, 5, 10, 15,20,25,30,35,60,100,180,270,500]
+    self.Angle_Speed = [255,160,100,80,70,60,55,50,40,33,27,17,12]
+    
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
@@ -192,6 +202,21 @@ class CarState(object):
     else:
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
+    if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
+      if self.v_ego < 11.38:
+        self.acc_slow_on = True
+        self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
+      else:
+        self.acc_slow_on = False
+    if self.acc_slow_on and self.CP.carFingerprint != CAR.OLD_CAR:
+      self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
+    if not self.left_blinker_on and not self.right_blinker_on:
+      self.Angles[self.Angle_counter] = abs(self.angle_steers)
+      self.v_cruise_pcm = int(min(self.v_cruise_pcm, interp(np.max(self.Angles), self.Angle, self.Angle_Speed)))
+    else:
+      self.Angles[self.Angle_counter] = 0
+      self.Angles_later[self.Angle_counter] = 0
+    self.Angle_counter = (self.Angle_counter + 1 ) % 250
     self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
     self.pcm_acc_active = bool(cp.vl["PCM_CRUISE"]['CRUISE_ACTIVE'])
     self.brake_lights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or self.brake_pressed)
