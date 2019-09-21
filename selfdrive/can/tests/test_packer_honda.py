@@ -23,7 +23,7 @@ class TestPackerMethods(unittest.TestCase):
       pump_on = (random.randint(0, 2) % 2 == 0)
       pcm_override = (random.randint(0, 2) % 2 == 0)
       pcm_cancel_cmd = (random.randint(0, 2) % 2 == 0)
-      chime = random.randint(0, 65536)
+ 
       fcw = random.randint(0, 65536)
       idx = random.randint(0, 65536)
       m_old = hondacan.create_brake_command(self.honda_cp_old, apply_brake, pump_on, pcm_override, pcm_cancel_cmd, fcw, idx, car_fingerprint, is_panda_black)
