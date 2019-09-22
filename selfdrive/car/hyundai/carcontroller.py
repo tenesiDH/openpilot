@@ -134,7 +134,7 @@ class CarController(object):
         self.last_resume_cnt = self.cnt
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0, self.clu11_cnt))
       
-    can_sends.append(create_ems11(self.packer, low_speed, CS.ems11))
+    can_sends.append(create_ems11(self.packer, 0 if enabled else (CS.v_ego * 3.6), CS.ems11))
 
     self.cnt += 1
 
