@@ -224,8 +224,8 @@ class CarState(object):
     self.steer_torque_driver = cp_mdps.vl["MDPS11"]['CR_Mdps_DrvTq']
     self.steer_torque_motor = cp_mdps.vl["MDPS12"]['CR_Mdps_OutTq']
     self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4.
-    self.mdps11_strang = cp.vl["MDPS11"]["CR_Mdps_StrAng"]
-    self.mdps11_stat = cp.vl["MDPS11"]["CF_Mdps_Stat"]
+    self.mdps11_strang = cp_mdps.vl["MDPS11"]["CR_Mdps_StrAng"]
+    self.mdps11_stat = cp_mdps.vl["MDPS11"]["CF_Mdps_Stat"]
 
     self.user_brake = 0
 
