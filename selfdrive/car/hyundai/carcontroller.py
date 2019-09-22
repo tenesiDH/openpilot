@@ -135,6 +135,7 @@ class CarController(object):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0, self.clu11_cnt))
       
     low_speed = CS.v_ego < 17
+    can_sends.append(create_ems11(self.packer, low_speed, CS.ems11))
 
     self.cnt += 1
 
