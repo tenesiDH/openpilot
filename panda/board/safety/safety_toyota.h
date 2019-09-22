@@ -79,7 +79,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     if ((gas_interceptor > TOYOTA_GAS_INTERCEPTOR_THRESHOLD) &&
         (gas_interceptor_prev <= TOYOTA_GAS_INTERCEPTOR_THRESHOLD) &&
         long_controls_allowed) {
-      controls_allowed = 1;
+      toyota_gas_pressed = 1;
     }
     gas_interceptor_prev = gas_interceptor;
   }
@@ -88,7 +88,7 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if (addr == 0x2C1) {
     int gas = GET_BYTE(to_push, 6) & 0xFF;
     if ((gas > 0) && (toyota_gas_prev == 0) && !gas_interceptor_detected && long_controls_allowed) {
-      controls_allowed = 1;
+      toyota_gas_pressed = 1;
     }
     toyota_gas_prev = gas;
   }
