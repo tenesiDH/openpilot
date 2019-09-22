@@ -79,13 +79,10 @@ class kegman_conf():
 	self.config.update({"2barMax":"2.5"})
 	self.config.update({"3barMax":"2.5"})
         self.element_updated = True
-
-
-      # Force update battery charge limits to higher values for Big Model
-      #if self.config['battChargeMin'] != "75":
-      #  self.config.update({"battChargeMin":"75"})
-      #  self.config.update({"battChargeMax":"80"})
-      #  self.element_updated = True
+	
+      if "slowOnCurves" not in self.config:
+        self.config.update({"slowOnCurves":"0"})
+        self.element_updated = True
 
       if self.element_updated:
         print("updated")
@@ -98,7 +95,7 @@ class kegman_conf():
                      "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5", "deadzone":"0.0", \
 		     "1barBP0":"-0.25", "1barBP1":"2.75", "2barBP0":"-0.25", "2barBP1":"3.0", "3barBP0":"0.0", \
 		     "3barBP1":"4.0", "1barMax":"2.5", "2barMax":"2.5", "3barMax":"2.5", \
-		     "steerRatio":"-1", "steerRateCost":"-1"}
+		     "steerRatio":"-1", "steerRateCost":"-1", "slowOnCurves":"0"}
 
       self.write_config(self.config)
     return self.config
