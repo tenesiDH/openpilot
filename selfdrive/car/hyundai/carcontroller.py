@@ -69,7 +69,7 @@ class CarController(object):
     if CS.stopped and (self.cnt - self.last_resume_cnt) > 20:
       if (self.cnt - self.last_resume_cnt) % 5 == 0:
         self.last_resume_cnt = self.cnt
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, self.clu11_cnt))
+      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0, self.clu11_cnt))
       
     low_speed = CS.v_ego < 17
     can_sends.append(create_ems11(self.packer, low_speed, CS.ems11))
