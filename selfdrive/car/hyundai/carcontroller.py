@@ -62,6 +62,7 @@ class CarController(object):
                                    enabled, 0, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    enabled, 1, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
+    can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.NONE, 41, self.clu11_cnt))
 
     #if pcm_cancel_cmd:
       #can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL))
