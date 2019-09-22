@@ -176,6 +176,7 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
           violation |= max_limit_check(desired_torque, 805, -805);
         } else {
         violation = 1;
+        }
       }
 
       // reset to 0 if either controls is not allowed or there's a violation
