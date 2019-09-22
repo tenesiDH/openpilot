@@ -279,3 +279,4 @@ class CarState(object):
     self.lkas11 = cp_cam.vl["LKAS11"]
     self.clu11 = cp.vl["CLU11"]
     self.mdps12 = cp_mdps.vl["MDPS12"]
+    self.ems11 = cp.vl["EMS11"]
