@@ -6,7 +6,7 @@ hyundai_checksum = crcmod.mkCrcFun(0x11D, initCrc=0xFD, rev=False, xorOut=0xdf)
 def make_can_msg(addr, dat, alt):
   return [addr, 0, dat, alt]
 
-def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled, lkas11, hud_alert, keep_stock=False):
+def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled, bus_to_send, lkas11, hud_alert, keep_stock=False):
   values = {
     "CF_Lkas_Bca_R": lkas11["CF_Lkas_Bca_R"] if keep_stock else 2,
     "CF_Lkas_LdwsSysState": 3 if steer_req else (lkas11["CF_Lkas_LdwsSysState"] if keep_stock else 1),
@@ -47,7 +47,7 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
 
   values["CF_Lkas_Chksum"] = checksum
 
-  return packer.make_can_msg("LKAS11", 0, values)
+  return packer.make_can_msg("LKAS11", bus_to_send, values)
 
 def create_lkas12():
   return make_can_msg(1342, "\x00\x00\x00\x00\x60\x05", 0)
@@ -60,14 +60,14 @@ def create_1191():
 def create_1156():
   return make_can_msg(1156, "\x08\x20\xfe\x3f\x00\xe0\xfd\x3f", 0)
 
-def create_clu11(packer, clu11, button, cnt):
+def create_clu11(packer, clu11, button, speed, cnt):
   values = {
     "CF_Clu_CruiseSwState": button,
     "CF_Clu_CruiseSwMain": clu11["CF_Clu_CruiseSwMain"],
     "CF_Clu_SldMainSW": clu11["CF_Clu_SldMainSW"],
     "CF_Clu_ParityBit1": clu11["CF_Clu_ParityBit1"],
     "CF_Clu_VanzDecimal": clu11["CF_Clu_VanzDecimal"],
-    "CF_Clu_Vanz": clu11["CF_Clu_Vanz"],
+    "CF_Clu_Vanz": speed if speed != 0 else clu11["CF_Clu_Vanz"],
     "CF_Clu_SPEED_UNIT": clu11["CF_Clu_SPEED_UNIT"],
     "CF_Clu_DetentOut": clu11["CF_Clu_DetentOut"],
     "CF_Clu_RheostatLevel": clu11["CF_Clu_RheostatLevel"],
@@ -76,7 +76,7 @@ def create_clu11(packer, clu11, button, cnt):
     "CF_Clu_AliveCnt1": cnt,
   }
 
-  return packer.make_can_msg("CLU11", 0, values)
+  return packer.make_can_msg("CLU11", 1 if button == 0 else 0, values)
 
 def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
   values = {
@@ -99,6 +99,7 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
   values["CF_Mdps_Chksum2"] = checksum
 
   return packer.make_can_msg("MDPS12", 2, values)
+
 
 def create_spas11(packer, car_fingerprint, cnt, en_spas, apply_steer):
   values = {
@@ -150,3 +151,4 @@ def create_spas12(packer):
   }
 
   return packer.make_can_msg("SPAS12", 0, values)
+

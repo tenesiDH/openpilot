@@ -94,7 +94,12 @@ class CarController(object):
     else:
       can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12, CS.lkas11))
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
-                                   enabled, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
+                                   enabled, 0, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
+    can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
+                                   enabled, 1, CS.lkas11, hud_alert, keep_stock=(not self.camera_disconnected)))
+    low_speed = 41 if CS.v_ego < 17 else 0
+    can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.NONE, low_speed, self.clu11_cnt))
+
     # SPAS11 50hz
     if (self.cnt % 2) == 0 and not self.spas_present:
       if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
@@ -127,7 +132,9 @@ class CarController(object):
     if CS.stopped and (self.cnt - self.last_resume_cnt) > 20:
       if (self.cnt - self.last_resume_cnt) % 5 == 0:
         self.last_resume_cnt = self.cnt
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, self.clu11_cnt))
+      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, 0, self.clu11_cnt))
+      
+    low_speed = CS.v_ego < 17
 
     self.cnt += 1
 
