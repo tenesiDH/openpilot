@@ -67,7 +67,7 @@ def create_clu11(packer, clu11, button, speed, cnt):
     "CF_Clu_SldMainSW": clu11["CF_Clu_SldMainSW"],
     "CF_Clu_ParityBit1": clu11["CF_Clu_ParityBit1"],
     "CF_Clu_VanzDecimal": clu11["CF_Clu_VanzDecimal"],
-    "CF_Clu_Vanz": speed,
+    "CF_Clu_Vanz": speed if button == 0 else clu11["CF_Clu_Vanz"],
     "CF_Clu_SPEED_UNIT": clu11["CF_Clu_SPEED_UNIT"],
     "CF_Clu_DetentOut": clu11["CF_Clu_DetentOut"],
     "CF_Clu_RheostatLevel": clu11["CF_Clu_RheostatLevel"],
@@ -76,7 +76,7 @@ def create_clu11(packer, clu11, button, speed, cnt):
     "CF_Clu_AliveCnt1": cnt,
   }
 
-  return packer.make_can_msg("CLU11", 0, values)
+  return packer.make_can_msg("CLU11", 1 if button == 0 else 0, values)
 
 def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
   values = {
