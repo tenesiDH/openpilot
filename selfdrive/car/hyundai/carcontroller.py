@@ -13,14 +13,14 @@ from selfdrive.config import Conversions as CV
 # Steer torque limits
 
 class SteerLimitParams:
-  STEER_MAX = 255   # 409 is the max, 255 is stock
-  STEER_DELTA_UP = 3
-  STEER_DELTA_DOWN = 7
+  STEER_MAX = 409   # 409 is the max, 255 is stock
+  STEER_DELTA_UP = 5
+  STEER_DELTA_DOWN = 12
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
-  STEER_ANG_MAX = 20          # SPAS Max Angle
-  STEER_ANG_MAX_RATE = 0.4    # SPAS Degrees per ms
+  STEER_ANG_MAX = 45          # SPAS Max Angle
+  STEER_ANG_MAX_RATE = 1.2    # SPAS Degrees per ms
 
 class CarController(object):
   def __init__(self, dbc_name, car_fingerprint):
@@ -66,14 +66,6 @@ class CarController(object):
         self.apply_steer_ang -= 0.5
     else:
       self.apply_steer_ang = apply_steer_ang_req
-
-    # Use LKAS or SPAS
-    if CS.mdps11_stat == 7 or CS.v_ego > 30. * CV.KPH_TO_MS:
-      self.lkas = True
-    elif CS.v_ego < 30. * CV.KPH_TO_MS:
-      self.lkas = False
-    if self.spas_present:
-      self.lkas = True
 
 
     can_sends = []
