@@ -61,7 +61,7 @@ I will attempt to detail the changes in each of the branches here:
 List of changes and tweaks (latest changes at the top):
 - <b> New! Enable / Disable Model based Slowdowns on turns:  On tight turns, the model will slow down the car so that you can make the turn.  Some like this, some people don't.  Set slowOnCurve = "1" to enable slowdowns on curves, or "0" (default) to disable.
   
-- <b> New! Live long tuning for city speeds < 19.44 m/s </b>:  Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.  
+- <b> New! Live long tuning for city speeds < 19.44 m/s </b>:</b> Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.  
   
 <b>Be careful and ready to take over at any time when doing this!!!</b>  The "distance" in s is the target distance the car will try to maintain.  The default distancces are 0.9s, 1.3s, 1.8s for 1,2 and 3 bar intervals.  I manipulate this value to pass to the MPC to scale the behavior which leads to harder braking or sooner braking or softer braking.  Essentially when you are approaching a car, the distance changes depending on your approach speed.  When the lead car pulls away, the distance returns to whatever your bar setting is
   
