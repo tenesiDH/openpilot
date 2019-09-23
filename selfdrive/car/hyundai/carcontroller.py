@@ -45,7 +45,7 @@ class CarController(object):
 
     can_sends = []
 
-    self.lkas11_cnt = self.cnt % 0x10
+    self.lkas11_cnt = CS.lkas11["CF_Lkas_MsgCount"] + 1 #if not self.camera_disconnected else self.cnt % 0x10
     self.clu11_cnt = self.cnt % 0x10
     self.mdps12_cnt = self.cnt % 0x100
 
