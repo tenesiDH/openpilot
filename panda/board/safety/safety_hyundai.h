@@ -14,6 +14,8 @@ int hyundai_desired_torque_last = 0;
 int hyundai_cruise_engaged_last = 0;
 uint32_t hyundai_ts_last = 0;
 struct sample_t hyundai_torque_driver;         // last few driver torques measured
+bool hyundai_LKAS_forwarded = 0;
+bool OP_LKAS_live = 0;
 
 static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus = GET_BUS(to_push);
@@ -72,7 +74,9 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     int desired_torque = ((GET_BYTES_04(to_send) >> 16) & 0x7ff) - 1024;
     uint32_t ts = TIM2->CNT;
     bool violation = 0;
-
+    if (!hyundai_LKAS_forwarded) {
+      OP_LKAS_live = 1;
+    }
     if (controls_allowed) {
 
       // *** global torque limit check ***
@@ -95,8 +99,12 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         hyundai_rt_torque_last = desired_torque;
         hyundai_ts_last = ts;
       }
+    } else {
+      if ((hyundai_LKAS_forwarded) && (!OP_LKAS_live)) {
+        hyundai_LKAS_forwarded = 0;
+        return 1;
+      }
     }
-
     // no torque if controls is not allowed
     if (!controls_allowed && (desired_torque != 0)) {
       violation = 1;
@@ -135,26 +143,39 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   if (hyundai_giraffe_switch_2) {
     if (bus_num == 0) {
       int addr = GET_ADDR(to_fwd);
-      if ((addr != 790) && (addr != 1265)) {
+      if (addr != 1265) {
         bus_fwd = hyundai_camera_bus + 10;
         } else {
+          if (!OP_LKAS_live) {
+            bus_fwd = hyundai_camera_bus + 10;
+          } else {
         bus_fwd = hyundai_camera_bus;
+		  }
       }
     }
     if (bus_num == hyundai_camera_bus) {
       int addr = GET_ADDR(to_fwd);
       if (addr != 832) {
         bus_fwd = 0 + 10;
+      } else {
+        if (!OP_LKAS_live) {
+          hyundai_LKAS_forwarded = 1;
+          bus_fwd = 0 + 10;
+        }
       }
     }
-    if (bus_num == 1) {
-      int addr = GET_ADDR(to_fwd);
-      // speed address
-      if (addr != 593) {
+  }
+  if (bus_num == 1) {
+    int addr = GET_ADDR(to_fwd);
+    // speed address
+    if (addr != 593) {
+      bus_fwd = 0 + 20;
+    } else {
+      if (!OP_LKAS_live) {
         bus_fwd = 0 + 20;
       } else {
-        bus_fwd = 0;
-      }
+      bus_fwd = 0;
+	  }
     }
   }
   return bus_fwd;
@@ -163,7 +184,7 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
 static void hyundai_init(int16_t param) {
   UNUSED(param);
   controls_allowed = 0;
-  hyundai_giraffe_switch_2 = 0;
+  hyundai_giraffe_switch_2 = 1;
 }
 
 const safety_hooks hyundai_hooks = {
