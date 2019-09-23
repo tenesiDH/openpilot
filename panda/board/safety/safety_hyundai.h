@@ -105,7 +105,6 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         return 1;
       }
     }
-
     // no torque if controls is not allowed
     if (!controls_allowed && (desired_torque != 0)) {
       violation = 1;
