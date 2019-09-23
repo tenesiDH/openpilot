@@ -146,7 +146,11 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
       if (addr != 1265) {
         bus_fwd = hyundai_camera_bus + 10;
         } else {
+          if (!OP_LKAS_live) {
+            bus_fwd = hyundai_camera_bus + 10;
+          } else {
         bus_fwd = hyundai_camera_bus;
+		  }
       }
     }
     if (bus_num == hyundai_camera_bus) {
@@ -167,7 +171,11 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
     if (addr != 593) {
       bus_fwd = 0 + 20;
     } else {
+      if (!OP_LKAS_live) {
+        bus_fwd = 0 + 20;
+      } else {
       bus_fwd = 0;
+	  }
     }
   }
   return bus_fwd;
