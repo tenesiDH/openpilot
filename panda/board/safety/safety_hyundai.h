@@ -147,14 +147,14 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
         bus_fwd = 0 + 10;
       }
     }
-    if (bus_num == 1) {
-      int addr = GET_ADDR(to_fwd);
-      // speed address
-      if (addr != 593) {
-        bus_fwd = 0 + 20;
-      } else {
-        bus_fwd = 0;
-      }
+  }
+  if (bus_num == 1) {
+    int addr = GET_ADDR(to_fwd);
+    // speed address
+    if (addr != 593) {
+      bus_fwd = 0 + 20;
+    } else {
+      bus_fwd = 0;
     }
   }
   return bus_fwd;
