@@ -20,7 +20,7 @@ class CarController(object):
   def __init__(self, dbc_name, car_fingerprint):
     self.apply_steer_last = 0
     self.car_fingerprint = car_fingerprint
-    self.lkas11_cnt = 0
+    self.lkas11_cnt = -1
     self.cnt = 0
     self.last_resume_cnt = 0
     # True when giraffe switch 2 is low and we need to replace all the camera messages
@@ -42,10 +42,14 @@ class CarController(object):
     steer_req = 1 if enabled else 0
 
     self.apply_steer_last = apply_steer
+    
+    # run only at first
+    if self.lkas11_cnt == -1:
+      self.lkas11_cnt = CS.lkas11["CF_Lkas_MsgCount"] + 1 
 
     can_sends = []
 
-    self.lkas11_cnt = (CS.lkas11["CF_Lkas_MsgCount"] + 1) % 0x10 # if not self.camera_disconnected else self.cnt % 0x10
+    self.lkas11_cnt %= 0x10
     self.clu11_cnt = self.cnt % 0x10
     self.mdps12_cnt = self.cnt % 0x100
 
@@ -74,6 +78,7 @@ class CarController(object):
       
     low_speed = CS.v_ego < 17
 
+    self.lkas11_cnt += 1
     self.cnt += 1
 
     return can_sends
