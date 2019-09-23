@@ -143,7 +143,7 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   if (hyundai_giraffe_switch_2) {
     if (bus_num == 0) {
       int addr = GET_ADDR(to_fwd);
-      if (addr != 1265) {
+      if ((addr != 790) && (addr != 1265)) {
         bus_fwd = hyundai_camera_bus + 10;
         } else {
           if (!OP_LKAS_live) {
