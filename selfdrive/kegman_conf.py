@@ -18,6 +18,9 @@ class kegman_conf():
     if self.conf['Ki'] == "-1":
       self.conf['Ki'] = str(round(CP.lateralTuning.pid.kiV[0],3))
       write_conf = True
+    if self.conf['Kf'] == "-1":
+      self.conf['Kf'] = str('{:f}'.format(CP.lateralTuning.pid.kf))
+      write_conf = True
     if self.conf['steerRatio'] == "-1":
       self.conf['steerRatio'] = str(round(CP.steerRatio,3))
       write_conf = True
@@ -83,6 +86,10 @@ class kegman_conf():
       if "slowOnCurves" not in self.config:
         self.config.update({"slowOnCurves":"0"})
         self.element_updated = True
+	
+      if "Kf" not in self.config:
+        self.config.update({"Kf":"-1"})
+        self.element_updated = True
 
       if self.element_updated:
         print("updated")
@@ -95,7 +102,7 @@ class kegman_conf():
                      "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5", "deadzone":"0.0", \
 		     "1barBP0":"-0.25", "1barBP1":"2.75", "2barBP0":"-0.25", "2barBP1":"3.0", "3barBP0":"0.0", \
 		     "3barBP1":"4.0", "1barMax":"2.5", "2barMax":"2.5", "3barMax":"2.5", \
-		     "steerRatio":"-1", "steerRateCost":"-1", "slowOnCurves":"0"}
+		     "steerRatio":"-1", "steerRateCost":"-1", "slowOnCurves":"0", "Kf":"-1"}
 
       self.write_config(self.config)
     return self.config
