@@ -126,7 +126,7 @@ class LongControl(object):
     if radarState is not None and radarState.radarState.leadOne.status is True:
       self.leadOne = radarState.radarState.leadOne
       vRel = self.leadOne.vRel
-    except:
+    else:
       vRel = None
 
     #gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)    
