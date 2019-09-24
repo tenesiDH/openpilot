@@ -70,13 +70,15 @@ class LongControl(object):
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
     self.radarState = messaging.sub_sock(service_list['radarState'].port, conflate=True)
+    self.last_lead = None
+    self.num_nones = 0
     
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
     self.pid.reset()
     self.v_pid = v_pid
     
-  def dynamic_gas(self, v_ego, v_rel, gasinterceptor, gasbuttonstatus):
+  def dynamic_gas(self, v_ego, gasinterceptor, gasbuttonstatus):
     dynamic = False
     if gasinterceptor:
       if gasbuttonstatus == 0:
@@ -102,6 +104,15 @@ class LongControl(object):
 
     accel = interp(v_ego, x, y)
 
+    if self.num_nones <= 5 and self.last_lead is not None:  # if the number of iterations where None is returned is less than 5, assume we have a lead
+      v_rel = self.last_lead.vRel
+      #a_lead = self.last_lead.aLeadK  # to use later
+      #x_lead = self.last_lead.dRel
+    else:
+      v_rel = None
+      #a_lead = None
+      #x_lead = None
+
     if dynamic and v_rel is not None:  # dynamic gas profile specific operations, and if lead
       if v_ego < 6.7056:  # if under 15 mph
         x = [1.61479, 1.99067, 2.28537, 2.49888, 2.6312, 2.68224]
@@ -123,13 +134,13 @@ class LongControl(object):
     radarState = messaging.recv_one_or_none(self.radarState)
 
     if radarState is not None and radarState.radarState.leadOne.status is True:
-      self.leadOne = radarState.radarState.leadOne
-      vRel = self.leadOne.vRel
+      self.last_lead = radarState.radarState.leadOne
+      self.num_nones = 0
     else:
-      vRel = None
+      self.num_nones = clip(self.num_nones + 1, 0, 20)
 
     #gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)    
-    gas_max = self.dynamic_gas(v_ego, vRel, gasinterceptor, gasbuttonstatus)
+    gas_max = self.dynamic_gas(v_ego, gasinterceptor, gasbuttonstatus)
     brake_max = interp(v_ego, CP.brakeMaxBP, CP.brakeMaxV)
 
     # Update state machine
