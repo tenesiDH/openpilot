@@ -59,6 +59,8 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
+- <b> New! Added kF feedforward param to live tuner.</b>
+
 - <b> New! Enable / Disable Model based Slowdowns on turns:  On tight turns, the model will slow down the car so that you can make the turn.  Some like this, some people don't.  Set slowOnCurve = "1" to enable slowdowns on curves, or "0" (default) to disable.
   
 - <b> New! Live long tuning for city speeds < 19.44 m/s </b>:</b> Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.  
