@@ -30,8 +30,11 @@ def circle_through_points(p1, p2, p3):
   B = (x1**2 + y1**2) * (y3 - y2) + (x2**2 + y2**2) * (y1 - y3) + (x3**2 + y3**2) * (y2 - y1)
   C = (x1**2 + y1**2) * (x2 - x3) + (x2**2 + y2**2) * (x3 - x1) + (x3**2 + y3**2) * (x1 - x2)
   D = (x1**2 + y1**2) * (x3 * y2 - x2 * y3) + (x2**2 + y2**2) * (x1 * y3 - x3 * y1) + (x3**2 + y3**2) * (x2 * y1 - x1 * y2)
-
-  return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
+  
+  if abs((y3-y1)*x2-(x3-x1)*y2+x3*y1-y3*x1)/np.sqrt((y3-y1)**2+(x3-x1)**2) > 0.1:
+    return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
+  else:
+    return (-B / (2 * A), - C / (2 * A), np.inf)
 
 def parse_speed_unit(max_speed):
   """Converts a maxspeed string to m/s based on the unit present in the input.
