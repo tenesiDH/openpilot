@@ -1,4 +1,3 @@
-import zmq
 import selfdrive.messaging as messaging
 from selfdrive.services import service_list
 from cereal import log
