@@ -217,7 +217,7 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
 
 
 def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cruise_kph, v_cruise_kph_last,
-                  AM, rk, driver_status, LaC, LoC, VM, read_only, is_metric, cal_perc):
+                  AM, rk, driver_status, LaC, LoC, VM, read_only, is_metric, cal_perc, sm):
   """Given the state, this function returns an actuators packet"""
 
   actuators = car.CarControl.Actuators.new_message()
@@ -266,8 +266,10 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
     gasinterceptor = False
     
   # Gas/Brake PID loop
+  lead_one = sm['radarState'].leadOne if sm.updated['radarState'] else None
   actuators.gas, actuators.brake = LoC.update(active, CS.vEgo, CS.brakePressed, CS.standstill, CS.cruiseState.standstill,
-                                              v_cruise_kph, v_acc_sol, plan.vTargetFuture, a_acc_sol, CP, gasinterceptor, 0, plan.decelForTurn, plan.longitudinalPlanSource)
+                                              v_cruise_kph, v_acc_sol, plan.vTargetFuture, a_acc_sol, CP, gasinterceptor, 0, plan.decelForTurn, plan.longitudinalPlanSource,
+                                              lead_one)
   # Steering PID loop and lateral MPC
   actuators.steer, actuators.steerAngle, lac_log = LaC.update(active, CS.vEgo, CS.steeringAngle, CS.steeringRate, CS.steeringTorqueEps, CS.steeringPressed, CP, VM, path_plan)
 
@@ -438,7 +440,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
 
   if sm is None:
     sm = messaging.SubMaster(['thermal', 'health', 'liveCalibration', 'driverMonitoring', 'plan', 'pathPlan', \
-                              'gpsLocation'], ignore_alive=['gpsLocation'])
+                              'gpsLocation', 'radarState'], ignore_alive=['gpsLocation'])
 
   if can_sock is None:
     can_timeout = None if os.environ.get('NO_CAN_TIMEOUT', False) else 100
@@ -550,7 +552,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     # Compute actuators (runs PID loops and lateral MPC)
     actuators, v_cruise_kph, driver_status, v_acc, a_acc, lac_log = \
       state_control(sm.frame, sm.rcv_frame, sm['plan'], sm['pathPlan'], CS, CP, state, events, v_cruise_kph, v_cruise_kph_last, AM, rk,
-                    driver_status, LaC, LoC, VM, read_only, is_metric, cal_perc)
+                    driver_status, LaC, LoC, VM, read_only, is_metric, cal_perc, sm)
 
     prof.checkpoint("State Control")
 
