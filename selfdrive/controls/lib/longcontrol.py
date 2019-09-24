@@ -1,3 +1,5 @@
+import zmq
+import selfdrive.messaging as messaging
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
@@ -67,6 +69,8 @@ class LongControl(object):
     self.v_pid = 0.0
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
+    self.poller = zmq.Poller()
+    self.radarState = messaging.sub_sock(service_list['radarState'].port, poller=self.poller, conflate=True)
     
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -117,6 +121,18 @@ class LongControl(object):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
     #gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)
+    radarState = None
+
+    for socket, event in self.poller.poll(0):
+      if socket is self.radarState:
+        radarState = messaging.recv_one(socket)
+
+    try:
+      self.leadOne = radarState.radarState.leadOne
+      vRel = self.leadOne.vRel
+    except:
+      vRel = None
+    
     gas_max = self.dynamic_gas(v_ego, vRel, gasinterceptor, gasbuttonstatus)
     brake_max = interp(v_ego, CP.brakeMaxBP, CP.brakeMaxV)
 
