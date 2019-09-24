@@ -81,7 +81,8 @@ class CarInterface(object):
     self.last_enable_sent = 0
     self.gas_pressed_prev = False
     self.brake_pressed_prev = False
-
+    self.cruise_enabled_prev = False
+    
     self.cp = get_can_parser(CP)
     self.cp_cam = get_cam_can_parser(CP)
 
@@ -572,7 +573,9 @@ class CarInterface(object):
     # update previous brake/gas pressed
     self.gas_pressed_prev = ret.gasPressed
     self.brake_pressed_prev = ret.brakePressed
-
+    
+    self.cruise_enabled_prev = ret.cruiseState.enabled
+    
     # cast to reader so it can't be modified
     return ret.as_reader()
 
