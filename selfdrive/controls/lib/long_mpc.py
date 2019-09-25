@@ -189,8 +189,8 @@ class LongitudinalMpc(object):
 
   def update(self, pm, CS, lead, v_cruise_setpoint):
     v_ego = CS.vEgo
-    self.car_state = CS.carState
-    self.v_ego = CS.carState.vEgo
+    self.car_state = CS
+    self.v_ego = CS.vEgo
     
     # Setup current mpc state
     self.cur_state[0].x_ego = 0.0
