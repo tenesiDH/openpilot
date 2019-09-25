@@ -203,7 +203,10 @@ class LongitudinalMpc(object):
       if (v_lead < 0.1 or -a_lead / 2.0 > v_lead):
         v_lead = 0.0
         a_lead = 0.0
-
+        
+      self.v_lead = v_lead
+      self.x_lead = x_lead
+      
       self.a_lead_tau = lead.aLeadTau
       self.new_lead = False
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
@@ -220,6 +223,8 @@ class LongitudinalMpc(object):
       self.cur_state[0].x_l = 50.0
       self.cur_state[0].v_l = v_ego + 10.0
       a_lead = 0.0
+      self.v_lead = None
+      self.x_lead = None
       self.a_lead_tau = _LEAD_ACCEL_TAU
 
     # Calculate mpc
