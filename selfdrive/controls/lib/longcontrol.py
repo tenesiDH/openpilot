@@ -69,7 +69,7 @@ class LongControl(object):
     self.v_pid = 0.0
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
-    self.sm = messaging.SubMaster(['radarState']
+    self.sm = messaging.SubMaster(['radarState'])
     self.last_lead = None
     
   def reset(self, v_pid):
