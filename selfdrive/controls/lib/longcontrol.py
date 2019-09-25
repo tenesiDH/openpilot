@@ -68,6 +68,7 @@ class LongControl(object):
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
     self.last_lead = None
+    self.none_count = 0
     
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -100,7 +101,7 @@ class LongControl(object):
 
     accel = interp(v_ego, x, y)
 
-    if self.last_lead is not None and self.last_lead.status:
+    if self.none_count < 10 and self.last_lead is not None and self.last_lead.status:  # if returned nones is less than 10, last lead is not none, and last lead's status is true assume lead
       v_rel = self.last_lead.vRel
       #a_lead = self.last_lead.aLeadK  # to use later
       #x_lead = self.last_lead.dRel
@@ -127,9 +128,11 @@ class LongControl(object):
              gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
-                                  
-
-    self.last_lead = lead_one                          
+    if lead_one is not None:
+      self.last_lead = lead_one
+      self.none_count = 0
+    else:
+      self.none_count = clip(self.none_count + 1, 0, 10)
 
     #gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)    
     gas_max = self.dynamic_gas(v_ego, gas_interceptor, gas_button_status)
