@@ -219,12 +219,11 @@ class Planner(object):
         required_decel = min(0, (v_curvature_map - v_ego) / time_to_turn)
         accel_limits[0] = max(accel_limits[0], required_decel)
       if v_speedlimit_ahead < v_speedlimit and self.longitudinalPlanSource =='cruise' and v_ego > v_speedlimit_ahead:
-        if sm['liveMapData'].speedLimitAheadDistance > 1:
-          required_decel = min(0, (v_speedlimit_ahead*v_speedlimit_ahead - v_ego*v_ego)/(sm['liveMapData'].speedLimitAheadDistance*2))
-          required_decel = max(required_decel, -3.0)
-          accel_limits[0] = required_decel
-          accel_limits[1] = required_decel
-          self.a_acc_start = required_decel
+        required_decel = min(0, (v_speedlimit_ahead*v_speedlimit_ahead - v_ego*v_ego)/(sm['liveMapData'].speedLimitAheadDistance*2))
+        required_decel = max(required_decel, -3.0)
+        accel_limits[0] = required_decel
+        accel_limits[1] = required_decel
+        self.a_acc_start = required_decel
       
       self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,

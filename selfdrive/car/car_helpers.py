@@ -129,7 +129,7 @@ def fingerprint(logcan, sendcan, is_panda_black):
     done = failed or succeeded
 
     frame += 1
-
+  
   cloudlog.warning("fingerprinted %s", car_fingerprint)
   return car_fingerprint, finger, vin
 
@@ -143,7 +143,7 @@ def get_car(logcan, sendcan, is_panda_black=False):
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
     candidate = "mock"
-  if BASEDIR == "/data/openpilot":
+  if BASEDIR == "/data/openpilot" or BASEDIR == "/data/openpilot.arne182":
     x = threading.Thread(target=crash_log, args=(candidate,))
     x.start()
   CarInterface, CarController = interfaces[candidate]

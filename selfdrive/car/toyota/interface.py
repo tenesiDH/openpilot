@@ -258,8 +258,8 @@ class CarInterface(object):
     # steer, gas, brake limitations VS speed
     ret.steerMaxBP = [16. * CV.KPH_TO_MS, 45. * CV.KPH_TO_MS]  # breakpoints at 1 and 40 kph
     ret.steerMaxV = [1., 1.]  # 2/3rd torque allowed above 45 kph
-    ret.brakeMaxBP = [0.]
-    ret.brakeMaxV = [1.]
+    ret.brakeMaxBP = [0., 35., 55.]
+    ret.brakeMaxV = [0.9, 0.8, 0.7]
 
     ret.enableCamera = not check_ecu_msgs(fingerprint, ECU.CAM, candidate) or is_panda_black
     ret.enableDsu = not check_ecu_msgs(fingerprint, ECU.DSU, candidate) or (is_panda_black and candidate in TSS2_CAR)

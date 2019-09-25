@@ -1,4 +1,3 @@
-import selfdrive.messaging as messaging
 from cereal import log
 from common.numpy_fast import clip, interp
 from selfdrive.controls.lib.pid import PIController
@@ -68,7 +67,6 @@ class LongControl(object):
     self.v_pid = 0.0
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
-    self.sm = messaging.SubMaster(['radarState'])
     self.last_lead = None
     
   def reset(self, v_pid):
@@ -126,13 +124,12 @@ class LongControl(object):
     return round(max(min(accel, max_return), min_return), 5)  # ensure we return a value between range
 
   def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP, gas_interceptor,
-             gas_button_status, decelForTurn, longitudinalPlanSource, lead_one):
+             gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
                                   
-    #sm.update(0) # is this needed?
 
-    self.last_lead = self.sm['radarState'].leadOne                          
+    self.last_lead = lead_one                          
 
     #gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)    
     gas_max = self.dynamic_gas(v_ego, gas_interceptor, gas_button_status)
@@ -180,7 +177,7 @@ class LongControl(object):
         self.pid._k_i = (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV)
         self.pid.k_f=1.0
       
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=(prevent_overshoot or gas_pressed or brake_pressed))
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
