@@ -5,7 +5,7 @@ const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
 // packet is sent at 100hz, so this limit is 1000/sec
 const int TOYOTA_MAX_RATE_UP = 10;        // ramp up slow
 const int TOYOTA_MAX_RATE_DOWN = 25;      // ramp down fast
-const int TOYOTA_MAX_TORQUE_ERROR = 350;  // max torque cmd in excess of torque motor
+const int TOYOTA_MAX_TORQUE_ERROR = 375;  // max torque cmd in excess of torque motor
 
 // real time torque limit to prevent controls spamming
 // the real time limit is 1500/sec
@@ -20,7 +20,6 @@ const int TOYOTA_GAS_INTERCEPTOR_THRESHOLD = 475;  // ratio between offset and g
 
 // global actuation limit states
 int toyota_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TORQUE_EPS in %: see dbc file
-int toyota_gas_pressed = 0;
 
 // states
 int toyota_giraffe_switch_1 = 0;          // is giraffe switch 1 high?
@@ -29,8 +28,9 @@ int toyota_desired_torque_last = 0;       // last desired steer torque
 int toyota_rt_torque_last = 0;            // last desired torque for real time check
 uint32_t toyota_ts_last = 0;
 int toyota_cruise_engaged_last = 0;       // cruise state
-int toyota_gas_prev = 0;
 int ego_speed_toyota = 0;                 // speed
+int toyota_gas_pressed = 0;
+int toyota_gas_prev = 0;
 struct sample_t toyota_torque_meas;       // last 3 motor torques produced by the eps
 
 
@@ -41,8 +41,8 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   // sample speed
   if (addr == 0xb4) {
     // Middle bytes needed
-    ego_speed_toyota = (GET_BYTES_48(to_push) >> 8) & 0xFFFF;//GET_BYTE(to_push, 1);//(to_push->RDHR >>  8) & 0xFFFF; //Speed is 100x
-  }// Special thanks to Willem Melching for the code
+    ego_speed_toyota = (GET_BYTES_48(to_push) >> 8) & 0xFFFF;
+  }
   // get eps motor torque (0.66 factor in dbc)
   if (addr == 0x260) {
     int torque_meas_new = (GET_BYTE(to_push, 5) << 8) | GET_BYTE(to_push, 6);
@@ -60,30 +60,16 @@ static void toyota_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   }
 
   // enter controls on rising edge of ACC, exit controls on ACC off
-  if (ego_speed_toyota < 700){
-    if (addr == 0x1D2) {
-      // 5th bit is CRUISE_ACTIVE
-      int cruise_engaged = GET_BYTE(to_push, 0) & 0x20;
-      if (!cruise_engaged) {
-        controls_allowed = 0;
-      }
-      if (cruise_engaged && !toyota_cruise_engaged_last) {
-        controls_allowed = 1;
-      }
-      toyota_cruise_engaged_last = cruise_engaged;
+  if (addr == 0x1D3) {
+    // 15th bit is CRUISE_ACTIVE
+    int cruise_engaged = GET_BYTES_04(to_push) & 0x8000;
+    if (!cruise_engaged) {
+      controls_allowed = 0;
     }
-  } else {
-    if (addr == 0x1D3) {
-      // 15th bit is MAIN_ON
-      int cruise_engaged = GET_BYTES_04(to_push) & 0x8000;
-      if (!cruise_engaged) {
-        controls_allowed = 0;
-      }
-      if (cruise_engaged && !toyota_cruise_engaged_last) {
-        controls_allowed = 1;
-      }
-      toyota_cruise_engaged_last = cruise_engaged;
+    if (cruise_engaged && !toyota_cruise_engaged_last) {
+      controls_allowed = 1;
     }
+    toyota_cruise_engaged_last = cruise_engaged;
   }
 
   // exit controls on rising edge of interceptor gas press
@@ -164,43 +150,37 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
       uint32_t ts = TIM2->CNT;
 
-      if (long_controls_allowed) {
-        if (!toyota_cruise_engaged_last){
-          if (ego_speed_toyota > 4500){
-              violation |= max_limit_check(desired_torque, 805, -805);
-          } else {
-              violation = 1;
-          }
-        } else {
-        // *** global torque limit check ***
-          violation |= max_limit_check(desired_torque, TOYOTA_MAX_TORQUE, -TOYOTA_MAX_TORQUE);
-        }
+      // *** global torque limit check ***
+      violation |= max_limit_check(desired_torque, TOYOTA_MAX_TORQUE, -TOYOTA_MAX_TORQUE);
 
-        // *** torque rate limit check ***
-        violation |= dist_to_meas_check(desired_torque, toyota_desired_torque_last,
-          &toyota_torque_meas, TOYOTA_MAX_RATE_UP, TOYOTA_MAX_RATE_DOWN, TOYOTA_MAX_TORQUE_ERROR);
+      // *** torque rate limit check ***
+      violation |= dist_to_meas_check(desired_torque, toyota_desired_torque_last,
+        &toyota_torque_meas, TOYOTA_MAX_RATE_UP, TOYOTA_MAX_RATE_DOWN, TOYOTA_MAX_TORQUE_ERROR);
 
-        // used next time
-        toyota_desired_torque_last = desired_torque;
+      // used next time
+      toyota_desired_torque_last = desired_torque;
 
-        // *** torque real time rate limit check ***
-        violation |= rt_rate_limit_check(desired_torque, toyota_rt_torque_last, TOYOTA_MAX_RT_DELTA);
+      // *** torque real time rate limit check ***
+      violation |= rt_rate_limit_check(desired_torque, toyota_rt_torque_last, TOYOTA_MAX_RT_DELTA);
 
-        // every RT_INTERVAL set the new limits
-        uint32_t ts_elapsed = get_ts_elapsed(ts, toyota_ts_last);
-        if (ts_elapsed > TOYOTA_RT_INTERVAL) {
-          toyota_rt_torque_last = desired_torque;
-          toyota_ts_last = ts;
-        }
+      // every RT_INTERVAL set the new limits
+      uint32_t ts_elapsed = get_ts_elapsed(ts, toyota_ts_last);
+      if (ts_elapsed > TOYOTA_RT_INTERVAL) {
+        toyota_rt_torque_last = desired_torque;
+        toyota_ts_last = ts;
       }
 
       // no torque if controls is not allowed
-      //if (!controls_allowed && (desired_torque != 0)) {
-      //  violation = 1;
-      //}
+      if (!controls_allowed) {
+        if (ego_speed_toyota > 4500){
+          violation |= max_limit_check(desired_torque, 805, -805);
+        } else {
+        violation = 1;
+        }
+      }
 
       // reset to 0 if either controls is not allowed or there's a violation
-      if (violation ) {
+      if (violation) {
         toyota_desired_torque_last = 0;
         toyota_rt_torque_last = 0;
         toyota_ts_last = ts;
@@ -218,7 +198,6 @@ static int toyota_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
 static void toyota_init(int16_t param) {
   controls_allowed = 0;
-  long_controls_allowed = 1;
   toyota_giraffe_switch_1 = 0;
   toyota_camera_forwarded = 0;
   toyota_dbc_eps_torque_factor = param;
