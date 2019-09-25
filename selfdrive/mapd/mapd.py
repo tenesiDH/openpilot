@@ -183,8 +183,11 @@ def mapsd_thread():
     save_gps_data(gps)
 
     last_gps = gps
-
+    
     fix_ok = gps.flags & 1
+    
+    if gps.accuracy > 2.0:
+      fix_ok = False
     if not fix_ok or last_query_result is None or not cache_valid:
       cur_way = None
       curvature = None
