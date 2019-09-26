@@ -186,7 +186,7 @@ def mapsd_thread():
     
     fix_ok = gps.flags & 1
     
-    if gps.accuracy < 2.0:
+    if gps.accuracy > 2.0:
       fix_ok = False
     if not fix_ok or last_query_result is None or not cache_valid:
       cur_way = None
