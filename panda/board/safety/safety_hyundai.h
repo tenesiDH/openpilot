@@ -42,11 +42,11 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if (addr == 1057) {
     // 2 bits: 13-14
     int cruise_engaged = (GET_BYTES_04(to_push) >> 13) & 0x3;
-    if (cruise_engaged && !hyundai_cruise_engaged_last) {
+    //if (cruise_engaged && !hyundai_cruise_engaged_last) {
       controls_allowed = 1;
-    }
+    //}
     if (!cruise_engaged) {
-      controls_allowed = 0;
+      //controls_allowed = 0;
     }
     hyundai_cruise_engaged_last = cruise_engaged;
   }
