@@ -154,8 +154,7 @@ class CarController(object):
       
     apply_steer = apply_toyota_steer_torque_limits(apply_steer, self.last_steer, CS.steer_torque_motor, SteerLimitParams)
     
-    if apply_steer == 0 and self.last_steer == 0:
-      apply_steer_req = 0
+
       
     if not enabled and right_lane_depart and CS.v_ego > 12.5 and not CS.right_blinker_on:
       apply_steer = self.last_steer + 3
@@ -182,6 +181,9 @@ class CarController(object):
     else:
       apply_steer_req = 1
 
+    if apply_steer == 0 and self.last_steer == 0:
+      apply_steer_req = 0
+      
     self.steer_angle_enabled, self.ipas_reset_counter = \
       ipas_state_transition(self.steer_angle_enabled, enabled, CS.ipas_active, self.ipas_reset_counter)
     #print("{0} {1} {2}".format(self.steer_angle_enabled, self.ipas_reset_counter, CS.ipas_active))
