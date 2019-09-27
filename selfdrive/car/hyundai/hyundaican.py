@@ -97,7 +97,7 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12):
     "CF_Mdps_ToiFlt": mdps12["CF_Mdps_ToiFlt"],
     "CF_Mdps_SErr": mdps12["CF_Mdps_SErr"],
     "CR_Mdps_StrTq": mdps12["CR_Mdps_StrTq"],
-    "CF_Mdps_FailStat": mdps12["CR_Mdps_OutTq"],
+    "CF_Mdps_FailStat": mdps12["CF_Mdps_FailStat"],
     "CR_Mdps_OutTq": mdps12["CR_Mdps_OutTq"],
   }
 
