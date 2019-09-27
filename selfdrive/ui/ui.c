@@ -334,7 +334,7 @@ typedef struct UIState {
 } UIState;
 
 #include "dashcam.h"
-#include "dashboard.h"
+//#include "dashboard.h"
 
 static int last_brightness = -1;
 static void set_brightness(UIState *s, int brightness) {
@@ -2904,7 +2904,7 @@ int main(int argc, char* argv[]) {
     // Don't waste resources on drawing in case screen is off or car is not started.
     if (s->awake && s->vision_connected) {
       dashcam(s, touch_x, touch_y);
-      dashboard(s, touch_x, touch_y);
+      //dashboard(s, touch_x, touch_y);
       ui_draw(s);
       glFinish();
       should_swap = true;
