@@ -2,7 +2,7 @@ import os
 import math
 import numpy as np
 
-from common.numpy_fast import clip
+#from common.numpy_fast import clip
 from common.realtime import sec_since_boot
 from selfdrive.swaglog import cloudlog
 from selfdrive.controls.lib.lateral_mpc import libmpc_py
