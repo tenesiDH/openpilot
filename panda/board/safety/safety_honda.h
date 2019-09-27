@@ -84,20 +84,6 @@ static void honda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       honda_gas_prev = gas;
     }
   }
-  if ((bus == 2) && (addr == 0x1FA)) {
-    bool honda_stock_aeb = GET_BYTE(to_push, 3) & 0x20;
-    int honda_stock_brake = (GET_BYTE(to_push, 0) << 2) + ((GET_BYTE(to_push, 1) >> 6) & 0x3);
-
-    // Forward AEB when stock braking is higher than openpilot braking
-    // only stop forwarding when AEB event is over
-    if (!honda_stock_aeb) {
-      honda_fwd_brake = false;
-    } else if (honda_stock_brake >= honda_brake) {
-      honda_fwd_brake = true;
-    } else {
-      // Leave honda forward brake as is
-    }
-  }
 }
 
 // all commands: gas, brake and steering
