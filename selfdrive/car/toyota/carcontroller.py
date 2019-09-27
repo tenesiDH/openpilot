@@ -149,7 +149,7 @@ class CarController(object):
     # steer torque
     apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     
-    if abs(CS.angle_steers) > 200:
+    if abs(CS.angle_steers) > 100:
       apply_steer = 0
       
     
