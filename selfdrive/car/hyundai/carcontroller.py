@@ -71,7 +71,7 @@ class CarController(object):
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, self.clu11_cnt))
 
     if CS.stopped:
-      # run only first time when the car stopped
+      # run only first time when the car stops
       if self.last_lead_distance == 0:
         # get the lead distance from the Radar
         self.last_lead_distance = CS.lead_distance
@@ -84,6 +84,7 @@ class CarController(object):
         if self.clu11_cnt > 5:
           self.last_resume_cnt = self.cnt
           self.clu11_cnt = 0
+    # reset lead distnce after the car starts moving
     elif self.last_lead_distance != 0:
       self.last_lead_distance = 0
 
