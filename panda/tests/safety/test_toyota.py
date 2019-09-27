@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 import libpandasafety_py
 
-MAX_RATE_UP = 15
-MAX_RATE_DOWN = 15
+MAX_RATE_UP = 10
+MAX_RATE_DOWN = 20
 MAX_TORQUE = 1500
 
 MAX_ACCEL = 3000
