@@ -28,10 +28,16 @@ class CarController(object):
     # True when giraffe switch 2 is low and we need to replace all the camera messages
     # otherwise we forward the camera msgs and we just replace the lkas cmd signals
     self.camera_disconnected = False
+    self.turning_signal_timer = 0
 
     self.packer = CANPacker(dbc_name)
 
   def update(self, enabled, CS, actuators, pcm_cancel_cmd, hud_alert):
+
+    if CS.left_blinker_on or CS.right_blinker_on:
+      self.turning_signal_timer = 200  # Disable for 2.0 Seconds after blinker turned off
+    if self.turning_signal_timer:
+      enabled = 0
 
     ### Steering Torque
     apply_steer = actuators.steer * SteerLimitParams.STEER_MAX
@@ -81,7 +87,7 @@ class CarController(object):
     elif self.last_lead_distance != 0:
       self.last_lead_distance = 0  
 
-
+    self.turning_signal_timer -= 1 if self.turning_signal_timer
     self.cnt += 1
 
     return can_sends
