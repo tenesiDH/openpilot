@@ -86,15 +86,15 @@ def create_clu11(packer, clu11, button, cnt):
 
   return packer.make_can_msg("CLU11", 0, values)
 
-def create_mdps12(packer, car_fingerprint, cnt, mdps12, lkas11):
+def create_mdps12(packer, car_fingerprint, cnt, mdps12, cancel_cmd):
   values = {
     "CR_Mdps_StrColTq": mdps12["CR_Mdps_StrColTq"],
     "CF_Mdps_Def": mdps12["CF_Mdps_Def"],
-    "CF_Mdps_ToiActive": lkas11["CF_Lkas_ActToi"],
+    "CF_Mdps_ToiActive": 0,
     "CF_Mdps_ToiUnavail": 1,
     "CF_Mdps_MsgCount2": cnt,
     "CF_Mdps_Chksum2": 0,
-    "CF_Mdps_ToiFlt": 0,
+    "CF_Mdps_ToiFlt": cancel_cmd,
     "CF_Mdps_SErr": mdps12["CF_Mdps_SErr"],
     "CR_Mdps_StrTq": mdps12["CR_Mdps_StrTq"],
     "CF_Mdps_FailStat": mdps12["CF_Mdps_FailStat"],
