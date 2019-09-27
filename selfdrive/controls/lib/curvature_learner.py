@@ -20,7 +20,7 @@ class CurvatureLearner:
         self.debug = debug
         try:
             self.learned_offsets = pickle.load(open("/data/curvaturev2.p", "rb"))
-        except (OSError, IOError) as e:
+        except (OSError, IOError):
             self.learned_offsets = {
                 "center": 0.,
                 "leftinner": 0.,
