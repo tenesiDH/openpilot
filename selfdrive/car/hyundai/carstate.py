@@ -258,7 +258,7 @@ class CarState(object):
     else:
       self.gear_tcu = "unknown"
 
-    self.lkas_button_on = 7 >= cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"] != 0
+    self.lkas_button_on = 7 > cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"] != 0
 
     # save the entire LKAS11 and CLU11
     self.lkas11 = cp_cam.vl["LKAS11"]
