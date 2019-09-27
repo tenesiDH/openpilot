@@ -85,9 +85,10 @@ class CarController(object):
           self.last_resume_cnt = self.cnt
           self.clu11_cnt = 0
     elif self.last_lead_distance != 0:
-      self.last_lead_distance = 0  
+      self.last_lead_distance = 0
 
     self.turning_signal_timer -= 1 if self.turning_signal_timer
+
     self.cnt += 1
 
     return can_sends
