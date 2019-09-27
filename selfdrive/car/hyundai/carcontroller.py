@@ -51,7 +51,7 @@ class CarController(object):
               left_line, right_line, left_lane_depart, right_lane_depart):
 
     if CS.left_blinker_on or CS.right_blinker_on:
-      self.turning_signal_timer = 200  # Disable for 2.0 Seconds after blinker turned off
+      self.turning_signal_timer = 100  # Disable for 1.0 Seconds after blinker turned off
     if self.turning_signal_timer:
       enabled = 0
 
@@ -85,9 +85,9 @@ class CarController(object):
                                    enabled, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
 
-    if pcm_cancel_cmd:
-      self.clu11_cnt = frame % 0x10
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, self.clu11_cnt))
+    #if pcm_cancel_cmd:
+      #self.clu11_cnt = frame % 0x10
+      #can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, self.clu11_cnt))
 
     if CS.stopped:
       # run only first time when the car stops
