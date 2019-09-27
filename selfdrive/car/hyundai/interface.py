@@ -230,7 +230,7 @@ class CarInterface(object):
       ret.cruiseState.speed = self.CS.cruise_set_speed
     else:
       ret.cruiseState.speed = 0
-    ret.cruiseState.available = bool(self.CS.main_on)
+    ret.cruiseState.available = True
     ret.cruiseState.standstill = False
 
     # TODO: button presses
