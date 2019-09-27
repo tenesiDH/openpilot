@@ -87,7 +87,8 @@ class CarController(object):
     elif self.last_lead_distance != 0:
       self.last_lead_distance = 0
 
-    self.turning_signal_timer -= 1 if self.turning_signal_timer > 0
+    if self.turning_signal_timer > 0:
+      self.turning_signal_timer -= 1 
 
     self.cnt += 1
 
