@@ -87,6 +87,8 @@ def get_can_parser(CP):
 
     ("SAS_Angle", "SAS11", 0),
     ("SAS_Speed", "SAS11", 0),
+
+    ("Gear_Signal", "NEWGEAR", 0),
   ]
 
   checks = [
@@ -222,6 +224,7 @@ class CarState(object):
       self.pedal_gas = cp.vl["EMS12"]['TPS']
     self.car_gas = cp.vl["EMS12"]['TPS']
 
+
     # Gear Selecton - This is not compatible with all Kia/Hyundai's, But is the best way for those it is compatible with
     gear = cp.vl["LVR12"]["CF_Lvr_Gear"]
     if gear == 5:
@@ -234,7 +237,6 @@ class CarState(object):
       self.gear_shifter = "reverse"
     else:
       self.gear_shifter = "unknown"
-
     # Gear Selection via Cluster - For those Kia/Hyundai which are not fully discovered, we can use the Cluster Indicator for Gear Selection, as this seems to be standard over all cars, but is not the preferred method.
     if cp.vl["CLU15"]["CF_Clu_InhibitD"] == 1:
       self.gear_shifter_cluster = "drive"
@@ -257,6 +259,19 @@ class CarState(object):
       self.gear_tcu = "drive"
     else:
       self.gear_tcu = "unknown"
+
+    # Gear Selecton - This is only compatible with optima hybrid 2017
+    gear3 = cp.vl["NEWGEAR"]["Gear_Signal"]
+    if gear3 == 5:
+      self.gear_shifter = "drive"
+    elif gear3 == 6:
+      self.gear_shifter = "neutral"
+    elif gear3 == 0:
+      self.gear_shifter = "park"
+    elif gear3 == 7:
+      self.gear_shifter = "reverse"
+    else:
+      self.gear_shifter = "unknown"
 
     # save the entire LKAS11 and CLU11
     self.lkas11 = cp_cam.vl["LKAS11"]
