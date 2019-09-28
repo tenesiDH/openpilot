@@ -206,7 +206,7 @@ class CarInterface(object):
     elif self.CP.carFingerprint in FEATURES["use_tcu_gears"]:
       ret.gearShifter = self.CS.gear_tcu
     elif self.CP.carFingerprint in FEATURES["use_new_gears"]:
-      ret.gearShifter = self.CS.gear_new
+      ret.gearShifter = self.CS.gear_shifter_new 
     else:
       ret.gearShifter = self.CS.gear_shifter
 
