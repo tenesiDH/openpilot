@@ -263,15 +263,15 @@ class CarState(object):
     # Gear Selecton - This is only compatible with optima hybrid 2017
     gear3 = cp.vl["NEWGEAR"]["Gear_Signal"]
     if gear3 == 5:
-      self.gear_shifter = "drive"
+      self.gear_shifter_new = "drive"
     elif gear3 == 6:
-      self.gear_shifter = "neutral"
+      self.gear_shifter_new = "neutral"
     elif gear3 == 0:
-      self.gear_shifter = "park"
+      self.gear_shifter_new = "park"
     elif gear3 == 7:
-      self.gear_shifter = "reverse"
+      self.gear_shifter_new = "reverse"
     else:
-      self.gear_shifter = "unknown"
+      self.gear_shifter_new = "unknown"
 
     # save the entire LKAS11 and CLU11
     self.lkas11 = cp_cam.vl["LKAS11"]
