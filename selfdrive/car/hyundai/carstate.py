@@ -88,7 +88,7 @@ def get_can_parser(CP):
     ("SAS_Angle", "SAS11", 0),
     ("SAS_Speed", "SAS11", 0),
 
-    #("Gear_Signal", "NEWGEAR", 0),
+    ("Gear_Signal", "NEW11", 0),
   ]
 
   checks = [
