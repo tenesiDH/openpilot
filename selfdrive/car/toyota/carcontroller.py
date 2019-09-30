@@ -137,13 +137,13 @@ class CarController(object):
     if CS.CP.enableGasInterceptor:
       if CS.pedal_gas > 15.0:
         apply_accel = max(apply_accel, 0.06)
-      if CS.brake_lights:
+      if CS.brake_pressed:
         apply_gas = 0.0
         apply_accel = min(apply_accel, 0.00)
     else:
       if CS.pedal_gas > 0.0:
         apply_accel = max(apply_accel, 0.0)
-      if CS.brake_lights and CS.v_ego > 1:
+      if CS.brake_pressed and CS.v_ego > 1:
         apply_accel = min(apply_accel, 0.0)
       
     # steer torque
