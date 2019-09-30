@@ -261,7 +261,7 @@ class CarState(object):
       self.gear_tcu = "unknown"
 
     # Gear Selecton - This is only compatible with optima hybrid 2017
-    gear3 = 5 #cp.vl["NEWGEAR"]["Gear_Signal"]
+    gear3 = cp.vl["NEW11"]["Gear_Signal"]
     if gear3 == 5:
       self.gear_shifter_new = "drive"
     elif gear3 == 6:
