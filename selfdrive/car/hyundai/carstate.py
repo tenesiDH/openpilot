@@ -1,4 +1,4 @@
-from selfdrive.car.hyundai.values import DBC, STEER_THRESHOLD
+from selfdrive.car.hyundai.values import DBC, STEER_THRESHOLD, FEATURES
 from selfdrive.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
@@ -149,7 +149,7 @@ class CarState(object):
     self.left_blinker_flash = 0
     self.right_blinker_on = 0
     self.right_blinker_flash = 0
-    self.has_scc = False
+    self.has_scc = CP.carFingerprint not in FEATURES["non_scc"]
 
   def update(self, cp, cp_cam):
     # update prevs, update must run once per Loop
@@ -163,7 +163,6 @@ class CarState(object):
     self.esp_disabled = cp.vl["TCS15"]['ESC_Off_Step']
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
 
-    self.has_scc = True if (cp.vl["SCC11"]['TauGapSet'] > 0) else False
     self.main_on = (cp.vl["SCC11"]["MainMode_ACC"] != 0) if self.has_scc else \
                                             cp.vl['EMS16']['CRUISE_LAMP_M']
     self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if self.has_scc else \
