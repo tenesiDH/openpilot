@@ -41,6 +41,8 @@ I will attempt to detail the changes in each of the branches here:
 
 <b>kegman</b> - this is the default branch which does not include Gernby's resonant feed forward steering (i.e. it's comma's default steering)
 
+<b>kegman-noAEB</b> - since 0.6.4 comma has reintroduced Honda stock emergency braking.  It has had some unexpected results especially on tight curves on 2 lane roads.  This disables honda stock AEB on nidec vehicles
+
 <b>kegman-stockUI</b> - for 0.6 some people were having trouble with devUI so I separated the branches out.  
 
 <b>kegman-trafficML</b> - for CommunityPilot traffic signal machine learning and stop signs.  These branches also upload driving videos to CommunityPilot machine learning servers for the development of stopping at intersections.  Want this feature?  Contribute your videos by using this branch in your intersection laiden drives.
