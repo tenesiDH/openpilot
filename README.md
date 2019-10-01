@@ -1,33 +1,7 @@
 This is a fork of comma's openpilot: https://github.com/commaai/openpilot, and contains tweaks for Hondas and GM vehicles.  It is open source and inherits MIT license.  By installing this software you accept all responsibility for anything that might occur while you use it.  All contributors to this fork are not liable.  <b>Use at your own risk.</b>
 
 <b>NOTE:  If you upgrade to 0.6 you cannot go back to 0.5.xx without reflashing your NEOS!</b>
-Here's how to flash back to v9 NEOS if you want to downgrade (it's not that bad)
-
-<b>Manual Instructions to flash back to v9 NEOS for downgrading back to 0.5.xx:</b>
-- the boot and system image files for v9 NEOS - are in #hw-unofficial - look for the 0.5.13 - they are pinned messages (click pin icon at top)
-- download android fastboot
-- press and hold UP vol and Power to go into Fastboot mode (Eon Gold is hold DOWN and Power)
-- connect to PC with USB cord
-- put the system and boot img files in the same directory as fastboot.exe
-- type in these commands (only the ones that start with fastboot): https://github.com/commaai/eon-neos/blob/master/flash.sh#L8-L19
-- restart the Eon, on the setup screen enter your wifi password and SSID and SSH in - after you successfully SSH in reboot
-- when your Eon boots it will ask you to enter install URL:  enter https://openpilot.comma.ai
-- when the Eon reboots it will ask you to upgrade NEOS - STOP - do not say yes
-- SSH into the Eon
-- cd /data
-- rm -rf ./openpilot
-- git clone https://github.com/kegman/openpilot
-- cd openpilot
-- git checkout (one of the non-0.6 branches)
-- reboot
-- enjoy
-
-<b>NOTE:</b> If you have upgraded at any time to v0.5.10, v0.6.x and you want to go back to a branch with v0.5.9 or v0.5.8, then you have to SSH into the Eon and edit the file /data/params/d/ControlsParams and rename "angle_model_bias" to "angle_offset" or your car will have Dash Errors and you'll be scratching your head for hours! 
-
-<b>Pedal Users:</b> Also note that you need to flash your Pedal to go to v0.5.10.  If you want to go back to 0.5.9 or 0.5.8 you need to flash your pedal back to 0.5.9.  Instructions are here:  https://medium.com/@jfrux/comma-pedal-updating-the-firmware-over-can-fa438a3cf910.  Also. After you flash your Pedal..  All hell will break loose on your dash.  Traction control error, Power Steering Error, Trailer Error, OMFG the sky is falling error etc.  DON'T PANIC.  Just drive around a bit and it will disappear after about 2-3 restarts of the car.  Don't rush it I believe it's time dependent as well.  Just drive as normal.  They'll go away.
-
-
-<b>IMPORTANT:</b> I have added the stopping of services for Nidec vehicles, which always have power from the panda.  See feature list below for details.  
+Here's how to flash back to v9 NEOS if you want to downgrade (it's not that bad) - scroll to bottom of readme for instructions on downgrading
 
 <b>ALSO IMPORTANT:</b> /data/kegman.json is a file that holds parameters and is used on various branches / forks.  When switching between forks (like @arne182 and @gernby), or between branches within this repo (like non-gernby and gernby), it is best to delete or rename the existing file so there are no parameter conflicts. _Do this before rebooting the EON to compile on the new fork/branch._
   
@@ -41,7 +15,7 @@ I will attempt to detail the changes in each of the branches here:
 
 <b>kegman</b> - this is the default branch which does not include Gernby's resonant feed forward steering (i.e. it's comma's default steering)
 
-<b>kegman-noAEB</b> - since 0.6.4 comma has reintroduced Honda stock emergency braking.  It has had some unexpected results especially on tight curves on 2 lane roads.  This disables honda stock AEB on nidec vehicles
+<b>kegman-noAEB</b> - this branch disables the Honda Nidec AEB passthrough introduced in 0.6.4 as it gives problems and unexpectedly brakes on tight curves and oncoming traffic.
 
 <b>kegman-stockUI</b> - for 0.6 some people were having trouble with devUI so I separated the branches out.  
 
@@ -61,6 +35,8 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
+- <b> New! Added highway speed braking profile tweaks</b>.  Note that 1barHwy, 2barHwy and 3barHwy are DELTAS.  For example if One bar distance is 0.9 seconds, 1barHwy of 0.3 will add 3 seconds to the distance during braking making you brake harder.
+  
 - <b> New! Added kF feedforward param to live tuner.</b>
 
 - <b> New! Enable / Disable Model based Slowdowns on turns:  On tight turns, the model will slow down the car so that you can make the turn.  Some like this, some people don't.  Set slowOnCurve = "1" to enable slowdowns on curves, or "0" (default) to disable.
@@ -175,3 +151,29 @@ For Bosch vehicles, the Eon will just simply shutdown as usual when battery fall
 
 
 Enjoy everyone.
+
+
+<b>Manual Instructions to flash back to v9 NEOS for downgrading back to 0.5.xx:</b>
+- the boot and system image files for v9 NEOS - are in #hw-unofficial - look for the 0.5.13 - they are pinned messages (click pin icon at top)
+- download android fastboot
+- press and hold UP vol and Power to go into Fastboot mode (Eon Gold is hold DOWN and Power)
+- connect to PC with USB cord
+- put the system and boot img files in the same directory as fastboot.exe
+- type in these commands (only the ones that start with fastboot): https://github.com/commaai/eon-neos/blob/master/flash.sh#L8-L19
+- restart the Eon, on the setup screen enter your wifi password and SSID and SSH in - after you successfully SSH in reboot
+- when your Eon boots it will ask you to enter install URL:  enter https://openpilot.comma.ai
+- when the Eon reboots it will ask you to upgrade NEOS - STOP - do not say yes
+- SSH into the Eon
+- cd /data
+- rm -rf ./openpilot
+- git clone https://github.com/kegman/openpilot
+- cd openpilot
+- git checkout (one of the non-0.6 branches)
+- reboot
+- enjoy
+
+<b>NOTE:</b> If you have upgraded at any time to v0.5.10, v0.6.x and you want to go back to a branch with v0.5.9 or v0.5.8, then you have to SSH into the Eon and edit the file /data/params/d/ControlsParams and rename "angle_model_bias" to "angle_offset" or your car will have Dash Errors and you'll be scratching your head for hours! 
+
+<b>Pedal Users:</b> Also note that you need to flash your Pedal to go to v0.5.10.  If you want to go back to 0.5.9 or 0.5.8 you need to flash your pedal back to 0.5.9.  Instructions are here:  https://medium.com/@jfrux/comma-pedal-updating-the-firmware-over-can-fa438a3cf910.  Also. After you flash your Pedal..  All hell will break loose on your dash.  Traction control error, Power Steering Error, Trailer Error, OMFG the sky is falling error etc.  DON'T PANIC.  Just drive around a bit and it will disappear after about 2-3 restarts of the car.  Don't rush it I believe it's time dependent as well.  Just drive as normal.  They'll go away.
+
+

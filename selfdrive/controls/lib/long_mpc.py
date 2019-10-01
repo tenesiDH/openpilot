@@ -81,6 +81,9 @@ class LongitudinalMpc(object):
     self.oneBarProfile = [ONE_BAR_DISTANCE, float(kegman.conf['1barMax'])]
     self.twoBarProfile = [TWO_BAR_DISTANCE, float(kegman.conf['2barMax'])]
     self.threeBarProfile = [THREE_BAR_DISTANCE, float(kegman.conf['3barMax'])]
+    self.oneBarHwy = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+float(kegman.conf['1barHwy'])]
+    self.twoBarHwy = [TWO_BAR_DISTANCE, TWO_BAR_DISTANCE+float(kegman.conf['2barHwy'])]
+    self.threeBarHwy = [THREE_BAR_DISTANCE, THREE_BAR_DISTANCE+float(kegman.conf['3barHwy'])]
 
   def send_mpc_solution(self, pm, qp_iterations, calculation_time):
     qp_iterations = max(0, qp_iterations)
@@ -168,6 +171,9 @@ class LongitudinalMpc(object):
       self.oneBarProfile = [ONE_BAR_DISTANCE, float(kegman.conf['1barMax'])]
       self.twoBarProfile = [TWO_BAR_DISTANCE, float(kegman.conf['2barMax'])]
       self.threeBarProfile = [THREE_BAR_DISTANCE, float(kegman.conf['3barMax'])]
+      self.oneBarHwy = [ONE_BAR_DISTANCE, ONE_BAR_DISTANCE+float(kegman.conf['1barHwy'])]
+      self.twoBarHwy = [TWO_BAR_DISTANCE, TWO_BAR_DISTANCE+float(kegman.conf['2barHwy'])]
+      self.threeBarHwy = [THREE_BAR_DISTANCE, THREE_BAR_DISTANCE+float(kegman.conf['3barHwy'])]
       self.bp_counter = 0  
       
       
@@ -178,7 +184,7 @@ class LongitudinalMpc(object):
       if self.street_speed:
         TR = interp(-self.v_rel, self.oneBarBP, self.oneBarProfile)  
       else:
-        TR = interp(-self.v_rel, H_ONE_BAR_PROFILE_BP, H_ONE_BAR_PROFILE) 
+        TR = interp(-self.v_rel, H_ONE_BAR_PROFILE_BP, self.oneBarHwy) 
       if CS.readdistancelines != self.lastTR:
         self.libmpc.init(MPC_COST_LONG.TTC, 1.0, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
         self.lastTR = CS.readdistancelines  
@@ -188,7 +194,7 @@ class LongitudinalMpc(object):
       if self.street_speed:
         TR = interp(-self.v_rel, self.twoBarBP, self.twoBarProfile)
       else:
-        TR = interp(-self.v_rel, H_TWO_BAR_PROFILE_BP, H_TWO_BAR_PROFILE)
+        TR = interp(-self.v_rel, H_TWO_BAR_PROFILE_BP, self.twoBarHwy)
       if CS.readdistancelines != self.lastTR:
         self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
         self.lastTR = CS.readdistancelines  
@@ -198,7 +204,7 @@ class LongitudinalMpc(object):
       #if self.street_speed and (self.lead_car_gap_shrinking or self.tailgating):
         TR = interp(-self.v_rel, self.threeBarBP, self.threeBarProfile)
       else:
-        TR = interp(-self.v_rel, H_THREE_BAR_PROFILE_BP, H_THREE_BAR_PROFILE)
+        TR = interp(-self.v_rel, H_THREE_BAR_PROFILE_BP, self.threeBarHwy)
       if CS.readdistancelines != self.lastTR:
         self.libmpc.init(MPC_COST_LONG.TTC, MPC_COST_LONG.DISTANCE, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
         self.lastTR = CS.readdistancelines   

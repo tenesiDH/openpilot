@@ -83,6 +83,12 @@ class kegman_conf():
 	self.config.update({"3barMax":"2.5"})
         self.element_updated = True
 	
+      if "1barHwy" not in self.config:
+        self.config.update({"1barHwy":"0.3"})
+	self.config.update({"2barHwy":"0.2"})
+	self.config.update({"3barHwy":"0.1"})
+        self.element_updated = True
+	
       if "slowOnCurves" not in self.config:
         self.config.update({"slowOnCurves":"0"})
         self.element_updated = True
@@ -102,6 +108,7 @@ class kegman_conf():
                      "Kp":"-1", "Ki":"-1", "liveParams":"1", "leadDistance":"5", "deadzone":"0.0", \
 		     "1barBP0":"-0.25", "1barBP1":"2.75", "2barBP0":"-0.25", "2barBP1":"3.0", "3barBP0":"0.0", \
 		     "3barBP1":"4.0", "1barMax":"2.5", "2barMax":"2.5", "3barMax":"2.5", \
+		     "1barHwy":"0.3", "2barHwy":"0.2", "3barHwy":"0.1", \
 		     "steerRatio":"-1", "steerRateCost":"-1", "slowOnCurves":"0", "Kf":"-1"}
 
       self.write_config(self.config)
