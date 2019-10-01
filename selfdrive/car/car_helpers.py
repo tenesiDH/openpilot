@@ -137,7 +137,7 @@ def crash_log(candidate):
   crash.capture_warning("fingerprinted %s" % candidate)
   
 def crash_log2(fingerprints):
-  crash.capture_warning("car doesn't match any fingerprints: %r", fingerprints)
+  crash.capture_warning("car doesn't match any fingerprints: %s" % fingerprints)
   
 def get_car(logcan, sendcan, is_panda_black=False):
 
