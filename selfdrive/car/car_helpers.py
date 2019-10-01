@@ -136,12 +136,17 @@ def fingerprint(logcan, sendcan, is_panda_black):
 def crash_log(candidate):
   crash.capture_warning("fingerprinted %s" % candidate)
   
+def crash_log2(fingerprints):
+  crash.capture_warning("car doesn't match any fingerprints: %r", fingerprints)
+  
 def get_car(logcan, sendcan, is_panda_black=False):
 
   candidate, fingerprints, vin = fingerprint(logcan, sendcan, is_panda_black)
 
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
+    y = threading.Thread(target=crash_log2, args=(fingerprints,))
+    y.start()
     candidate = "mock"
   if BASEDIR == "/data/openpilot" or BASEDIR == "/data/openpilot.arne182":
     x = threading.Thread(target=crash_log, args=(candidate,))
