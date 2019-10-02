@@ -303,7 +303,7 @@ class CarInterface(object):
       # disable on pedals rising edge or when brake is pressed and speed isn't zero
       if ((ret.gasPressed and not self.gas_pressed_prev) or \
         (ret.brakePressed)) and disengage_event: # and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
-      #  events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
+        events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
       if ret.gasPressed and disengage_event:
         events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
       if ret.cruiseState.standstill:
