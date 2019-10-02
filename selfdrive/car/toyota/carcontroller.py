@@ -149,12 +149,9 @@ class CarController(object):
     # steer torque
     apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     
-    if abs(CS.angle_steers) > 100:
+    if abs(CS.angle_steers) > 100 or abs(CS.angle_steers_rate) > 100:
       apply_steer = 0
-      
-    
 
-      
     if not enabled and right_lane_depart and CS.v_ego > 12.5 and not CS.right_blinker_on:
       apply_steer = self.last_steer + 3
       apply_steer = min(apply_steer , 800)
@@ -173,8 +170,8 @@ class CarController(object):
     if CS.steer_state in [9, 25]:
       self.last_fault_frame = frame
 
-    # Cut steering for 2s after fault
-    if not enabled or (frame - self.last_fault_frame < 200):
+    # Cut steering for 1s after fault
+    if not enabled or (frame - self.last_fault_frame < 100):
       apply_steer = 0
       apply_steer_req = 0
     else:
