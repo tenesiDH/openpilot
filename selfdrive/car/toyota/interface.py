@@ -348,6 +348,8 @@ class CarInterface(object):
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     else:
       ret.cruiseState.enabled = bool(self.CS.main_on)
+      if not self.CS.pcm_acc_active:
+        ret.brakePressed = True
     if self.CS.v_ego < 1:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
