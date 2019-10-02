@@ -24,6 +24,7 @@ class CarInterface(object):
     self.frame = 0
     self.gas_pressed_prev = False
     self.brake_pressed_prev = False
+    self.cruise_enabled_prev = False
     self.acc_active_prev = 0
 
     # *** init the major players ***
@@ -212,7 +213,12 @@ class CarInterface(object):
     # cruise state
     ret.cruiseState.available = bool(self.CS.main_on)
     cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
-    ret.cruiseState.enabled = cruiseEnabled
+    if not self.cruise_enabled_prev:
+      ret.cruiseState.enabled = self.CS.pcm_acc_active
+    else:
+      ret.cruiseState.enabled = bool(self.CS.main_on)
+      if not self.CS.pcm_acc_active:
+        ret.brakePressed = True
     ret.cruiseState.standstill = self.CS.pcm_acc_status == 4
 
     ret.leftBlinker = self.CS.left_blinker_on
@@ -257,15 +263,20 @@ class CarInterface(object):
       buttonEvents.append(be)
 
     ret.buttonEvents = buttonEvents
-
+    
+    if ret.cruiseState.enabled and not self.cruise_enabled_prev:
+      disengage_event = True
+    else:
+      disengage_event = False
+      
     events = []
     if self.CS.steer_error:
       events.append(create_event('steerUnavailable', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
     if self.CS.steer_not_allowed:
       events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
-    if ret.doorOpen:
+    if ret.doorOpen and disengage_event:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if ret.seatbeltUnlatched:
+    if ret.seatbeltUnlatched and disengage_event:
       events.append(create_event('seatbeltNotLatched', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
 
     if self.CS.car_fingerprint in SUPERCRUISE_CARS:
@@ -290,11 +301,11 @@ class CarInterface(object):
       if self.CS.park_brake:
         events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
       # disable on pedals rising edge or when brake is pressed and speed isn't zero
-      if (ret.gasPressed and not self.gas_pressed_prev) or \
-        (ret.brakePressed): # and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
-        events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
-      if ret.gasPressed:
-        events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
+      #if (ret.gasPressed and not self.gas_pressed_prev) or \
+      #  (ret.brakePressed): # and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
+      #  events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
+      #if ret.gasPressed:
+      #  events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
       if ret.cruiseState.standstill:
         events.append(create_event('resumeRequired', [ET.WARNING]))
       if self.CS.pcm_acc_status == AccState.FAULTED:
@@ -315,6 +326,7 @@ class CarInterface(object):
     self.acc_active_prev = self.CS.acc_active
     self.gas_pressed_prev = ret.gasPressed
     self.brake_pressed_prev = ret.brakePressed
+    self.cruise_enabled_prev = ret.cruiseState.enabled
 
     # cast to reader so it can't be modified
     return ret.as_reader()
