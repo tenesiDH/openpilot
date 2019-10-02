@@ -2,6 +2,7 @@ import numpy as np
 from selfdrive.services import service_list
 from cereal import car
 from cereal import arne182
+import selfdrive.messaging as messaging
 from common.numpy_fast import interp
 from common.kalman.simple_kalman import KF1D
 from selfdrive.can.can_define import CANDefine
@@ -141,7 +142,7 @@ class CarState(object):
                          K=[[0.12287673], [0.29666309]])
     self.v_ego = 0.0
 
-  def update(self, cp):
+  def update(self, cp, cp_cam):
     # update prevs, update must run once per loop
     self.prev_left_blinker_on = self.left_blinker_on
     self.prev_right_blinker_on = self.right_blinker_on
