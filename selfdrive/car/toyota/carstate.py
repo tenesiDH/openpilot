@@ -1,5 +1,7 @@
 import numpy as np
+from selfdrive.services import service_list
 from cereal import car
+from cereal import arne182
 from common.numpy_fast import interp
 from common.kalman.simple_kalman import KF1D
 from selfdrive.can.can_define import CANDefine
@@ -87,7 +89,18 @@ def get_can_parser(CP):
 
 def get_cam_can_parser(CP):
 
-  signals = []
+  signals = [
+    ("TSGN1", "RSA1", 0),
+    ("SPDVAL1", "RSA1", 0),
+    ("SPLSGN1", "RSA1", 0),
+    ("TSGN2", "RSA1", 0),
+    ("SPDVAL2", "RSA1", 0),
+    ("SPLSGN2", "RSA1", 0),
+    ("TSGN3", "RSA2", 0),
+    ("SPLSGN3", "RSA2", 0),
+    ("TSGN4", "RSA2", 0),
+    ("SPLSGN4", "RSA2", 0),
+  ]
 
   # use steering message to check if panda is connected to frc
   checks = [("STEERING_LKA", 42)]
@@ -114,7 +127,7 @@ class CarState(object):
     self.Angle_counter = 0
     self.Angle = [0, 5, 10, 15,20,25,30,35,60,100,180,270,500]
     self.Angle_Speed = [255,160,100,80,70,60,55,50,40,33,27,17,12]
-    
+    self.traffic_data_sock = messaging.pub_sock(service_list['liveTrafficData'].port)
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
@@ -224,3 +237,34 @@ class CarState(object):
       self.generic_toggle = cp.vl["AUTOPARK_STATUS"]['STATE'] != 0
     else:
       self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
+    self.tsgn1 = cp_cam.vl["RSA1"]['TSGN1']
+    self.spdval1 = cp_cam.vl["RSA1"]['SPDVAL1']
+    
+    self.splsgn1 = cp_cam.vl["RSA1"]['SPLSGN1']
+    self.tsgn2 = cp_cam.vl["RSA1"]['TSGN2']
+    self.spdval2 = cp_cam.vl["RSA1"]['SPDVAL2']
+    
+    self.splsgn2 = cp_cam.vl["RSA1"]['SPLSGN2']
+    self.tsgn3 = cp_cam.vl["RSA2"]['TSGN3']
+    self.splsgn3 = cp_cam.vl["RSA2"]['SPLSGN3']
+    self.tsgn4 = cp_cam.vl["RSA2"]['TSGN4']
+    self.splsgn4 = cp_cam.vl["RSA2"]['SPLSGN4']
+    self.noovertake = self.tsgn1 == 65 or self.tsgn2 == 65 or self.tsgn3 == 65 or self.tsgn4 == 65 or self.tsgn1 == 66 or self.tsgn2 == 66 or self.tsgn3 == 66 or self.tsgn4 == 66
+    if self.spdval1 > 0 or self.spdval2 > 0:
+      dat = arne182.LiveTrafficData.new_message()
+      if self.spdval1 > 0:
+        dat.speedLimitValid = True
+        if self.tsgn1 == 36:
+          dat.speedLimit = self.spdval1 * 1.60934
+        elif self.tsgn1 == 1:
+          dat.speedLimit = self.spdval1
+        else:
+          dat.speedLimit = 0
+      else:
+        dat.speedLimitValid = False
+      if self.spdval2 > 0:
+        dat.speedAdvisoryValid = True
+        dat.speedAdvisory = self.spdval2
+      else:
+        dat.speedAdvisoryValid = False
+      self.traffic_data_sock.send(dat.to_bytes())
