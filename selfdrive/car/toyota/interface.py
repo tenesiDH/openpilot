@@ -297,9 +297,7 @@ class CarInterface(object):
     # ******************* do can recv *******************
     self.cp.update_strings(can_strings)
 
-    # run the cam can update for 10s as we just need to know if the camera is alive
-    if self.frame < 1000:
-      self.cp_cam.update_strings(can_strings)
+    self.cp_cam.update_strings(can_strings)
 
     self.CS.update(self.cp)
 
