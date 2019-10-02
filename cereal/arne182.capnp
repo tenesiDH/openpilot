@@ -17,3 +17,25 @@ struct Arne182Status {
   gasbuttonstatus @6 :Float32;
   lkMode @7 :Bool;
   }
+
+struct LiveTrafficData {
+  speedLimitValid @0 :Bool;
+  speedLimit @1 :Float32;
+  speedAdvisoryValid @2 :Bool;
+  speedAdvisory @3 :Float32;
+}  
+
+struct LatControl {
+  anglelater @0 :Float32;
+}
+
+struct PhantomData {
+  status @0 :Bool;
+  speed @1 :Float32;
+  angle @2 :Float32;
+  time @3 :Float32;
+}
+
+struct ManagerData {
+  runningProcesses @0 :List(Text);
+}
