@@ -301,11 +301,11 @@ class CarInterface(object):
       if self.CS.park_brake:
         events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
       # disable on pedals rising edge or when brake is pressed and speed isn't zero
-      #if (ret.gasPressed and not self.gas_pressed_prev) or \
-      #  (ret.brakePressed): # and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
+      if ((ret.gasPressed and not self.gas_pressed_prev) or \
+        (ret.brakePressed)) and disengage_event: # and (not self.brake_pressed_prev or ret.vEgo > 0.001)):
       #  events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
-      #if ret.gasPressed:
-      #  events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
+      if ret.gasPressed and disengage_event:
+        events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
       if ret.cruiseState.standstill:
         events.append(create_event('resumeRequired', [ET.WARNING]))
       if self.CS.pcm_acc_status == AccState.FAULTED:
