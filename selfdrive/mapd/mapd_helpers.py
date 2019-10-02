@@ -389,14 +389,14 @@ class Way:
         count = 0
         loop_must_break = False
         for n in way.way.nodes:
-          if 'highway' in n.tags and (n.tags['highway']=='stop' or n.tags['highway']=='give_way') and way_pts[count,0] > 0:
-            if backwards and (n.tags['direction']=='backward'  or n.tags['direction']=='both'):
+          if 'highway' in n.tags and (n.tags['highway']=='stop' or n.tags['highway']=='give_way' or n.tags['highway']=='traffic_signals') and way_pts[count,0] > 0:
+            if backwards and (n.tags['direction']=='backward' or n.tags['direction']=='both'):
               print("backward")
               if way_pts[count, 0] > 0:
                 speed_ahead_dist = way_pts[count, 0]
                 print(speed_ahead_dist)
                 speed_ahead = 5/3.6
-                if n.tags['highway']=='stop':
+                if n.tags['highway']=='stop' or n.tags['highway']=='traffic_signals':
                   speed_ahead = 0
                 loop_must_break = True
                 break
@@ -406,7 +406,7 @@ class Way:
                 speed_ahead_dist = way_pts[count, 0]
                 print(speed_ahead_dist)
                 speed_ahead = 5/3.6
-                if n.tags['highway']=='stop':
+                if n.tags['highway']=='stop' or n.tags['highway']=='traffic_signals':
                   speed_ahead = 0
                 loop_must_break = True
                 break
@@ -422,7 +422,7 @@ class Way:
                   speed_ahead_dist = way_pts[count, 0]
                   print(speed_ahead_dist)
                   speed_ahead = 5/3.6
-                  if n.tags['highway']=='stop':
+                  if n.tags['highway']=='stop' or n.tags['highway']=='traffic_signals':
                     speed_ahead = 0
                   loop_must_break = True
                   break
