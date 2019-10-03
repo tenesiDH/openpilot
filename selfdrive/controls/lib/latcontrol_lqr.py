@@ -2,10 +2,13 @@ import numpy as np
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from common.numpy_fast import clip
 from cereal import log
+from selfdrive.kegman_conf import kegman_conf
 
 
 class LatControlLQR(object):
   def __init__(self, CP, rate=100):
+    kegman_conf(CP)
+    
     self.sat_flag = False
     self.scale = CP.lateralTuning.lqr.scale
     self.ki = CP.lateralTuning.lqr.ki
