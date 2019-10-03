@@ -214,10 +214,10 @@ class CarInterface(object):
     ret.cruiseState.available = bool(self.CS.main_on)
     cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
     if not self.cruise_enabled_prev:
-      ret.cruiseState.enabled = self.CS.pcm_acc_active
+      ret.cruiseState.enabled = cruiseEnabled
     else:
       ret.cruiseState.enabled = bool(self.CS.main_on)
-      if not self.CS.pcm_acc_active:
+      if not cruiseEnabled:
         ret.brakePressed = True
     ret.cruiseState.standstill = self.CS.pcm_acc_status == 4
 
