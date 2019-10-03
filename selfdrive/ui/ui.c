@@ -51,8 +51,8 @@
 #define ALERTSIZE_FULL 3
 
 #define UI_BUF_COUNT 4
-//#define SHOW_SPEEDLIMIT 1
-//#define DEBUG_TURN
+#define SHOW_SPEEDLIMIT 1
+#define DEBUG_TURN
 
 //#define DEBUG_FPS
 
@@ -175,11 +175,11 @@ typedef struct UIScene {
 
   uint64_t started_ts;
 
-
+  float angleSteers;
   //BB CPU TEMP
   uint16_t maxCpuTemp;
   uint32_t maxBatTemp;
-  //float gpsAccuracy;
+  float gpsAccuracy;
   float freeSpace;
   float angleSteers;
   float angleSteersDes;
@@ -1217,7 +1217,7 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
   }
 
   //add grey panda GPS accuracy
-  /*if (true) {
+  if (true) {
     char val_str[16];
     char uom_str[3];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
@@ -1237,7 +1237,7 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
         val_color, lab_color, uom_color,
         value_fontSize, label_fontSize, uom_fontSize );
     bb_ry = bb_y + bb_h;
-  }*/
+  }
 
   //add free space - from bthaler1
   if (true) {
@@ -1774,6 +1774,7 @@ static void ui_draw_vision_event(UIState *s) {
     const int img_wheel_size = bg_wheel_size*1.5;
     const int img_wheel_x = bg_wheel_x-(img_wheel_size/2);
     const int img_wheel_y = bg_wheel_y-25;
+    const float img_rotation = s->scene.angleSteers/180*3.141592;
     float img_wheel_alpha = 0.1f;
     bool is_engaged = (s->status == STATUS_ENGAGED) && !scene->steerOverride;
     bool is_warning = (s->status == STATUS_WARNING);
@@ -1791,12 +1792,16 @@ static void ui_draw_vision_event(UIState *s) {
       nvgFill(s->vg);
       img_wheel_alpha = 1.0f;
     }
+    nvgSave(s->vg);
+    nvgTranslate(s->vg,bg_wheel_x,(bg_wheel_y + (bdr_s*1.5)));
+    nvgRotate(s->vg,-img_rotation);
     nvgBeginPath(s->vg);
-    NVGpaint imgPaint = nvgImagePattern(s->vg, img_wheel_x, img_wheel_y,
+    NVGpaint imgPaint = nvgImagePattern(s->vg, img_wheel_x-bg_wheel_x, img_wheel_y-(bg_wheel_y + (bdr_s*1.5)),
       img_wheel_size, img_wheel_size, 0, s->img_wheel, img_wheel_alpha);
-    nvgRect(s->vg, img_wheel_x, img_wheel_y, img_wheel_size, img_wheel_size);
+    nvgRect(s->vg, img_wheel_x-bg_wheel_x, img_wheel_y-(bg_wheel_y + (bdr_s*1.5)), img_wheel_size, img_wheel_size);
     nvgFillPaint(s->vg, imgPaint);
     nvgFill(s->vg);
+    nvgRestore(s->vg);
   }
 }
 
@@ -2145,6 +2150,7 @@ void handle_message(UIState *s, void *which) {
     s->scene.angleSteersDes = datad.angleSteersDes;
     s->scene.steerOverride = datad.steerOverride;
     s->scene.curvature = datad.curvature;
+    s->scene.angleSteers = datad.angleSteers;
     s->scene.engaged = datad.enabled;
     s->scene.engageable = datad.engageable;
     //s->scene.gps_planner_active = datad.gpsPlannerActive;
@@ -2537,7 +2543,7 @@ static void ui_update(UIState *s) {
       set_awake(s, true);
     }
 
-    /*if (polls[9].revents) {
+    if (polls[9].revents) {
       // gps socket
 
       zmq_msg_t msg;
@@ -2568,7 +2574,7 @@ static void ui_update(UIState *s) {
         s->scene.gpsAccuracy = 99.8;
       }
       zmq_msg_close(&msg);
-    }*/
+    }
 
     if (polls[plus_sock_num].revents) {
       // plus socket
