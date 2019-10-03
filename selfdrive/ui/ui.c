@@ -2520,8 +2520,8 @@ static void ui_update(UIState *s) {
       polls[7].events = ZMQ_POLLIN;
       num_polls++;
       plus_sock_num++;
-      polls[9].socket = s->gps_sock_raw;
-      polls[9].events = ZMQ_POLLIN;
+      polls[8].socket = s->gps_sock_raw;
+      polls[8].events = ZMQ_POLLIN;
     }
 
     polls[plus_sock_num].socket = s->plus_sock_raw; // plus_sock should be last
@@ -2538,12 +2538,12 @@ static void ui_update(UIState *s) {
 
     if (polls[0].revents || polls[1].revents || polls[2].revents ||
         polls[3].revents || polls[4].revents || polls[6].revents ||
-        polls[7].revents || polls[plus_sock_num].revents || polls[9].revents) {
+        polls[7].revents || polls[8].revents || polls[plus_sock_num].revents) {
       // awake on any (old) activity
       set_awake(s, true);
     }
 
-    if (polls[9].revents) {
+    if (polls[8].revents) {
       // gps socket
 
       zmq_msg_t msg;
