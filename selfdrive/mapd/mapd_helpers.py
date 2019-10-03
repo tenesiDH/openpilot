@@ -390,44 +390,84 @@ class Way:
         loop_must_break = False
         for n in way.way.nodes:
           if 'highway' in n.tags and (n.tags['highway']=='stop' or n.tags['highway']=='give_way' or n.tags['highway']=='traffic_signals') and way_pts[count,0] > 0:
-            if backwards and (n.tags['direction']=='backward' or n.tags['direction']=='both'):
-              print("backward")
-              if way_pts[count, 0] > 0:
-                speed_ahead_dist = way_pts[count, 0]
-                print(speed_ahead_dist)
-                speed_ahead = 5/3.6
-                if n.tags['highway']=='stop' or n.tags['highway']=='traffic_signals':
-                  speed_ahead = 0
-                loop_must_break = True
-                break
-            elif not backwards and (n.tags['direction']=='forward' or n.tags['direction']=='both'):
-              print("forward")
-              if way_pts[count, 0] > 0:
-                speed_ahead_dist = way_pts[count, 0]
-                print(speed_ahead_dist)
-                speed_ahead = 5/3.6
-                if n.tags['highway']=='stop' or n.tags['highway']=='traffic_signals':
-                  speed_ahead = 0
-                loop_must_break = True
-                break
-            try:
-              if int(n.tags['direction']) > -0.1 and int(n.tags['direction']) < 360.1:
-                print(int(n.tags['direction']))
-                direction = int(n.tags['direction']) - heading
-                if direction < -180:
-                  direction = direction + 360
-                if direction > 180:
-                  direction = direction - 360
-                if abs(direction) > 135:
+            if 'direction' in n.tags:
+              if backwards and (n.tags['direction']=='backward' or n.tags['direction']=='both'):
+                print("backward")
+                if way_pts[count, 0] > 0:
                   speed_ahead_dist = way_pts[count, 0]
                   print(speed_ahead_dist)
                   speed_ahead = 5/3.6
-                  if n.tags['highway']=='stop' or n.tags['highway']=='traffic_signals':
+                  if n.tags['highway']=='stop':
                     speed_ahead = 0
                   loop_must_break = True
                   break
-            except (KeyError, ValueError):
-              pass
+              elif not backwards and (n.tags['direction']=='forward' or n.tags['direction']=='both'):
+                print("forward")
+                if way_pts[count, 0] > 0:
+                  speed_ahead_dist = way_pts[count, 0]
+                  print(speed_ahead_dist)
+                  speed_ahead = 5/3.6
+                  if n.tags['highway']=='stop':
+                    speed_ahead = 0
+                  loop_must_break = True
+                  break
+              try:
+                if int(n.tags['direction']) > -0.1 and int(n.tags['direction']) < 360.1:
+                  print(int(n.tags['direction']))
+                  direction = int(n.tags['direction']) - heading
+                  if direction < -180:
+                    direction = direction + 360
+                  if direction > 180:
+                    direction = direction - 360
+                  if abs(direction) > 135:
+                    speed_ahead_dist = way_pts[count, 0]
+                    print(speed_ahead_dist)
+                    speed_ahead = 5/3.6
+                    if n.tags['highway']=='stop':
+                      speed_ahead = 0
+                    loop_must_break = True
+                    break
+              except (KeyError, ValueError):
+                pass
+            elif 'traffic_signals:direction' in n.tags:
+              if backwards and (n.tags['traffic_signals:direction']=='backward' or n.tags['traffic_signals:direction']=='both'):
+                print("backward")
+                if way_pts[count, 0] > 0:
+                  speed_ahead_dist = way_pts[count, 0]
+                  print(speed_ahead_dist)
+                  speed_ahead = 5/3.6
+                  if n.tags['highway']=='traffic_signals':
+                    speed_ahead = 0
+                  loop_must_break = True
+                  break
+              elif not backwards and (n.tags['traffic_signals:direction']=='forward' or n.tags['traffic_signals:direction']=='both'):
+                print("forward")
+                if way_pts[count, 0] > 0:
+                  speed_ahead_dist = way_pts[count, 0]
+                  print(speed_ahead_dist)
+                  speed_ahead = 5/3.6
+                  if n.tags['highway']=='traffic_signals':
+                    speed_ahead = 0
+                  loop_must_break = True
+                  break
+              try:
+                if int(n.tags['traffic_signals:direction']) > -0.1 and int(n.tags['traffic_signals:direction']) < 360.1:
+                  print(int(n.tags['traffic_signals:direction']))
+                  direction = int(n.tags['traffic_signals:direction']) - heading
+                  if direction < -180:
+                    direction = direction + 360
+                  if direction > 180:
+                    direction = direction - 360
+                  if abs(direction) > 135:
+                    speed_ahead_dist = way_pts[count, 0]
+                    print(speed_ahead_dist)
+                    speed_ahead = 5/3.6
+                    if n.tags['highway']=='traffic_signals':
+                      speed_ahead = 0
+                    loop_must_break = True
+                    break
+              except (KeyError, ValueError):
+                pass
           count += 1
         if loop_must_break: break
       except (KeyError, IndexError, ValueError):
