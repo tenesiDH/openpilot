@@ -37,8 +37,8 @@ class TestPackerMethods(unittest.TestCase):
       pcm_cancel = (random.randint(0, 2) % 2 == 0)
       standstill_req = (random.randint(0, 2) % 2 == 0)
       lead = (random.randint(0, 2) % 2 == 0)
-      m_old = create_accel_command(self.cp_old, accel, pcm_cancel, standstill_req, lead)
-      m = create_accel_command(self.cp, accel, pcm_cancel, standstill_req, lead)
+      m_old = create_accel_command(self.cp_old, accel, pcm_cancel, standstill_req, lead, 2)
+      m = create_accel_command(self.cp, accel, pcm_cancel, standstill_req, lead, 2)
       self.assertEqual(m_old, m)
 
       fcw = random.randint(1, 65536)
