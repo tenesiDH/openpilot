@@ -7,7 +7,7 @@
 //      brake rising edge
 //      brake > 0mph
 
-const int HONDA_GAS_INTERCEPTOR_THRESHOLD = 328;  // ratio between offset and gain from dbc file
+const int HONDA_GAS_INTERCEPTOR_THRESHOLD = 800;  // ratio between offset and gain from dbc file
 int honda_brake = 0;
 int honda_gas_prev = 0;
 bool honda_brake_pressed_prev = false;
