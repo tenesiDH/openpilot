@@ -129,6 +129,8 @@ struct CarState {
   leftBlinker @20 :Bool;
   rightBlinker @21 :Bool;
   genericToggle @23 :Bool;
+  distanceToggle @30 :Float32;
+  laneDepartureToggle @31 :Bool;
 
   # lock info
   doorOpen @24 :Bool;

@@ -365,6 +365,9 @@ class CarInterface(object):
     ret.seatbeltUnlatched = not self.CS.seatbelt
 
     ret.genericToggle = self.CS.generic_toggle
+    ret.laneDepartureToggle = self.CS.lane_departure_toggle_on
+    ret.distanceToggle = self.CS.distance_toggle
+    ret.readdistancelines = self.CS.read_distance_lines
 
     # events
     events = []
