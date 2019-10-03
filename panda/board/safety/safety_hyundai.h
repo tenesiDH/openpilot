@@ -87,7 +87,7 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     uint32_t ts = TIM2->CNT;
     bool violation = 0;
 
-    if ((!OP_LKAS_live) && (!hyundai_LKAS_forwarded)) {
+    if (!hyundai_LKAS_forwarded) {
       OP_LKAS_live = 50;
     }
     if ((hyundai_LKAS_forwarded) && (!OP_LKAS_live)) {
