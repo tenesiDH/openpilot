@@ -175,7 +175,7 @@ typedef struct UIScene {
 
   uint64_t started_ts;
 
-  float angleSteers;
+  
   //BB CPU TEMP
   uint16_t maxCpuTemp;
   uint32_t maxBatTemp;
