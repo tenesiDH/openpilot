@@ -2538,7 +2538,7 @@ static void ui_update(UIState *s) {
 
     if (polls[0].revents || polls[1].revents || polls[2].revents ||
         polls[3].revents || polls[4].revents || polls[6].revents ||
-        polls[7].revents || polls[plus_sock_num].revents) || polls[9].revents) {
+        polls[7].revents || polls[plus_sock_num].revents || polls[9].revents) {
       // awake on any (old) activity
       set_awake(s, true);
     }
