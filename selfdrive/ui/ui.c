@@ -1773,7 +1773,7 @@ static void ui_draw_vision_event(UIState *s) {
     nvgRect(s->vg, img_turn_x, img_turn_y, img_turn_size, img_turn_size);
     nvgFillPaint(s->vg, imgPaint);
     nvgFill(s->vg);
-  } else if ((s->scene.decel_for_turn && s->scene.engaged && s->limit_set_speed) || (s->scene.decel_for_model && s->scene.engaged) {
+  } else if ((s->scene.decel_for_turn && s->scene.engaged && s->limit_set_speed) || (s->scene.decel_for_model && s->scene.engaged)) {
     // draw winding road sign
     const int img_turn_size = 160*1.5;
     const int img_turn_x = viz_event_x-(img_turn_size/4);
