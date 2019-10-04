@@ -1,8 +1,9 @@
+from cereal import car
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
                                              create_clu11, create_mdps12
-from selfdrive.car.hyundai.values import Buttons
+from selfdrive.car.hyundai.values import CAR, Buttons
 from selfdrive.can.packer import CANPacker
 
 
@@ -16,10 +17,17 @@ class SteerLimitParams:
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
 
-def process_lane_visible(enabled, left_line, right_line, hud_alert):
+VisualAlert = car.CarControl.HUDControl.VisualAlert
+
+def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
+                       right_line, left_lane_depart, right_lane_depart):
+
+  hud_alert = 0
+  if visual_alert == VisualAlert.steerRequired:
+    hud_alert = 5 if fingerprint in [CAR.SANTA_FE, CAR.SANTA_FE_1] else 4
+
   # initialize to no line visible
   lane_visible = 1
-
   if left_line and right_line or hud_alert:
     if enabled or hud_alert:
       lane_visible = 3
@@ -30,7 +38,15 @@ def process_lane_visible(enabled, left_line, right_line, hud_alert):
   elif right_line:
     lane_visible = 6
 
-  return lane_visible
+  # initialize to no warnings
+  left_lane_warning = 0
+  right_lane_warning = 0
+  if left_lane_depart:
+    left_lane_warning = 1 if fingerprint in [CAR.GENESIS , CAR.GENESIS_G90, CAR.GENESIS_G80] else 2
+  if right_lane_depart:
+    right_lane_warning = 1 if fingerprint in [CAR.GENESIS , CAR.GENESIS_G90, CAR.GENESIS_G80] else 2
+
+  return hud_alert, lane_visible, left_lane_warning, right_lane_warning
 
 class CarController(object):
   def __init__(self, dbc_name, car_fingerprint):
@@ -47,7 +63,7 @@ class CarController(object):
 
     self.packer = CANPacker(dbc_name)
 
-  def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, hud_alert,
+  def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, visual_alert,
               left_line, right_line, left_lane_depart, right_lane_depart):
 
     if CS.left_blinker_on or CS.right_blinker_on:
@@ -67,7 +83,9 @@ class CarController(object):
 
     self.apply_steer_last = apply_steer
 
-    lane_visible = process_lane_visible(enabled, left_line, right_line, hud_alert)
+    hud_alert, lane_visible, left_lane_warning, right_lane_warning =\
+            process_hud_alert(enabled, self.car_fingerprint, visual_alert,
+            left_line, right_line,left_lane_depart, right_lane_depart)
 
     can_sends = []
 
