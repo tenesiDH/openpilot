@@ -4,7 +4,7 @@ from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.car.hyundai.carstate import CarState, get_can_parser, get_camera_parser
-from selfdrive.car.hyundai.values import CAMERA_MSGS, CAR, get_hud_alerts, FEATURES
+from selfdrive.car.hyundai.values import CAMERA_MSGS, CAR
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness
 
 GearShifter = car.CarState.GearShifter
@@ -72,7 +72,7 @@ class CarInterface(object):
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.25], [0.05]]
       ret.minSteerSpeed = 0.
-    elif candidate == CAR.ELANTRA:
+    elif candidate in [CAR.ELANTRA, CAR.ELANTRA_GT_I30]:
       ret.lateralTuning.pid.kf = 0.00006
       ret.mass = 1275. + STD_CARGO_KG
       ret.wheelbase = 2.7
@@ -202,14 +202,7 @@ class CarInterface(object):
     ret.wheelSpeeds.rr = self.CS.v_wheel_rr
 
     # gear shifter
-    if self.CP.carFingerprint in FEATURES["use_cluster_gears"]:
-      ret.gearShifter = self.CS.gear_shifter_cluster
-    elif self.CP.carFingerprint in FEATURES["use_tcu_gears"]:
-      ret.gearShifter = self.CS.gear_tcu
-    elif self.CP.carFingerprint in FEATURES["use_new_gears"]:
-      ret.gearShifter = self.CS.gear_shifter_new 
-    else:
-      ret.gearShifter = self.CS.gear_shifter
+    ret.gearShifter = self.CS.gear_shifter
 
     # gas pedal
     ret.gas = self.CS.car_gas
@@ -311,14 +304,12 @@ class CarInterface(object):
     return ret.as_reader()
 
   def apply(self, c):
-
-    hud_alert = get_hud_alerts(c.hudControl.visualAlert)
     
     # Fix for Genesis hard fault when steer request sent while the speed is low 
     enable = 0 if self.CS.v_ego < self.CP.minSteerSpeed and self.CP.carFingerprint == CAR.GENESIS else c.enabled
     
     can_sends = self.CC.update(enable, self.CS, self.frame, c.actuators,
-                               c.cruiseControl.cancel, hud_alert, c.hudControl.leftLaneVisible,
+                               c.cruiseControl.cancel, c.hudControl.visualAlert, c.hudControl.leftLaneVisible,
                                c.hudControl.rightLaneVisible, c.hudControl.leftLaneDepart, c.hudControl.rightLaneDepart)
 
     self.frame += 1
