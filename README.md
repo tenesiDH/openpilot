@@ -35,6 +35,8 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
+- <b> New! Toyota support</b>:  Thanks to @j4z for adding distance interval support with his Arduino solution and also helping to debug the kegman.json issues to make Kegman fork work with Toyotas!
+
 - <b> New! Added highway speed braking profile tweaks</b>.  Note that 1barHwy, 2barHwy and 3barHwy are DELTAS.  For example if One bar distance is 0.9 seconds, 1barHwy of 0.3 will add 3 seconds to the distance during braking making you brake harder.
   
 - <b> New! Added kF feedforward param to live tuner.</b>
