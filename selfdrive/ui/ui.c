@@ -2158,6 +2158,11 @@ void handle_message(UIState *s, void *which) {
     struct cereal_ControlsState_LateralPIDState pdata;
     cereal_read_ControlsState_LateralPIDState(&pdata, datad.lateralControlState.pidState);
 
+    struct cereal_ControlsState_LateralLQRState qdata;
+    cereal_read_ControlsState_LateralLQRState(&qdata, datad.lateralControlState.lqrState);
+
+    struct cereal_ControlsState_LateralINDIState rdata;
+    cereal_read_ControlsState_LateralINDIState(&rdata, datad.lateralControlState.indiState);
 
     if (datad.vCruise != s->scene.v_cruise) {
       s->scene.v_cruise_update_ts = eventd.logMonoTime;
@@ -2173,8 +2178,13 @@ void handle_message(UIState *s, void *which) {
     s->scene.engageable = datad.engageable;
     //s->scene.gps_planner_active = datad.gpsPlannerActive;
     s->scene.monitoring_active = datad.driverMonitoringOn;
-    s->scene.output_scale = pdata.output;
-
+    if (pdata.output > qdata.output && pdata.output > rdata.output){
+      s->scene.output_scale = pdata.output;
+    } else if (qdata.output > pdata.output && qdata.output > rdata.output){
+      s->scene.output_scale = qdata.output;
+    } else if (rdata.output > pdata.output && rdata.output > qdata.output){
+      s->scene.output_scale = rdata.output;
+    }
     s->scene.frontview = datad.rearViewCam;
 
     s->scene.decel_for_model = datad.decelForModel;
