@@ -160,7 +160,7 @@ def mapsd_thread():
       if socket is gps_external_sock:
         gps_ext = messaging.recv_one(socket)
       elif socket is traffic_data_sock:
-        traffic = messaging.recv_one(socket)
+        traffic = messaging.recv_one_arne182(socket)
     if traffic is not None:
       if traffic.liveTrafficData.speedLimitValid:
         speedLimittraffic = traffic.liveTrafficData.speedLimit
