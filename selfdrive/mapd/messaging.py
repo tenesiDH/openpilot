@@ -1,7 +1,13 @@
 import zmq
 
 from cereal import log
+from cereal import arne182
 from selfdrive.mapd import realtime
+
+def new_arne182_message():
+  dat = arne182.Event.new_message()
+  dat.logMonoTime = int(realtime.sec_since_boot() * 1e9)
+  return dat
 
 def new_message():
   dat = log.Event.new_message()
