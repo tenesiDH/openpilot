@@ -143,6 +143,7 @@ typedef struct UIScene {
   uint64_t v_cruise_update_ts;
   float v_ego;
   bool decel_for_model;
+  bool decel_for_turn;
 
   float speedlimit;
   float speedlimitaheaddistance;
@@ -2187,8 +2188,8 @@ void handle_message(UIState *s, void *which) {
     }
     s->scene.frontview = datad.rearViewCam;
 
-    s->scene.decel_for_model = datad.decelForModel;
-
+    s->scene.decel_for_model = datad.decelForModel; 
+    s->scene.decel_for_turn = datad.decelForTurn;
     s->alert_sound_timeout = 1 * UI_FREQ;
 
     if (datad.alertSound != cereal_CarControl_HUDControl_AudibleAlert_none && datad.alertSound != s->alert_sound) {
@@ -2386,9 +2387,9 @@ void handle_message(UIState *s, void *which) {
       s->scene.blinker_blinkingrate = 100;
     s->scene.leftBlinker = datad.leftBlinker;
     s->scene.rightBlinker = datad.rightBlinker;
-  } else if (eventd.which == cereal_Event_GpsLocationData) {
+  } else if (eventd.which == cereal_Event_gpsLocationExternal) {
     struct cereal_GpsLocationData datad;
-    cereal_read_GpsLocationData(&datad, eventd.GpsLocationData);
+    cereal_read_GpsLocationData(&datad, eventd.gpsLocationExternal);
     s->scene.gpsAccuracy = datad.accuracy;
     if (s->scene.gpsAccuracy > 100)
     {
