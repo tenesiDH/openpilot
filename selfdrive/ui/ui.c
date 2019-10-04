@@ -1758,13 +1758,13 @@ static void ui_draw_vision_event(UIState *s) {
   const int ui_viz_rx = scene->ui_viz_rx;
   const int ui_viz_rw = scene->ui_viz_rw;
   const int viz_event_w = 220;
-  const int viz_event_x = ((ui_viz_rx + ui_viz_rw) - (viz_event_w + (bdr_is*2)));
-  const int viz_event_y = (box_y + (bdr_is*1.5));
-  const int viz_event_h = (header_h - (bdr_is*1.5));
+  const int viz_event_x = ((ui_viz_rx + ui_viz_rw) - (viz_event_w + (bdr_s*2)));
+  const int viz_event_y = (box_y + (bdr_s*1.5));
+  const int viz_event_h = (header_h - (bdr_s*1.5));
   if (s->scene.speedlimitahead_valid && s->scene.speedlimitaheaddistance < 300 && s->scene.engaged && s->limit_set_speed) {
     // draw speed sign
-    const int img_turn_size = 160*1.5;
-    const int img_turn_x = viz_event_x-(img_turn_size/4);
+    const int img_turn_size = 160;
+    const int img_turn_x = viz_event_x-(img_turn_size/4)+80;
     const int img_turn_y = viz_event_y+bdr_is-25;
     float img_turn_alpha = 1.0f;
     nvgBeginPath(s->vg);
@@ -1775,8 +1775,8 @@ static void ui_draw_vision_event(UIState *s) {
     nvgFill(s->vg);
   } else if ((s->scene.decel_for_turn && s->scene.engaged && s->limit_set_speed) || (s->scene.decel_for_model && s->scene.engaged)) {
     // draw winding road sign
-    const int img_turn_size = 160*1.5;
-    const int img_turn_x = viz_event_x-(img_turn_size/4);
+    const int img_turn_size = 160;
+    const int img_turn_x = viz_event_x-(img_turn_size/4)+80;
     const int img_turn_y = viz_event_y+bdr_is-25;
     float img_turn_alpha = 1.0f;
     nvgBeginPath(s->vg);
