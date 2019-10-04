@@ -2345,6 +2345,10 @@ void handle_message(UIState *s, void *which) {
   } else if (eventd.which == cereal_Event_liveMapData) {
     struct cereal_LiveMapData datad;
     cereal_read_LiveMapData(&datad, eventd.liveMapData);
+    s->scene.speedlimit = datad.speedLimit;
+	  s->scene.speedlimitahead_valid = datad.speedLimitAheadValid;
+	  s->scene.speedlimitaheaddistance = datad.speedLimitAheadDistance;
+    s->scene.speedlimit_valid = datad.speedLimitValid;
     s->scene.map_valid = datad.mapValid;
   } else if (eventd.which == cereal_Event_carState) {
     struct cereal_CarState datad;
@@ -2354,6 +2358,18 @@ void handle_message(UIState *s, void *which) {
       s->scene.blinker_blinkingrate = 100;
     s->scene.leftBlinker = datad.leftBlinker;
     s->scene.rightBlinker = datad.rightBlinker;
+  } else if (eventd.which == cereal_Event_GpsLocationData) {
+    struct cereal_GpsLocationData datad;
+    cereal_read_GpsLocationData(&datad, eventd.GpsLocationData);
+    s->scene.gpsAccuracy = datad.accuracy;
+    if (s->scene.gpsAccuracy > 100)
+    {
+      s->scene.gpsAccuracy = 99.99;
+    }
+    else if (s->scene.gpsAccuracy == 0)
+    {
+      s->scene.gpsAccuracy = 99.8;
+    }
   }
   capn_free(&ctx);
   zmq_msg_close(&msg);
@@ -2520,8 +2536,12 @@ static void ui_update(UIState *s) {
       polls[7].events = ZMQ_POLLIN;
       num_polls++;
       plus_sock_num++;
-      polls[8].socket = s->gps_sock_raw;
+      polls[8].socket = s->map_data_sock_raw;
       polls[8].events = ZMQ_POLLIN;
+      num_polls++;
+      plus_sock_num++;
+      polls[9].socket = s->gps_sock_raw;
+      polls[9].events = ZMQ_POLLIN;
     }
 
     polls[plus_sock_num].socket = s->plus_sock_raw; // plus_sock should be last
@@ -2541,39 +2561,6 @@ static void ui_update(UIState *s) {
         polls[7].revents || polls[8].revents || polls[plus_sock_num].revents) {
       // awake on any (old) activity
       set_awake(s, true);
-    }
-
-    if (polls[8].revents) {
-      // gps socket
-
-      zmq_msg_t msg;
-      err = zmq_msg_init(&msg);
-      assert(err == 0);
-      err = zmq_msg_recv(&msg, s->gps_sock_raw, 0);
-      assert(err >= 0);
-
-      struct capn ctx;
-      capn_init_mem(&ctx, zmq_msg_data(&msg), zmq_msg_size(&msg), 0);
-
-      cereal_Event_ptr eventp;
-      eventp.p = capn_getp(capn_root(&ctx), 0, 1);
-      struct cereal_Event eventd;
-      cereal_read_Event(&eventd, eventp);
-
-      struct cereal_GpsLocationData datad;
-      cereal_read_GpsLocationData(&datad, eventd.gpsLocation);
-
-      s->scene.gpsAccuracy = datad.accuracy;
-
-      if (s->scene.gpsAccuracy > 100)
-      {
-        s->scene.gpsAccuracy = 99.99;
-      }
-      else if (s->scene.gpsAccuracy == 0)
-      {
-        s->scene.gpsAccuracy = 99.8;
-      }
-      zmq_msg_close(&msg);
     }
 
     if (polls[plus_sock_num].revents) {
