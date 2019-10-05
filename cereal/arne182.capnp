@@ -39,3 +39,17 @@ struct PhantomData {
 struct ManagerData {
   runningProcesses @0 :List(Text);
 }
+
+struct Event {
+  # in nanoseconds?
+  logMonoTime @0 :UInt64;
+  valid @67 :Bool = true;
+
+  union {
+  arne182Status @1:Arne182Status;
+  liveTrafficData @2:LiveTrafficData;
+  latControl @3:LatControl;
+  phantomData @4:PhantomData;
+  managerData @5:ManagerData;
+  }
+}
