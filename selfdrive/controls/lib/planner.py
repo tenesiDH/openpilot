@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import math
+import datetime
+import time
 import numpy as np
 from common.params import Params
 from common.numpy_fast import interp
@@ -167,13 +169,15 @@ class Planner(object):
       model_speed = max(20.0 * CV.MPH_TO_MS, model_speed) # Don't slow down below 20mph
     else:
       model_speed = MAX_SPEED
+    now = datetime.now()
+    
     try:
-      if sm['liveMapData'].speedLimitValid and osm:
+      if sm['liveMapData'].speedLimitValid and osm and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         speed_limit = sm['liveMapData'].speedLimit
         v_speedlimit = speed_limit + offset
       else:
         speed_limit = None
-      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance:
+      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distanceand (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         distanceatlowlimit = 50
         if sm['liveMapData'].speedLimitAhead < 21/3.6:
           distanceatlowlimit = speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*2
@@ -188,7 +192,7 @@ class Planner(object):
         else:
           speed_limit_ahead = sm['liveMapData'].speedLimitAhead
         v_speedlimit_ahead = speed_limit_ahead + offset
-      if sm['liveMapData'].curvatureValid and osm:
+      if sm['liveMapData'].curvatureValid and osm and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         curvature = abs(sm['liveMapData'].curvature)
         radius = 1/max(1e-4, curvature)
         if radius > 500:
