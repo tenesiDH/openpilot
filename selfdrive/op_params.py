@@ -12,7 +12,7 @@ class opParams:
     self.last_read_time = time.time()
 
   def read_params(self):
-    default_params = {'cameraOffset': 0.06, 'wheelTouchSeconds': 300, 'lane_hug_direction': 'none',
+    default_params = {'cameraOffset': 0.06, 'wheelTouchfactor': 10, 'lane_hug_direction': 'none',
                       'lane_hug_mod': 1.2, 'lane_hug_angle': 10}
 
     if os.path.isfile(self.params_file):
