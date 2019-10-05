@@ -13,6 +13,10 @@ from selfdrive.controls.lib.speed_smoother import speed_smoother
 from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
+from selfdrive.op_params import opParams
+op_params = opParams()
+offset = op_params.get('offset', 0) # m/s
+osm = op_params.get('osm', True) # m/s
 
 NO_CURVATURE_SPEED = 90.0
 
@@ -163,9 +167,8 @@ class Planner(object):
       model_speed = max(20.0 * CV.MPH_TO_MS, model_speed) # Don't slow down below 20mph
     else:
       model_speed = MAX_SPEED
-    offset = 0.0
     try:
-      if sm['liveMapData'].speedLimitValid:
+      if sm['liveMapData'].speedLimitValid and osm:
         speed_limit = sm['liveMapData'].speedLimit
         v_speedlimit = speed_limit + offset
       else:
@@ -185,7 +188,7 @@ class Planner(object):
         else:
           speed_limit_ahead = sm['liveMapData'].speedLimitAhead
         v_speedlimit_ahead = speed_limit_ahead + offset
-      if sm['liveMapData'].curvatureValid:
+      if sm['liveMapData'].curvatureValid and osm:
         curvature = abs(sm['liveMapData'].curvature)
         radius = 1/max(1e-4, curvature)
         if radius > 500:
