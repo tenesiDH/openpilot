@@ -43,7 +43,7 @@ struct ManagerData {
 struct Event {
   # in nanoseconds?
   logMonoTime @0 :UInt64;
-  valid @67 :Bool = true;
+  valid @6 :Bool = true;
 
   union {
   arne182Status @1:Arne182Status;
