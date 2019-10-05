@@ -1,7 +1,10 @@
 from common.numpy_fast import interp
 import numpy as np
+from selfdrive.op_params import opParams
+op_params = opParams()
 
-CAMERA_OFFSET = 0.06  # m from center car to camera
+CAMERA_OFFSET = op_params.get('cameraOffset', 0.06) # m
+
 
 def compute_path_pinv(l=50):
   deg = 3
