@@ -13,7 +13,7 @@ class opParams:
 
   def read_params(self):
     default_params = {'cameraOffset': 0.06, 'wheelTouchfactor': 10, 'lane_hug_direction': 'none',
-                      'lane_hug_mod': 1.2, 'lane_hug_angle': 10}
+                      'lane_hug_mod': 1.2, 'lane_hug_angle': 10, 'offset': 0, 'osm': True}
 
     if os.path.isfile(self.params_file):
       try:
