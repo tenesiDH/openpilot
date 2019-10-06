@@ -13,6 +13,7 @@ import requests
 import threading
 import numpy as np
 import overpy
+from cereal import arne182
 #from common.params import Params
 from collections import defaultdict
 
@@ -160,7 +161,7 @@ def mapsd_thread():
       if socket is gps_external_sock:
         gps_ext = messaging.recv_one(socket)
       elif socket is traffic_data_sock:
-        traffic = messaging.recv_one_arne182(socket)
+        traffic = arne182.LiveTrafficData.from_bytes(socket.recv())
     if traffic is not None:
       if traffic.liveTrafficData.speedLimitValid:
         speedLimittraffic = traffic.liveTrafficData.speedLimit
