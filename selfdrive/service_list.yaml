@@ -80,8 +80,8 @@ testLiveLocation: [8045, false, 0.]
 testJoystick: [8056, false, 0.]
 
 #arne182
-liveTrafficData: [8208, false, 10]
-liveMapData: [8065, false, 10]
+liveTrafficData: [8208, false, 100.]
+liveMapData: [8065, false, 10.]
 
 # 8080 is reserved for slave testing daemon
 # 8762 is reserved for logserver
