@@ -6,7 +6,7 @@ def op_edit():  # use by running `python op_edit.py`
   params = op_params.params
   print('Welcome to the opParams command line editor!')
   print('Here are your parameters:\n')
-  values_list = [params[i] if len(str(params[i])) < 20 else '{} ... {}'.format(str(params[i])[:15], str(params[i])[-15:]) for i in params]
+  values_list = [params[i] if len(str(params[i])) < 20 else '{} ... {}'.format(str(params[i])[:30], str(params[i])[-15:]) for i in params]
   while True:
     print('\n'.join(['{}. {}: {} ({})'.format(idx + 1, i, values_list[idx], str(type(params[i]))[7:-2]) for idx, i in enumerate(params)]))
     print('\nChoose a parameter to edit (by index): ')
