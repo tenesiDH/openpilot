@@ -15,6 +15,7 @@ import subprocess
 from collections import Counter
 from selfdrive.swaglog import cloudlog
 from selfdrive.loggerd.config import ROOT
+from selfdrive.data_collection import gps_uploader
 
 from common.params import Params
 from common.api import Api
@@ -252,7 +253,16 @@ def uploader_fn(exit_event):
     on_hotspot = is_on_hotspot()
     on_wifi = is_on_wifi()
     should_upload = allow_cellular or (on_wifi and not on_hotspot)
-
+    if on_wifi and not on_hotspot:
+      try:
+        if last_gps_size == os.path.getsize("/data/openpilot/selfdrive/data_collection/gps-data"):
+          gps_uploader.upload_data()
+      except:
+        pass
+    try:
+      last_gps_size = os.path.getsize("/data/openpilot/selfdrive/data_collection/gps-data")
+    except:
+      last_gps_size = None
     if exit_event.is_set():
       return
 
