@@ -163,13 +163,13 @@ def mapsd_thread():
       elif socket is traffic_data_sock:
         traffic = arne182.LiveTrafficData.from_bytes(socket.recv())
     if traffic is not None:
-      if traffic.liveTrafficData.speedLimitValid:
-        speedLimittraffic = traffic.liveTrafficData.speedLimit
+      if traffic.speedLimitValid:
+        speedLimittraffic = traffic.speedLimit
         if abs(speedLimittraffic_prev - speedLimittraffic) > 0.1:
           speedLimittrafficvalid = True
           speedLimittraffic_prev = speedLimittraffic
-      if traffic.liveTrafficData.speedAdvisoryValid:
-        speedLimittrafficAdvisory = traffic.liveTrafficData.speedAdvisory
+      if traffic.speedAdvisoryValid:
+        speedLimittrafficAdvisory = traffic.speedAdvisory
         speedLimittrafficAdvisoryvalid = True
       else:
         speedLimittrafficAdvisoryvalid = False
