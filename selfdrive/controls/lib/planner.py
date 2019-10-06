@@ -17,7 +17,7 @@ from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
 from selfdrive.op_params import opParams
 op_params = opParams()
-offset = op_params.get('offset', 0) # m/s
+offset = op_params.get('speed_offset', 0) # m/s
 osm = op_params.get('osm', True) # m/s
 
 NO_CURVATURE_SPEED = 90.0
