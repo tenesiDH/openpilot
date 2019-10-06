@@ -2374,11 +2374,11 @@ void handle_message(UIState *s, void *which) {
   } else if (eventd.which == cereal_Event_liveMapData) {
     struct cereal_LiveMapData datad;
     cereal_read_LiveMapData(&datad, eventd.liveMapData);
-    s->scene.speedlimit = datad.speedLimit;
-	  s->scene.speedlimitahead_valid = datad.speedLimitAheadValid;
-	  s->scene.speedlimitaheaddistance = datad.speedLimitAheadDistance;
-    s->scene.speedlimit_valid = datad.speedLimitValid;
     s->scene.map_valid = datad.mapValid;
+    s->scene.speedlimit = datad.speedLimit;
+    s->scene.speedlimitahead_valid = datad.speedLimitAheadValid;
+    s->scene.speedlimitaheaddistance = datad.speedLimitAheadDistance;
+    s->scene.speedlimit_valid = datad.speedLimitValid;
   } else if (eventd.which == cereal_Event_carState) {
     struct cereal_CarState datad;
     cereal_read_CarState(&datad, eventd.carState);
