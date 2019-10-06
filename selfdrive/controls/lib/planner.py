@@ -230,6 +230,7 @@ class Planner(object):
         required_decel = max(required_decel, -3.0)
         accel_limits[0] = required_decel
         accel_limits[1] = required_decel
+        self.a_acc_start = required_decel
 
       
       self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
