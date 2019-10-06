@@ -3,7 +3,7 @@ import numpy as np
 from selfdrive.op_params import opParams
 op_params = opParams()
 
-CAMERA_OFFSET = op_params.get('cameraOffset', 0.06) # m
+CAMERA_OFFSET = float(op_params.get('cameraOffset', 0.06)) # m
 
 
 def compute_path_pinv(l=50):
