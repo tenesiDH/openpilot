@@ -1,7 +1,6 @@
 import os
 import json
 import time
-import ast
 
 
 def write_config(params_file, params):

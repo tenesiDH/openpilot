@@ -1,7 +1,7 @@
 from selfdrive.op_params import opParams
 import ast
 
-def op_edit():  # use by running `python op_edit.py`
+def op_edit():  # use by running `python /data/openpilot/op_edit.py`
   op_params = opParams()
   params = op_params.params
   print('Welcome to the opParams command line editor!')
