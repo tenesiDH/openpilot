@@ -4,7 +4,7 @@ import numpy as np
 import libpandasafety_py
 
 MAX_RATE_UP = 10
-MAX_RATE_DOWN = 30
+MAX_RATE_DOWN = 44
 MAX_TORQUE = 1500
 
 MAX_ACCEL = 3000

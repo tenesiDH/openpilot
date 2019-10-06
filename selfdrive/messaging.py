@@ -13,7 +13,12 @@ def new_message():
 def pub_sock(port, addr="*"):
   context = zmq.Context.instance()
   sock = context.socket(zmq.PUB)
-  sock.bind("tcp://%s:%d" % (addr, port))
+  try:
+    sock.bind("tcp://%s:%d" % (addr, port))
+  except zmq.error.ZMQError:
+    sock.unbind("tcp://%s:%d" % (addr, port))
+    print "sock was unbound"
+    sock.bind("tcp://%s:%d" % (addr, port))
   return sock
 
 def sub_sock(port, poller=None, addr="127.0.0.1", conflate=False, timeout=None):

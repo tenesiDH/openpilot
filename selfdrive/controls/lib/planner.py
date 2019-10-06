@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import math
+from datetime import datetime
+import time
 import numpy as np
 from common.params import Params
 from common.numpy_fast import interp
@@ -13,6 +15,10 @@ from selfdrive.controls.lib.speed_smoother import speed_smoother
 from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
+from selfdrive.op_params import opParams
+op_params = opParams()
+offset = op_params.get('speed_offset', 0) # m/s
+osm = op_params.get('osm', True) # m/s
 
 NO_CURVATURE_SPEED = 90.0
 
@@ -163,14 +169,15 @@ class Planner(object):
       model_speed = max(20.0 * CV.MPH_TO_MS, model_speed) # Don't slow down below 20mph
     else:
       model_speed = MAX_SPEED
-    offset = 0.0
+    now = datetime.now()
+    
     try:
-      if sm['liveMapData'].speedLimitValid:
+      if sm['liveMapData'].speedLimitValid and osm and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         speed_limit = sm['liveMapData'].speedLimit
         v_speedlimit = speed_limit + offset
       else:
         speed_limit = None
-      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance:
+      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         distanceatlowlimit = 50
         if sm['liveMapData'].speedLimitAhead < 21/3.6:
           distanceatlowlimit = speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*2
@@ -185,7 +192,7 @@ class Planner(object):
         else:
           speed_limit_ahead = sm['liveMapData'].speedLimitAhead
         v_speedlimit_ahead = speed_limit_ahead + offset
-      if sm['liveMapData'].curvatureValid:
+      if sm['liveMapData'].curvatureValid and osm and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         curvature = abs(sm['liveMapData'].curvature)
         radius = 1/max(1e-4, curvature)
         if radius > 500:
@@ -223,7 +230,7 @@ class Planner(object):
         required_decel = max(required_decel, -3.0)
         accel_limits[0] = required_decel
         accel_limits[1] = required_decel
-        self.a_acc_start = required_decel
+
       
       self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,
                                                     v_cruise_setpoint,

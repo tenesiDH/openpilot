@@ -51,8 +51,8 @@
 #define ALERTSIZE_FULL 3
 
 #define UI_BUF_COUNT 4
-//#define SHOW_SPEEDLIMIT 1
-//#define DEBUG_TURN
+#define SHOW_SPEEDLIMIT 1
+#define DEBUG_TURN
 
 //#define DEBUG_FPS
 
@@ -143,9 +143,12 @@ typedef struct UIScene {
   uint64_t v_cruise_update_ts;
   float v_ego;
   bool decel_for_model;
+  bool decel_for_turn;
 
   float speedlimit;
+  float speedlimitaheaddistance;
   bool speedlimit_valid;
+  bool speedlimitahead_valid;
   bool map_valid;
 
   float curvature;
@@ -175,11 +178,11 @@ typedef struct UIScene {
 
   uint64_t started_ts;
 
-
+  
   //BB CPU TEMP
   uint16_t maxCpuTemp;
   uint32_t maxBatTemp;
-  //float gpsAccuracy;
+  float gpsAccuracy;
   float freeSpace;
   float angleSteers;
   float angleSteersDes;
@@ -192,8 +195,7 @@ typedef struct UIScene {
   int cal_status;
   int cal_perc;
 
-  // Used to show gps planner status
-  //bool gps_planner_active;
+
 
   bool brakeLights;
   bool leftBlinker;
@@ -201,6 +203,7 @@ typedef struct UIScene {
   int blinker_blinkingrate;
 
   bool is_playing_alert;
+  // Used to show gps planner status
   bool gps_planner_active;
 } UIScene;
 
@@ -239,6 +242,7 @@ typedef struct UIState {
   int img_face;
   int img_map;
   int img_brake;
+  int img_speed;
 
   void *ctx;
 
@@ -250,7 +254,7 @@ typedef struct UIState {
   void *livempc_sock_raw;
   void *plus_sock_raw;
   void *map_data_sock_raw;
-  //void *gps_sock_raw;
+  void *gps_sock_raw;
   void *carstate_sock_raw;
 
   void *uilayout_sock_raw;
@@ -535,7 +539,7 @@ static void ui_init(UIState *s) {
   s->radarstate_sock_raw = sub_sock(s->ctx, "tcp://127.0.0.1:8012");
   s->livempc_sock_raw = sub_sock(s->ctx, "tcp://127.0.0.1:8035");
   s->plus_sock_raw = sub_sock(s->ctx, "tcp://127.0.0.1:8037");
-  //s->gps_sock_raw = sub_sock(s->ctx, "tcp://127.0.0.1:8032");
+  s->gps_sock_raw = sub_sock(s->ctx, "tcp://127.0.0.1:8032");
   s->carstate_sock_raw = sub_sock(s->ctx, "tcp://127.0.0.1:8021");
 
 #ifdef SHOW_SPEEDLIMIT
@@ -578,6 +582,9 @@ static void ui_init(UIState *s) {
 
   assert(s->img_brake >= 0);
   s->img_brake = nvgCreateImage(s->vg, "../assets/img_brake_disc.png", 1);
+
+  assert(s->img_speed >= 0);
+  s->img_speed = nvgCreateImage(s->vg, "../assets/img_trafficSign_speedahead.png", 1);
 
   // init gl
   s->frame_program = load_program(frame_vertex_shader, frame_fragment_shader);
@@ -1217,7 +1224,7 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
   }
 
   //add grey panda GPS accuracy
-  /*if (true) {
+  if (true) {
     char val_str[16];
     char uom_str[3];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
@@ -1237,7 +1244,7 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
         val_color, lab_color, uom_color,
         value_fontSize, label_fontSize, uom_fontSize );
     bb_ry = bb_y + bb_h;
-  }*/
+  }
 
   //add free space - from bthaler1
   if (true) {
@@ -1754,10 +1761,22 @@ static void ui_draw_vision_event(UIState *s) {
   const int viz_event_x = ((ui_viz_rx + ui_viz_rw) - (viz_event_w + (bdr_is*2)));
   const int viz_event_y = (box_y + (bdr_is*1.5));
   const int viz_event_h = (header_h - (bdr_is*1.5));
-  if (s->scene.decel_for_model && s->scene.engaged) {
+  if (s->scene.speedlimitahead_valid && s->scene.speedlimitaheaddistance < 300 && s->scene.engaged && s->limit_set_speed) {
+    // draw speed sign
+    const int img_turn_size = 160;
+    const int img_turn_x = viz_event_x-(img_turn_size/4)+80;
+    const int img_turn_y = viz_event_y+bdr_is-25;
+    float img_turn_alpha = 1.0f;
+    nvgBeginPath(s->vg);
+    NVGpaint imgPaint = nvgImagePattern(s->vg, img_turn_x, img_turn_y,
+      img_turn_size, img_turn_size, 0, s->img_speed, img_turn_alpha);
+    nvgRect(s->vg, img_turn_x, img_turn_y, img_turn_size, img_turn_size);
+    nvgFillPaint(s->vg, imgPaint);
+    nvgFill(s->vg);
+  } else if ((s->scene.decel_for_turn && s->scene.engaged && s->limit_set_speed) || (s->scene.decel_for_model && s->scene.engaged)) {
     // draw winding road sign
-    const int img_turn_size = 160*1.5;
-    const int img_turn_x = viz_event_x-(img_turn_size/4);
+    const int img_turn_size = 160;
+    const int img_turn_x = viz_event_x-(img_turn_size/4)+80;
     const int img_turn_y = viz_event_y+bdr_is-25;
     float img_turn_alpha = 1.0f;
     nvgBeginPath(s->vg);
@@ -1774,6 +1793,7 @@ static void ui_draw_vision_event(UIState *s) {
     const int img_wheel_size = bg_wheel_size*1.5;
     const int img_wheel_x = bg_wheel_x-(img_wheel_size/2);
     const int img_wheel_y = bg_wheel_y-25;
+    const float img_rotation = s->scene.angleSteers/180*3.141592;
     float img_wheel_alpha = 0.1f;
     bool is_engaged = (s->status == STATUS_ENGAGED) && !scene->steerOverride;
     bool is_warning = (s->status == STATUS_WARNING);
@@ -1791,12 +1811,16 @@ static void ui_draw_vision_event(UIState *s) {
       nvgFill(s->vg);
       img_wheel_alpha = 1.0f;
     }
+    nvgSave(s->vg);
+    nvgTranslate(s->vg,bg_wheel_x,(bg_wheel_y + (bdr_is*1.5)));
+    nvgRotate(s->vg,-img_rotation);
     nvgBeginPath(s->vg);
-    NVGpaint imgPaint = nvgImagePattern(s->vg, img_wheel_x, img_wheel_y,
+    NVGpaint imgPaint = nvgImagePattern(s->vg, img_wheel_x-bg_wheel_x, img_wheel_y-(bg_wheel_y + (bdr_is*1.5)),
       img_wheel_size, img_wheel_size, 0, s->img_wheel, img_wheel_alpha);
-    nvgRect(s->vg, img_wheel_x, img_wheel_y, img_wheel_size, img_wheel_size);
+    nvgRect(s->vg, img_wheel_x-bg_wheel_x, img_wheel_y-(bg_wheel_y + (bdr_is*1.5)), img_wheel_size, img_wheel_size);
     nvgFillPaint(s->vg, imgPaint);
     nvgFill(s->vg);
+    nvgRestore(s->vg);
   }
 }
 
@@ -2135,6 +2159,11 @@ void handle_message(UIState *s, void *which) {
     struct cereal_ControlsState_LateralPIDState pdata;
     cereal_read_ControlsState_LateralPIDState(&pdata, datad.lateralControlState.pidState);
 
+    struct cereal_ControlsState_LateralLQRState qdata;
+    cereal_read_ControlsState_LateralLQRState(&qdata, datad.lateralControlState.lqrState);
+
+    struct cereal_ControlsState_LateralINDIState rdata;
+    cereal_read_ControlsState_LateralINDIState(&rdata, datad.lateralControlState.indiState);
 
     if (datad.vCruise != s->scene.v_cruise) {
       s->scene.v_cruise_update_ts = eventd.logMonoTime;
@@ -2145,16 +2174,22 @@ void handle_message(UIState *s, void *which) {
     s->scene.angleSteersDes = datad.angleSteersDes;
     s->scene.steerOverride = datad.steerOverride;
     s->scene.curvature = datad.curvature;
+    s->scene.angleSteers = datad.angleSteers;
     s->scene.engaged = datad.enabled;
     s->scene.engageable = datad.engageable;
     //s->scene.gps_planner_active = datad.gpsPlannerActive;
     s->scene.monitoring_active = datad.driverMonitoringOn;
-    s->scene.output_scale = pdata.output;
-
+    if (pdata.output > qdata.output && pdata.output > rdata.output){
+      s->scene.output_scale = pdata.output;
+    } else if (qdata.output > pdata.output && qdata.output > rdata.output){
+      s->scene.output_scale = qdata.output;
+    } else if (rdata.output > pdata.output && rdata.output > qdata.output){
+      s->scene.output_scale = rdata.output;
+    }
     s->scene.frontview = datad.rearViewCam;
 
-    s->scene.decel_for_model = datad.decelForModel;
-
+    s->scene.decel_for_model = datad.decelForModel; 
+    s->scene.decel_for_turn = datad.decelForTurn;
     s->alert_sound_timeout = 1 * UI_FREQ;
 
     if (datad.alertSound != cereal_CarControl_HUDControl_AudibleAlert_none && datad.alertSound != s->alert_sound) {
@@ -2339,6 +2374,10 @@ void handle_message(UIState *s, void *which) {
   } else if (eventd.which == cereal_Event_liveMapData) {
     struct cereal_LiveMapData datad;
     cereal_read_LiveMapData(&datad, eventd.liveMapData);
+    s->scene.speedlimit = datad.speedLimit;
+	  s->scene.speedlimitahead_valid = datad.speedLimitAheadValid;
+	  s->scene.speedlimitaheaddistance = datad.speedLimitAheadDistance;
+    s->scene.speedlimit_valid = datad.speedLimitValid;
     s->scene.map_valid = datad.mapValid;
   } else if (eventd.which == cereal_Event_carState) {
     struct cereal_CarState datad;
@@ -2348,6 +2387,18 @@ void handle_message(UIState *s, void *which) {
       s->scene.blinker_blinkingrate = 100;
     s->scene.leftBlinker = datad.leftBlinker;
     s->scene.rightBlinker = datad.rightBlinker;
+  } else if (eventd.which == cereal_Event_gpsLocationExternal) {
+    struct cereal_GpsLocationData datad;
+    cereal_read_GpsLocationData(&datad, eventd.gpsLocationExternal);
+    s->scene.gpsAccuracy = datad.accuracy;
+    if (s->scene.gpsAccuracy > 100)
+    {
+      s->scene.gpsAccuracy = 99.99;
+    }
+    else if (s->scene.gpsAccuracy == 0)
+    {
+      s->scene.gpsAccuracy = 99.8;
+    }
   }
   capn_free(&ctx);
   zmq_msg_close(&msg);
@@ -2512,10 +2563,14 @@ static void ui_update(UIState *s) {
       plus_sock_num++;
       polls[7].socket = s->carstate_sock_raw;
       polls[7].events = ZMQ_POLLIN;
-      /*num_polls++;
+      num_polls++;
+      plus_sock_num++;
+      polls[8].socket = s->map_data_sock_raw;
+      polls[8].events = ZMQ_POLLIN;
+      num_polls++;
       plus_sock_num++;
       polls[9].socket = s->gps_sock_raw;
-      polls[9].events = ZMQ_POLLIN;*/
+      polls[9].events = ZMQ_POLLIN;
     }
 
     polls[plus_sock_num].socket = s->plus_sock_raw; // plus_sock should be last
@@ -2532,43 +2587,10 @@ static void ui_update(UIState *s) {
 
     if (polls[0].revents || polls[1].revents || polls[2].revents ||
         polls[3].revents || polls[4].revents || polls[6].revents ||
-        polls[7].revents || polls[plus_sock_num].revents) {  //} || polls[9].revents) {
+        polls[7].revents || polls[8].revents || polls[plus_sock_num].revents) {
       // awake on any (old) activity
       set_awake(s, true);
     }
-
-    /*if (polls[9].revents) {
-      // gps socket
-
-      zmq_msg_t msg;
-      err = zmq_msg_init(&msg);
-      assert(err == 0);
-      err = zmq_msg_recv(&msg, s->gps_sock_raw, 0);
-      assert(err >= 0);
-
-      struct capn ctx;
-      capn_init_mem(&ctx, zmq_msg_data(&msg), zmq_msg_size(&msg), 0);
-
-      cereal_Event_ptr eventp;
-      eventp.p = capn_getp(capn_root(&ctx), 0, 1);
-      struct cereal_Event eventd;
-      cereal_read_Event(&eventd, eventp);
-
-      struct cereal_GpsLocationData datad;
-      cereal_read_GpsLocationData(&datad, eventd.gpsLocation);
-
-      s->scene.gpsAccuracy = datad.accuracy;
-
-      if (s->scene.gpsAccuracy > 100)
-      {
-        s->scene.gpsAccuracy = 99.99;
-      }
-      else if (s->scene.gpsAccuracy == 0)
-      {
-        s->scene.gpsAccuracy = 99.8;
-      }
-      zmq_msg_close(&msg);
-    }*/
 
     if (polls[plus_sock_num].revents) {
       // plus socket

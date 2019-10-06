@@ -58,7 +58,7 @@ class CarInterface(object):
 
     ret.steerActuatorDelay = 0.12  # Default delay, Prius has larger delay
 
-    if candidate not in [CAR.PRIUS, CAR.RAV4, CAR.RAV4H]: # These cars use LQR/INDI
+    if candidate not in [CAR.PRIUS, CAR.RAV4, CAR.RAV4H, CAR.OLD_CAR]: # These cars use LQR/INDI
       ret.lateralTuning.init('pid')
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
 
@@ -228,6 +228,17 @@ class CarInterface(object):
       ret.mass = 6200.0 * CV.LB_TO_KG + STD_CARGO_KG
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1], [0.04]]
       ret.lateralTuning.pid.kf = 0.00004
+      ret.lateralTuning.init('lqr')
+
+      ret.lateralTuning.lqr.scale = 1500.0
+      ret.lateralTuning.lqr.ki = 0.05
+
+      ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
+      ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
+      ret.lateralTuning.lqr.c = [1., 0.]
+      ret.lateralTuning.lqr.k = [-110.73572306, 451.22718255]
+      ret.lateralTuning.lqr.l = [0.3233671, 0.3185757]
+      ret.lateralTuning.lqr.dcGain = 0.002237852961363602
 
     ret.steerRateCost = 1.
     if candidate == CAR.OLD_CAR:
@@ -297,11 +308,9 @@ class CarInterface(object):
     # ******************* do can recv *******************
     self.cp.update_strings(can_strings)
 
-    # run the cam can update for 10s as we just need to know if the camera is alive
-    if self.frame < 1000:
-      self.cp_cam.update_strings(can_strings)
+    self.cp_cam.update_strings(can_strings)
 
-    self.CS.update(self.cp)
+    self.CS.update(self.cp, self.cp_cam)
 
     # create message
     ret = car.CarState.new_message()

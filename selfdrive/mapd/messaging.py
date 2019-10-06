@@ -1,7 +1,13 @@
 import zmq
 
 from cereal import log
+from cereal import arne182
 from selfdrive.mapd import realtime
+
+def new_arne182_message():
+  dat = arne182.Event.new_message()
+  dat.logMonoTime = int(realtime.sec_since_boot() * 1e9)
+  return dat
 
 def new_message():
   dat = log.Event.new_message()
@@ -56,8 +62,17 @@ def recv_sock(sock, wait=False):
 def recv_one(sock):
   return log.Event.from_bytes(sock.recv())
 
+def recv_one_arne182(sock):
+  return arne182.EventArne182.from_bytes(sock.recv())
+
 def recv_one_or_none(sock):
   try:
     return log.Event.from_bytes(sock.recv(zmq.NOBLOCK))
+  except zmq.error.Again:
+    return None
+  
+def recv_one_or_none_arne182(sock):
+  try:
+    return arne182.EventArne182.from_bytes(sock.recv(zmq.NOBLOCK))
   except zmq.error.Again:
     return None
