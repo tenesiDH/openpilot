@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import math
-import datetime
+from datetime import datetime
 import time
 import numpy as np
 from common.params import Params
