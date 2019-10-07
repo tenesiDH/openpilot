@@ -1939,7 +1939,7 @@ static void ui_draw_vision_footer(UIState *s) {
   ui_draw_vision_brake(s);
 
 #ifdef SHOW_SPEEDLIMIT
-  // ui_draw_vision_map(s);
+  ui_draw_vision_map(s);
 #endif
 }
 
