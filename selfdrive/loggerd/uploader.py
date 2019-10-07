@@ -247,6 +247,12 @@ def uploader_fn(exit_event):
   uploader = Uploader(dongle_id, ROOT)
 
   backoff = 0.1
+  
+  try:
+    last_gps_size = os.path.getsize("/data/openpilot/selfdrive/data_collection/gps-data")
+  except:
+    last_gps_size = None
+  
   while True:
     allow_raw_upload = (params.get("IsUploadRawEnabled") != "0")
     allow_cellular = (params.get("IsUploadVideoOverCellularEnabled") != "0")
