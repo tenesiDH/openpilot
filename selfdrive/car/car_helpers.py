@@ -3,7 +3,7 @@ import zmq
 import json
 import threading
 from cereal import car
-from common.params import Params, UnknownKeyName
+from common.params import Params
 from common.vin import get_vin, VIN_UNKNOWN
 from common.basedir import BASEDIR
 from common.fingerprints import eliminate_incompatible_cars, all_known_cars
@@ -81,9 +81,9 @@ def fingerprint(logcan, sendcan, is_panda_black):
   params = Params()
   car_params = params.get("CarParams")
   
-  try:
+  if BASEDIR == "/data/openpilot" or BASEDIR == "/data/openpilot.arne182":
     cached_fingerprint = params.get('CachedFingerprint')
-  except UnknownKeyName:
+  elae:
     cached_fingerprint = None
     
   if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
