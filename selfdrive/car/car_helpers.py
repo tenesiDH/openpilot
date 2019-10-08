@@ -1,5 +1,6 @@
 import os
 import zmq
+import json
 import threading
 from cereal import car
 from common.params import Params
