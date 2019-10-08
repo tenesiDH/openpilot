@@ -3,7 +3,7 @@ import zmq
 import json
 import threading
 from cereal import car
-from common.params import Params
+from common.params import Params, UnknownKeyName
 from common.vin import get_vin, VIN_UNKNOWN
 from common.basedir import BASEDIR
 from common.fingerprints import eliminate_incompatible_cars, all_known_cars
