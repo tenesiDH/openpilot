@@ -228,7 +228,10 @@ class Way:
       if closest_way is None or score < best_score:
         closest_way = way
         best_score = score
-
+        
+    if best_score is None:
+      return None
+    
     # Normal score is < 5
     if best_score > 50:
       return None
