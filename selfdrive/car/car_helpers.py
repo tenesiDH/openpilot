@@ -83,7 +83,7 @@ def fingerprint(logcan, sendcan, is_panda_black):
   
   if BASEDIR == "/data/openpilot" or BASEDIR == "/data/openpilot.arne182":
     cached_fingerprint = params.get('CachedFingerprint')
-  elae:
+  else:
     cached_fingerprint = None
     
   if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
