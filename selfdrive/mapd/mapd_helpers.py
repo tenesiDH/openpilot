@@ -34,9 +34,9 @@ def circle_through_points(p1, p2, p3):
     if abs((y3-y1)*x2-(x3-x1)*y2+x3*y1-y3*x1)/np.sqrt((y3-y1)**2+(x3-x1)**2) > 0.1:
       return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
     else:
-      return (-B / (2 * A), - C / (2 * A), np.inf)
+      return (-B / (2 * A), - C / (2 * A), 10000)
   except RuntimeWarning:
-    return x2, y2, np.inf
+    return x2, y2, 10000
 
 def parse_speed_unit(max_speed):
   """Converts a maxspeed string to m/s based on the unit present in the input.
