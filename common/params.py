@@ -82,7 +82,7 @@ keys = {
   "TermsVersion": [TxType.PERSISTENT],
   "TrainingVersion": [TxType.PERSISTENT],
   "Version": [TxType.PERSISTENT],
-  "CachedFingerprint": TxType.PERSISTENT,
+  "CachedFingerprint": [TxType.PERSISTENT],
 }
 
 
