@@ -9,6 +9,9 @@ from common.fingerprints import eliminate_incompatible_cars, all_known_cars
 from selfdrive.swaglog import cloudlog
 import selfdrive.messaging as messaging
 import selfdrive.crash as crash
+from selfdrive.op_params import opParams
+op_params = opParams()
+useCarCaching = op_params.get('useCarCaching', True)
 
 def get_one_can(logcan):
   while True:
@@ -76,6 +79,10 @@ def fingerprint(logcan, sendcan, is_panda_black):
 
   params = Params()
   car_params = params.get("CarParams")
+  cached_fingerprint = params.get('CachedFingerprint')
+  if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
+    cached_fingerprint = json.loads(cached_fingerprint)
+    return (str(cached_fingerprint[0]), {long(key): value for key, value in cached_fingerprint[1].items()}, VIN_UNKNOWN) # not sure if dict of longs is required
 
   if car_params is not None:
     # use already stored VIN: a new VIN query cannot be done, since panda isn't in ELM327 mode
@@ -131,6 +138,8 @@ def fingerprint(logcan, sendcan, is_panda_black):
     frame += 1
   
   cloudlog.warning("fingerprinted %s", car_fingerprint)
+  
+  params.put("CachedFingerprint", json.dumps([car_fingerprint, {int(key): value for key, value in finger.items()}])) # probably can remove long to int conversion
   return car_fingerprint, finger, vin
 
 def crash_log(candidate):
