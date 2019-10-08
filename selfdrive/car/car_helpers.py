@@ -80,7 +80,12 @@ def fingerprint(logcan, sendcan, is_panda_black):
 
   params = Params()
   car_params = params.get("CarParams")
-  cached_fingerprint = params.get('CachedFingerprint')
+  
+  try:
+    cached_fingerprint = params.get('CachedFingerprint')
+  except UnknownKeyName:
+    cached_fingerprint = None
+    
   if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
     cached_fingerprint = json.loads(cached_fingerprint)
     return (str(cached_fingerprint[0]), {long(key): value for key, value in cached_fingerprint[1].items()}, VIN_UNKNOWN) # not sure if dict of longs is required
