@@ -104,7 +104,7 @@ def fingerprint(logcan, sendcan, is_panda_black):
   Params().put("CarVin", vin)
 
   finger = {i: {} for i in range(0, 4)}  # collect on all buses
-  candidate_cars = {i: all_known_cars() for i in [0, 1]}  # attempt fingerprint on bus 0
+  candidate_cars = {i: all_known_cars() for i in [0, 1]}  # attempt fingerprint on both bus 0 and 1
   frame = 0
   frame_fingerprint = 10  # 0.1s
   car_fingerprint = None
@@ -145,7 +145,7 @@ def fingerprint(logcan, sendcan, is_panda_black):
   
   cloudlog.warning("fingerprinted %s", car_fingerprint)
   
-  params.put("CachedFingerprint", json.dumps([car_fingerprint, {int(key): value for key, value in finger.items()}])) # probably can remove long to int conversion
+  params.put("CachedFingerprint", json.dumps([str(car_fingerprint), {int(key): value for key, value in finger[0].items()}])) # probably can remove long to int conversion
   return car_fingerprint, finger, vin
 
 def crash_log(candidate):
