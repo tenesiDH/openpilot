@@ -22,6 +22,7 @@ import selfdrive.mapd.messaging as messaging
 from selfdrive.mapd.mapd_helpers import MAPS_LOOKAHEAD_DISTANCE, Way, circle_through_points
 
 OVERPASS_API_URL = "https://z.overpass-api.de/api/interpreter"
+OVERPASS_API_URL2 = "https://lz4.overpass-api.de/api/interpreter"
 OVERPASS_HEADERS = {
     'User-Agent': 'NEOS (comma.ai)',
     'Accept-Encoding': 'gzip'
@@ -81,7 +82,12 @@ def query_thread():
       q = build_way_query(last_gps.latitude, last_gps.longitude, radius=4000)
       if connected_to_internet():
         try:
-          new_result = api.query(q)
+          try:
+            new_result = api.query(q)
+          except overpy.exception.OverpassGatewayTimeout:
+            api2 = overpy.Overpass(url=OVERPASS_API_URL2)
+            print("Using backup Server")
+            new_result = api2.query(q)
   
           # Build kd-tree
           nodes = []
