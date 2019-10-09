@@ -40,7 +40,7 @@ struct ManagerData {
   runningProcesses @0 :List(Text);
 }
 
-struct Event {
+struct EventArne182 {
   # in nanoseconds?
   logMonoTime @0 :UInt64;
   valid @6 :Bool = true;

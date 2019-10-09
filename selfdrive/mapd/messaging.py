@@ -63,7 +63,7 @@ def recv_one(sock):
   return log.Event.from_bytes(sock.recv())
 
 def recv_one_arne182(sock):
-  return arne182.Event.from_bytes(sock.recv())
+  return arne182.EventArne182.from_bytes(sock.recv())
 
 def recv_one_or_none(sock):
   try:
@@ -73,6 +73,6 @@ def recv_one_or_none(sock):
   
 def recv_one_or_none_arne182(sock):
   try:
-    return arne182.Event.from_bytes(sock.recv(zmq.NOBLOCK))
+    return arne182.EventArne182.from_bytes(sock.recv(zmq.NOBLOCK))
   except zmq.error.Again:
     return None

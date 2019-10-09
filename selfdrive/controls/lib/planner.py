@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import math
-import datetime
+from datetime import datetime
 import time
 import numpy as np
 from common.params import Params
@@ -177,7 +177,7 @@ class Planner(object):
         v_speedlimit = speed_limit + offset
       else:
         speed_limit = None
-      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distanceand (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
+      if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         distanceatlowlimit = 50
         if sm['liveMapData'].speedLimitAhead < 21/3.6:
           distanceatlowlimit = speed_ahead_distance = (v_ego - sm['liveMapData'].speedLimitAhead)*3.6*2
@@ -230,6 +230,7 @@ class Planner(object):
         required_decel = max(required_decel, -3.0)
         accel_limits[0] = required_decel
         accel_limits[1] = required_decel
+        self.a_acc_start = required_decel
 
       
       self.v_cruise, self.a_cruise = speed_smoother(self.v_acc_start, self.a_acc_start,

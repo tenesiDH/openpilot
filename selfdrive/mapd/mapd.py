@@ -13,6 +13,7 @@ import requests
 import threading
 import numpy as np
 import overpy
+from cereal import arne182
 #from common.params import Params
 from collections import defaultdict
 
@@ -21,6 +22,7 @@ import selfdrive.mapd.messaging as messaging
 from selfdrive.mapd.mapd_helpers import MAPS_LOOKAHEAD_DISTANCE, Way, circle_through_points
 
 OVERPASS_API_URL = "https://z.overpass-api.de/api/interpreter"
+OVERPASS_API_URL2 = "https://lz4.overpass-api.de/api/interpreter"
 OVERPASS_HEADERS = {
     'User-Agent': 'NEOS (comma.ai)',
     'Accept-Encoding': 'gzip'
@@ -80,7 +82,12 @@ def query_thread():
       q = build_way_query(last_gps.latitude, last_gps.longitude, radius=4000)
       if connected_to_internet():
         try:
-          new_result = api.query(q)
+          try:
+            new_result = api.query(q)
+          except overpy.exception.OverpassGatewayTimeout:
+            api2 = overpy.Overpass(url=OVERPASS_API_URL2)
+            print("Using backup Server")
+            new_result = api2.query(q)
   
           # Build kd-tree
           nodes = []
@@ -160,15 +167,15 @@ def mapsd_thread():
       if socket is gps_external_sock:
         gps_ext = messaging.recv_one(socket)
       elif socket is traffic_data_sock:
-        traffic = messaging.recv_one_arne182(socket)
+        traffic = arne182.LiveTrafficData.from_bytes(socket.recv())
     if traffic is not None:
-      if traffic.liveTrafficData.speedLimitValid:
-        speedLimittraffic = traffic.liveTrafficData.speedLimit
+      if traffic.speedLimitValid:
+        speedLimittraffic = traffic.speedLimit
         if abs(speedLimittraffic_prev - speedLimittraffic) > 0.1:
           speedLimittrafficvalid = True
           speedLimittraffic_prev = speedLimittraffic
-      if traffic.liveTrafficData.speedAdvisoryValid:
-        speedLimittrafficAdvisory = traffic.liveTrafficData.speedAdvisory
+      if traffic.speedAdvisoryValid:
+        speedLimittrafficAdvisory = traffic.speedAdvisory
         speedLimittrafficAdvisoryvalid = True
       else:
         speedLimittrafficAdvisoryvalid = False
@@ -230,14 +237,13 @@ def mapsd_thread():
             circles = [circle_through_points(*p) for p in zip(pnts, pnts[1:], pnts[2:])]
             circles = np.asarray(circles)
             radii = np.nan_to_num(circles[:, 2])
-            radii[radii < 15.] = np.inf
-            try:
-              if cur_way.way.tags['highway'] == 'trunk':
-                radii = radii*1.6 # https://media.springernature.com/lw785/springer-static/image/chp%3A10.1007%2F978-3-658-01689-0_21/MediaObjects/298553_35_De_21_Fig65_HTML.gif
-              if cur_way.way.tags['highway'] == 'motorway' or  cur_way.way.tags['highway'] == 'motorway_link':
-                radii = radii*2.8
-            except KeyError:
-              pass
+            radii[radii < 15.] = 10000
+            
+            if cur_way.way.tags['highway'] == 'trunk':
+              radii = radii*1.6 # https://media.springernature.com/lw785/springer-static/image/chp%3A10.1007%2F978-3-658-01689-0_21/MediaObjects/298553_35_De_21_Fig65_HTML.gif
+            if cur_way.way.tags['highway'] == 'motorway' or  cur_way.way.tags['highway'] == 'motorway_link':
+              radii = radii*2.8
+         
             curvature = 1. / radii
 
           # Index of closest point
@@ -327,7 +333,7 @@ def mapsd_thread():
       else:
         speedLimittrafficvalid = False
     else:
-      if max_speed is not None:
+      if max_speed is not None and map_valid:
         dat.liveMapData.speedLimitValid = True
         dat.liveMapData.speedLimit = max_speed
         
