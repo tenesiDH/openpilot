@@ -86,10 +86,6 @@ def fingerprint(logcan, sendcan, is_panda_black):
   else:
     cached_fingerprint = None
     
-  if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
-    cached_fingerprint = json.loads(cached_fingerprint)
-    return (str(cached_fingerprint[0]), {long(key): value for key, value in cached_fingerprint[1].items()}, VIN_UNKNOWN) # not sure if dict of longs is required
-
   if car_params is not None:
     # use already stored VIN: a new VIN query cannot be done, since panda isn't in ELM327 mode
     car_params = car.CarParams.from_bytes(car_params)
@@ -110,6 +106,12 @@ def fingerprint(logcan, sendcan, is_panda_black):
   car_fingerprint = None
   done = False
 
+  if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
+    cached_fingerprint = json.loads(cached_fingerprint)
+    finger[0] = {long(key): value for key, value in cached_fingerprint[1].items()}  # not sure if dict of longs is required
+    return (str(cached_fingerprint[0]), finger, vin)
+
+  
   while not done:
     a = get_one_can(logcan)
 
@@ -145,7 +147,7 @@ def fingerprint(logcan, sendcan, is_panda_black):
   
   cloudlog.warning("fingerprinted %s", car_fingerprint)
   
-  params.put("CachedFingerprint", json.dumps([str(car_fingerprint), {int(key): value for key, value in finger[0].items()}])) # probably can remove long to int conversion
+  params.put("CachedFingerprint", json.dumps([car_fingerprint, {int(key): value for key, value in finger[0].items()}])) # probably can remove long to int conversion
   return car_fingerprint, finger, vin
 
 def crash_log(candidate):
