@@ -25,12 +25,11 @@ class opParams:
     self.params = {}
     self.params_file = "/data/op_params.json"
     self.kegman_file = "/data/kegman.json"
-    self.travis = BASEDIR[:6] != '/data/'
+    self.travis = BASEDIR.strip('/').split('/')[0] == 'data'
     self.last_read_time = time.time()
     self.read_timeout = 1.0  # max frequency to read with self.get(...) (sec)
     self.default_params = {'cameraOffset': 0.06, 'wheelTouchFactor': 10.0, 'speed_offset': 0.0, 'osm': True}
     self.travis_params = {'wheelTouchFactor': 1.0}  # optional params to overwrite default_params for travis
-    print('BASEDIR TEST: {}'.format(BASEDIR))
     self.run_init()  # restores, reads, and updates params
 
   def add_default_params(self, force_update=False, travis=False):
@@ -43,7 +42,7 @@ class opParams:
           self.params.update({i: self.default_params[i]})
     else:
       for i in self.travis_params:
-        self.params.update({i: self.default_params[i]})
+        self.params.update({i: self.travis_params[i]})
     return prev_params == self.params
 
   def run_init(self):  # does first time initializing of default params, and/or restoring from kegman.json
