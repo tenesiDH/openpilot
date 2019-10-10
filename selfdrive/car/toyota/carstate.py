@@ -2,7 +2,6 @@ import numpy as np
 from selfdrive.services import service_list
 from cereal import car
 from cereal import arne182
-from common.basedir import BASEDIR
 import selfdrive.messaging as messaging
 from common.numpy_fast import interp
 from common.kalman.simple_kalman import KF1D
@@ -10,6 +9,7 @@ from selfdrive.can.can_define import CANDefine
 from selfdrive.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from selfdrive.car.toyota.values import CAR, DBC, STEER_THRESHOLD, TSS2_CAR, NO_DSU_CAR
+from common.travis_checker import travis
 
 GearShifter = car.CarState.GearShifter
 
@@ -129,7 +129,7 @@ class CarState(object):
     self.Angle_counter = 0
     self.Angle = [0, 5, 10, 15,20,25,30,35,60,100,180,270,500]
     self.Angle_Speed = [255,160,100,80,70,60,55,50,40,33,27,17,12]
-    if BASEDIR == "/data/openpilot" or BASEDIR == "/data/openpilot.arne182":
+    if not travis:
       self.traffic_data_sock = messaging.pub_sock(service_list['liveTrafficData'].port)
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
@@ -270,5 +270,5 @@ class CarState(object):
         dat.speedAdvisory = self.spdval2
       else:
         dat.speedAdvisoryValid = False
-      if BASEDIR == "/data/openpilot" or BASEDIR == "/data/openpilot.arne182":
+      if not travis:
         self.traffic_data_sock.send(dat.to_bytes())
