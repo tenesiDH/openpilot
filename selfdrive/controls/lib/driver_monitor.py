@@ -5,7 +5,7 @@ from common.filter_simple import FirstOrderFilter
 from common.stat_live import RunningStatFilter
 from selfdrive.op_params import opParams
 op_params = opParams()
-factor = op_params.get('wheelTouchFactor', 1)
+factor = op_params.get('wheelTouchFactor', 1.0)
 
 _AWARENESS_TIME = 100. * factor  # 1.6 minutes limit without user touching steering wheels make the car enter a terminal status
 _AWARENESS_PRE_TIME_TILL_TERMINAL = 25. * factor  # a first alert is issued 25s before expiration
