@@ -5,7 +5,7 @@ from cereal import log
 from selfdrive.kegman_conf import kegman_conf
 
 
-class LatControlPID(object):
+class LatControlPID():
   def __init__(self, CP):
     self.kegman = kegman_conf(CP)
     self.deadzone = float(self.kegman.conf['deadzone'])
@@ -35,7 +35,7 @@ class LatControlPID(object):
       self.mpc_frame = 0    
 
       
-  def update(self, active, v_ego, angle_steers, angle_steers_rate, eps_torque, steer_override, CP, VM, path_plan):
+  def update(self, active, v_ego, angle_steers, angle_steers_rate, eps_torque, steer_override, CP, path_plan):
     
     self.live_tune(CP)
     

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from common.numpy_fast import interp
+import math
 
 import selfdrive.messaging as messaging
 from selfdrive.swaglog import cloudlog
@@ -54,7 +55,7 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 LOG_MPC = os.environ.get('LOG_MPC', False)
 
 
-class LongitudinalMpc(object):
+class LongitudinalMpc():
   def __init__(self, mpc_id):
     self.mpc_id = mpc_id
 
@@ -233,10 +234,9 @@ class LongitudinalMpc(object):
     self.v_mpc_future = self.mpc_solution[0].v_ego[10]
 
     # Reset if NaN or goes through lead car
-    dls = np.array(list(self.mpc_solution[0].x_l)) - np.array(list(self.mpc_solution[0].x_ego))
-    crashing = min(dls) < -50.0
-    nans = np.any(np.isnan(list(self.mpc_solution[0].v_ego)))
-    backwards = min(list(self.mpc_solution[0].v_ego)) < -0.01
+    crashing = any(lead - ego < -50 for (lead, ego) in zip(self.mpc_solution[0].x_l, self.mpc_solution[0].x_ego))
+    nans = any(math.isnan(x) for x in self.mpc_solution[0].v_ego)
+    backwards = min(self.mpc_solution[0].v_ego) < -0.01
 
     if ((backwards or crashing) and self.prev_lead_status) or nans:
       if t > self.last_cloudlog_t + 5.0:
