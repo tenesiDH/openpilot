@@ -27,6 +27,7 @@ class opParams:
     self.params_file = "/data/op_params.json"
     self.kegman_file = "/data/kegman.json"
     self.params = {}
+    self.read_status = False
     self.last_read_time = time.time()
     self.read_timeout = 1.0  # max frequency to read with self.put(...) (s)
     self.default_params = {'cameraOffset': 0.06, 'wheelTouchFactor': 10, 'speed_offset': 0, 'osm': True}
@@ -47,7 +48,7 @@ class opParams:
     to_write = False
     no_params = False
     if os.path.isfile(self.params_file):
-      self.params, read_status = read_params(self.params_file, self.default_params)
+      self.params, self.read_status = read_params(self.params_file, self.default_params)
       if read_status:
         to_write = not self.add_default_params(force_update=force_update)  # if new default data has been added
       else:  # don't overwrite corrupted params, just print to screen
@@ -71,12 +72,12 @@ class opParams:
 
   def get(self, key=None, default=None):  # can specify a default value if key doesn't exist
     if (time.time() - self.last_read_time) >= self.read_timeout:  # make sure we aren't reading file too often
-      self.params, read_status = read_params(self.params_file, self.default_params)
+      self.params, self.read_status = read_params(self.params_file, self.default_params)
       self.last_read_time = time.time()
     if key is None:  # get all
       return self.params
     else:
-      if read_status:
+      if self.read_status:
         return self.params[key] if key in self.params else default
       else:
         return default
