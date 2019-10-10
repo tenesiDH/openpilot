@@ -76,4 +76,7 @@ class opParams:
     if key is None:  # get all
       return self.params
     else:
-      return self.params[key] if key in self.params else default
+      if read_status:
+        return self.params[key] if key in self.params else default
+      else:
+        return default
