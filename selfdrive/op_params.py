@@ -47,7 +47,7 @@ class opParams:
 
   def run_init(self):  # does first time initializing of default params, and/or restoring from kegman.json
     if self.travis:
-      print("THIS IS TRAVIS! TEST!")
+      print("Travis detected...")
       self.params = self.default_params
       self.add_default_params(travis=True)
       return

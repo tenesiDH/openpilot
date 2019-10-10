@@ -12,7 +12,7 @@ import selfdrive.messaging as messaging
 import selfdrive.crash as crash
 from selfdrive.op_params import opParams
 op_params = opParams()
-useCarCaching = op_params.get('useCarCaching', True)
+use_car_caching = op_params.get('useCarCaching', True)
 
 def get_one_can(logcan):
   while True:
@@ -106,7 +106,7 @@ def fingerprint(logcan, sendcan, is_panda_black):
   car_fingerprint = None
   done = False
 
-  if cached_fingerprint is not None and useCarCaching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
+  if cached_fingerprint is not None and use_car_caching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
     cached_fingerprint = json.loads(cached_fingerprint)
     finger[0] = {long(key): value for key, value in cached_fingerprint[1].items()}  # not sure if dict of longs is required
     return (str(cached_fingerprint[0]), finger, vin)
