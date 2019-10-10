@@ -49,7 +49,7 @@ class opParams:
     no_params = False
     if os.path.isfile(self.params_file):
       self.params, self.read_status = read_params(self.params_file, self.default_params)
-      if read_status:
+      if self.read_status:
         to_write = not self.add_default_params(force_update=force_update)  # if new default data has been added
       else:  # don't overwrite corrupted params, just print to screen
         print("ERROR: Can't read op_params.json file")
