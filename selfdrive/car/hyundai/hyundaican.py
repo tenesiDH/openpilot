@@ -100,8 +100,7 @@ def create_mdps12(packer, car_fingerprint, cnt, mdps12):
   }
 
   dat = packer.make_can_msg("MDPS12", 2, values)[2]
-  dat = [ord(i) for i in dat]
-  checksum = (dat[0] + dat[1] + dat[2] + dat[4] + dat[5] + dat[6] + dat[7]) % 256
+  checksum = sum(dat[:7]) % 256
   values["CF_Mdps_Chksum2"] = checksum
 
   return packer.make_can_msg("MDPS12", 2, values)
