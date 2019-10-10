@@ -219,11 +219,12 @@ class CarInterface(CarInterfaceBase):
 
     # cruise state
     ret.cruiseState.enabled = self.CS.main_on != 0
+    ret.cruiseState.enabled = self.CS.lkas_button_on
     if self.CS.pcm_acc_status != 0:
       ret.cruiseState.speed = self.CS.cruise_set_speed
     else:
       ret.cruiseState.speed = 0
-    ret.cruiseState.available = bool(self.CS.main_on)
+    ret.cruiseState.available = True
     ret.cruiseState.standstill = False
 
     # TODO: button presses
@@ -266,8 +267,8 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('seatbeltNotLatched', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if self.CS.esp_disabled:
       events.append(create_event('espDisabled', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if not self.CS.main_on:
-      events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
+    #if not self.CS.main_on:
+      #events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
     if ret.gearShifter == GearShifter.reverse:
       events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     if self.CS.steer_error:
