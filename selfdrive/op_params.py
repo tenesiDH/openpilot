@@ -4,9 +4,12 @@ import time
 
 
 def write_params(params_file, params):
-  with open(params_file, "w") as f:
-    json.dump(params, f, indent=2, sort_keys=True)
-  os.chmod(params_file, 0o764)
+  try:
+    with open(params_file, "w") as f:
+      json.dump(params, f, indent=2, sort_keys=True)
+    os.chmod(params_file, 0o764)
+  except IOError:
+    pass
 
 
 def read_params(params_file, default_params):
