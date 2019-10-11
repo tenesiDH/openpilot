@@ -1,6 +1,7 @@
 import struct
 from selfdrive.config import Conversions as CV
 from selfdrive.car.honda.values import CAR, HONDA_BOSCH
+from common.params import Params
 
 # *** Honda specific ***
 def can_cksum(mm):
@@ -67,16 +68,23 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, is_metric, idx, 
   bus_lkas = get_lkas_cmd_bus(car_fingerprint, has_relay)
 
   if car_fingerprint not in HONDA_BOSCH:
+    is_eon_metric = Params().get("IsMetric", encoding='utf8') == "1"
+    if is_eon_metric:
+      speed_units = 2
+    else:
+      speed_units = 3
+      
     acc_hud_values = {
       'PCM_SPEED': pcm_speed * CV.MS_TO_KPH,
       'PCM_GAS': hud.pcm_accel,
       'CRUISE_SPEED': hud.v_cruise,
       'ENABLE_MINI_CAR': hud.mini_car,
       'HUD_LEAD': hud.car,
-      'HUD_DISTANCE': 3,    # max distance setting on display
-      'IMPERIAL_UNIT': int(not is_metric),
+      'SET_ME_X01': 0x01,
+      'HUD_DISTANCE_3': 1,
+      'HUD_DISTANCE': hud.dist_lines,    # max distance setting on display
+      'IMPERIAL_UNIT': speed_units,
       'SET_ME_X01_2': 1,
-      'SET_ME_X01': 1,
     }
     commands.append(packer.make_can_msg("ACC_HUD", bus_pt, acc_hud_values, idx))
 
@@ -85,6 +93,7 @@ def create_ui_commands(packer, pcm_speed, hud, car_fingerprint, is_metric, idx, 
     'SET_ME_X48': 0x48,
     'STEERING_REQUIRED': hud.steer_required,
     'SOLID_LANES': hud.lanes,
+    'DASHED_LANES': hud.dashed_lanes,
     'BEEP': 0,
   }
   commands.append(packer.make_can_msg('LKAS_HUD', bus_lkas, lkas_hud_values, idx))

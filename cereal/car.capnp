@@ -84,6 +84,8 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     laneChange @59;
     invalidGiraffeToyota @60;
     internetConnectivityNeeded @61;
+    manualSteeringRequired @62;
+    manualSteeringRequiredBlinkersOn @63;
   }
 }
 
@@ -129,14 +131,22 @@ struct CarState {
   leftBlinker @20 :Bool;
   rightBlinker @21 :Bool;
   genericToggle @23 :Bool;
+  distanceToggle @30 :Float32;
+  laneDepartureToggle @31 :Bool;
 
   # lock info
   doorOpen @24 :Bool;
   seatbeltUnlatched @25 :Bool;
   canValid @26 :Bool;
 
+
   # clutch (manual transmission only)
   clutchPressed @28 :Bool;
+
+  readdistancelines @32 :Float32;
+  lkMode @29 :Bool;
+
+
 
   # which packets this state came from
   canMonoTimes @12: List(UInt64);
