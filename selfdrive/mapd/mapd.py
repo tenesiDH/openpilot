@@ -22,6 +22,7 @@ import selfdrive.mapd.messaging as messaging
 from selfdrive.mapd.mapd_helpers import MAPS_LOOKAHEAD_DISTANCE, Way, circle_through_points
 
 OVERPASS_API_URL = "https://z.overpass-api.de/api/interpreter"
+OVERPASS_API_URL2 = "https://lz4.overpass-api.de/api/interpreter"
 OVERPASS_HEADERS = {
     'User-Agent': 'NEOS (comma.ai)',
     'Accept-Encoding': 'gzip'
@@ -33,7 +34,7 @@ last_query_result = None
 last_query_pos = None
 cache_valid = False
 
-def connected_to_internet(url='https://z.overpass-api.de/api/interpreter', timeout=5):
+def connected_to_internet(url='https://lz4.overpass-api.de/api/interpreter', timeout=5):
     try:
         requests.get(url, timeout=timeout)
         return True
@@ -81,7 +82,12 @@ def query_thread():
       q = build_way_query(last_gps.latitude, last_gps.longitude, radius=4000)
       if connected_to_internet():
         try:
-          new_result = api.query(q)
+          try:
+            new_result = api.query(q)
+          except:
+            api2 = overpy.Overpass(url=OVERPASS_API_URL2)
+            print("Using backup Server")
+            new_result = api2.query(q)
   
           # Build kd-tree
           nodes = []
@@ -231,14 +237,13 @@ def mapsd_thread():
             circles = [circle_through_points(*p) for p in zip(pnts, pnts[1:], pnts[2:])]
             circles = np.asarray(circles)
             radii = np.nan_to_num(circles[:, 2])
-            radii[radii < 15.] = np.inf
-            try:
-              if cur_way.way.tags['highway'] == 'trunk':
-                radii = radii*1.6 # https://media.springernature.com/lw785/springer-static/image/chp%3A10.1007%2F978-3-658-01689-0_21/MediaObjects/298553_35_De_21_Fig65_HTML.gif
-              if cur_way.way.tags['highway'] == 'motorway' or  cur_way.way.tags['highway'] == 'motorway_link':
-                radii = radii*2.8
-            except KeyError:
-              pass
+            radii[radii < 15.] = 10000
+            
+            if cur_way.way.tags['highway'] == 'trunk':
+              radii = radii*1.6 # https://media.springernature.com/lw785/springer-static/image/chp%3A10.1007%2F978-3-658-01689-0_21/MediaObjects/298553_35_De_21_Fig65_HTML.gif
+            if cur_way.way.tags['highway'] == 'motorway' or  cur_way.way.tags['highway'] == 'motorway_link':
+              radii = radii*2.8
+         
             curvature = 1. / radii
 
           # Index of closest point
@@ -328,7 +333,7 @@ def mapsd_thread():
       else:
         speedLimittrafficvalid = False
     else:
-      if max_speed is not None:
+      if max_speed is not None and map_valid:
         dat.liveMapData.speedLimitValid = True
         dat.liveMapData.speedLimit = max_speed
         

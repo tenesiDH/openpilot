@@ -1,4 +1,3 @@
-import os
 import math
 import numpy as np
 
@@ -11,7 +10,6 @@ from selfdrive.controls.lib.lane_planner import LanePlanner
 import selfdrive.messaging as messaging
 #from selfdrive.controls.lib.curvature_learner import CurvatureLearner
 
-LOG_MPC = os.environ.get('LOG_MPC', False)
 
 
 def calc_states_after_delay(states, v_ego, steer_angle, curvature_factor, steer_ratio, delay):
@@ -133,12 +131,11 @@ class PathPlanner(object):
 
     pm.send('pathPlan', plan_send)
 
-    if LOG_MPC:
-      dat = messaging.new_message()
-      dat.init('liveMpc')
-      dat.liveMpc.x = list(self.mpc_solution[0].x)
-      dat.liveMpc.y = list(self.mpc_solution[0].y)
-      dat.liveMpc.psi = list(self.mpc_solution[0].psi)
-      dat.liveMpc.delta = list(self.mpc_solution[0].delta)
-      dat.liveMpc.cost = self.mpc_solution[0].cost
-      pm.send('liveMpc', dat)
+    dat = messaging.new_message()
+    dat.init('liveMpc')
+    dat.liveMpc.x = list(self.mpc_solution[0].x)
+    dat.liveMpc.y = list(self.mpc_solution[0].y)
+    dat.liveMpc.psi = list(self.mpc_solution[0].psi)
+    dat.liveMpc.delta = list(self.mpc_solution[0].delta)
+    dat.liveMpc.cost = self.mpc_solution[0].cost
+    pm.send('liveMpc', dat)

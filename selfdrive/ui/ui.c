@@ -1939,7 +1939,7 @@ static void ui_draw_vision_footer(UIState *s) {
   ui_draw_vision_brake(s);
 
 #ifdef SHOW_SPEEDLIMIT
-  // ui_draw_vision_map(s);
+  ui_draw_vision_map(s);
 #endif
 }
 
@@ -2179,13 +2179,16 @@ void handle_message(UIState *s, void *which) {
     s->scene.engageable = datad.engageable;
     //s->scene.gps_planner_active = datad.gpsPlannerActive;
     s->scene.monitoring_active = datad.driverMonitoringOn;
-    if (pdata.output > qdata.output && pdata.output > rdata.output){
+    if (fabs(pdata.output) < 1){
       s->scene.output_scale = pdata.output;
-    } else if (qdata.output > pdata.output && qdata.output > rdata.output){
-      s->scene.output_scale = qdata.output;
-    } else if (rdata.output > pdata.output && rdata.output > qdata.output){
+    }
+    if (fabs(rdata.output) < 1){
       s->scene.output_scale = rdata.output;
     }
+    if (fabs(qdata.output) < 1){
+      s->scene.output_scale = qdata.output;
+    }
+    
     s->scene.frontview = datad.rearViewCam;
 
     s->scene.decel_for_model = datad.decelForModel; 
@@ -2374,11 +2377,11 @@ void handle_message(UIState *s, void *which) {
   } else if (eventd.which == cereal_Event_liveMapData) {
     struct cereal_LiveMapData datad;
     cereal_read_LiveMapData(&datad, eventd.liveMapData);
-    s->scene.speedlimit = datad.speedLimit;
-	  s->scene.speedlimitahead_valid = datad.speedLimitAheadValid;
-	  s->scene.speedlimitaheaddistance = datad.speedLimitAheadDistance;
-    s->scene.speedlimit_valid = datad.speedLimitValid;
     s->scene.map_valid = datad.mapValid;
+    s->scene.speedlimit = datad.speedLimit;
+    s->scene.speedlimitahead_valid = datad.speedLimitAheadValid;
+    s->scene.speedlimitaheaddistance = datad.speedLimitAheadDistance;
+    s->scene.speedlimit_valid = datad.speedLimitValid;
   } else if (eventd.which == cereal_Event_carState) {
     struct cereal_CarState datad;
     cereal_read_CarState(&datad, eventd.carState);

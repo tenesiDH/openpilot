@@ -327,9 +327,9 @@ def data_send(sm, pm, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk
   ldw_allowed = CS.vEgo > 12.5 and not blinker
 
   if len(list(sm['pathPlan'].rPoly)) == 4:
-    CC.hudControl.rightLaneDepart = bool(ldw_allowed and sm['pathPlan'].rPoly[3] > -(1.08 + CAMERA_OFFSET) and right_lane_visible)
+    CC.hudControl.rightLaneDepart = bool(ldw_allowed and sm['pathPlan'].rPoly[3] > -(1.03 + CAMERA_OFFSET) and right_lane_visible)
   if len(list(sm['pathPlan'].lPoly)) == 4:
-    CC.hudControl.leftLaneDepart = bool(ldw_allowed and sm['pathPlan'].lPoly[3] < (1.08 - CAMERA_OFFSET) and left_lane_visible)
+    CC.hudControl.leftLaneDepart = bool(ldw_allowed and sm['pathPlan'].lPoly[3] < (1.03 - CAMERA_OFFSET) and left_lane_visible)
 
   CC.hudControl.visualAlert = AM.visual_alert
 
