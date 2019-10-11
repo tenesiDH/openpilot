@@ -1,7 +1,7 @@
 import os
 import json
 import time
-from common.basedir import BASEDIR
+from common.travis_checker import travis
 
 
 def write_params(params_file, params):
@@ -25,7 +25,6 @@ class opParams:
     self.params = {}
     self.params_file = "/data/op_params.json"
     self.kegman_file = "/data/kegman.json"
-    self.travis = BASEDIR.strip('/').split('/')[0] != 'data'
     self.last_read_time = time.time()
     self.read_timeout = 1.0  # max frequency to read with self.get(...) (sec)
     self.default_params = {'cameraOffset': 0.06, 'wheelTouchFactor': 10.0, 'speed_offset': 0.0, 'osm': True}
@@ -46,7 +45,7 @@ class opParams:
     return prev_params == self.params
 
   def run_init(self):  # does first time initializing of default params, and/or restoring from kegman.json
-    if self.travis:
+    if travis:
       print("Travis detected...")
       self.params = self.default_params
       self.add_default_params(travis=True)
@@ -75,12 +74,12 @@ class opParams:
       write_params(self.params_file, self.params)
 
   def put(self, key, value):
-    if not self.travis:
+    if not travis:
       self.params.update({key: value})
       write_params(self.params_file, self.params)
 
   def get(self, key=None, default=None):  # can specify a default value if key doesn't exist
-    if (time.time() - self.last_read_time) >= self.read_timeout and not self.travis:  # make sure we aren't reading file too often
+    if (time.time() - self.last_read_time) >= self.read_timeout and not travis:  # make sure we aren't reading file too often
       self.params, read_status = read_params(self.params_file, self.default_params)
       self.last_read_time = time.time()
     if key is None:  # get all
