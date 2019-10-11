@@ -84,7 +84,7 @@ def query_thread():
         try:
           try:
             new_result = api.query(q)
-          except overpy.exception.OverpassGatewayTimeout:
+          except:
             api2 = overpy.Overpass(url=OVERPASS_API_URL2)
             print("Using backup Server")
             new_result = api2.query(q)
