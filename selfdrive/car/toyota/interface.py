@@ -208,7 +208,7 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate == CAR.LEXUS_IS:
       stop_and_go = False
-      ret.safetyParam = 66
+      ret.safetyParam = 77
       ret.wheelbase = 2.79908
       ret.steerRatio = 13.3
       tire_stiffness_factor = 0.444
@@ -367,6 +367,9 @@ class CarInterface(CarInterfaceBase):
     ret.seatbeltUnlatched = not self.CS.seatbelt
 
     ret.genericToggle = self.CS.generic_toggle
+    ret.laneDepartureToggle = self.CS.lane_departure_toggle_on
+    ret.distanceToggle = self.CS.distance_toggle
+    ret.readdistancelines = self.CS.read_distance_lines
 
     # events
     events = []
