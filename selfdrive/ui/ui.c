@@ -2179,7 +2179,15 @@ void handle_message(UIState *s, void *which) {
     s->scene.engageable = datad.engageable;
     //s->scene.gps_planner_active = datad.gpsPlannerActive;
     s->scene.monitoring_active = datad.driverMonitoringOn;
-    s->scene.output_scale = (float)pdata.output + (float)rdata.output + (float)qdata.output;
+    if (fabs(pdata.output) < 1){
+      s->scene.output_scale = pdata.output 
+    }
+    if (fabs(rdata.output) < 1){
+      s->scene.output_scale = rdata.output 
+    }
+    if (fabs(qdata.output) < 1){
+      s->scene.output_scale = qdata.output 
+    }
     
     s->scene.frontview = datad.rearViewCam;
 
