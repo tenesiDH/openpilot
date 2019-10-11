@@ -52,6 +52,15 @@ def get_powertrain_can_parser(CP, canbus):
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], canbus.powertrain)
 
 
+def get_chassis_can_parser(CP, canbus):
+  # this function generates lists for signal, messages and initial values
+  signals = [
+      # sig_name, sig_address, default
+      ("FrictionBrakePressure", "EBCMFrictionBrakeStatus", 0),
+  ]
+
+  return CANParser(DBC[CP.carFingerprint]['chassis'], signals, [], canbus.chassis)
+
 class CarState():
   def __init__(self, CP, canbus):
     self.CP = CP

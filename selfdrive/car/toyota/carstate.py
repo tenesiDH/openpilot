@@ -192,7 +192,7 @@ class CarState():
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']
     self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
-    if bool(cp.vl["JOEL_ID"]['LANE_WARNING']) <> self.lane_departure_toggle_on_prev:
+    if bool(cp.vl["JOEL_ID"]['LANE_WARNING']) != self.lane_departure_toggle_on_prev:
       self.lane_departure_toggle_on = bool(cp.vl["JOEL_ID"]['LANE_WARNING'])
       if self.lane_departure_toggle_on:
         self.lane_departure_toggle_on_prev = self.lane_departure_toggle_on_prev
@@ -204,10 +204,10 @@ class CarState():
 
     self.distance_toggle = cp.vl["JOEL_ID"]['ACC_DISTANCE']
     self.read_distance_lines = cp.vl["PCM_CRUISE_SM"]['DISTANCE_LINES']
-    if self.distance_toggle <> self.distance_toggle_prev:
+    if self.distance_toggle != self.distance_toggle_prev:
       self.cstm_btns_tr = 1
       self.distance_toggle_prev = self.distance_toggle
-    if self.read_distance_lines <> self.read_distance_lines_prev:
+    if self.read_distance_lines != self.read_distance_lines_prev:
       self.cstm_btns_tr = 0
       self.read_distance_lines_prev = self.read_distance_lines
 

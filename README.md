@@ -1,3 +1,5 @@
+Many people have asked if they could donate some cash for my efforts...  I've setup a patreon page here if you feel like buying me a beer or 3:  https://www.patreon.com/kegman
+
 This is a fork of comma's openpilot: https://github.com/commaai/openpilot, and contains tweaks for Hondas and GM vehicles.  It is open source and inherits MIT license.  By installing this software you accept all responsibility for anything that might occur while you use it.  All contributors to this fork are not liable.  <b>Use at your own risk.</b>
 
 <b>NOTE:  If you upgrade to 0.6 you cannot go back to 0.5.xx without reflashing your NEOS!</b>

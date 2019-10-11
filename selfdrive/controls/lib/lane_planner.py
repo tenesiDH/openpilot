@@ -49,7 +49,7 @@ class LanePlanner():
     #self.lane_width_certainty = 1.0 #comma default
     #self.lane_width = 2.85 #comma default
     #zorro
-    self.lane_width = 3.0
+    self.lane_width = 2.85
     self.readings = []
     self.frame = 0
     

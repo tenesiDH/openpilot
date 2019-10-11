@@ -53,16 +53,16 @@ class kegman_conf():
         self.config.update({"tuneGernby":"1"})
         self.config.update({"Kp":"-1"})
         self.config.update({"Ki":"-1"})
-	self.element_updated = True
+        self.element_updated = True
 
       if "liveParams" not in self.config:
         self.config.update({"liveParams":"1"})
         self.element_updated = True
 	
       if "steerRatio" not in self.config:
-	self.config.update({"steerRatio":"-1"})
-	self.config.update({"steerRateCost":"-1"})
-	self.element_updated = True
+        self.config.update({"steerRatio":"-1"})
+        self.config.update({"steerRateCost":"-1"})
+        self.element_updated = True
 	
       if "leadDistance" not in self.config:
         self.config.update({"leadDistance":"5"})
@@ -74,24 +74,24 @@ class kegman_conf():
 	
       if "1barBP0" not in self.config:
         self.config.update({"1barBP0":"-0.1"})
-	self.config.update({"1barBP1":"2.25"})
-	self.config.update({"2barBP0":"-0.1"})
-	self.config.update({"2barBP1":"2.5"})
-	self.config.update({"3barBP0":"0.0"})
-	self.config.update({"3barBP1":"3.0"})
+        self.config.update({"1barBP1":"2.25"})
+        self.config.update({"2barBP0":"-0.1"})
+        self.config.update({"2barBP1":"2.5"})
+        self.config.update({"3barBP0":"0.0"})
+        self.config.update({"3barBP1":"3.0"})
         self.element_updated = True
 
 
       if "1barMax" not in self.config:
         self.config.update({"1barMax":"2.1"})
-	self.config.update({"2barMax":"2.1"})
-	self.config.update({"3barMax":"2.1"})
+        self.config.update({"2barMax":"2.1"})
+        self.config.update({"3barMax":"2.1"})
         self.element_updated = True
 	
       if "1barHwy" not in self.config:
         self.config.update({"1barHwy":"0.4"})
-	self.config.update({"2barHwy":"0.3"})
-	self.config.update({"3barHwy":"0.1"})
+        self.config.update({"2barHwy":"0.3"})
+        self.config.update({"3barHwy":"0.1"})
         self.element_updated = True
 	
       if "slowOnCurves" not in self.config:

@@ -394,7 +394,7 @@ class CarState():
     self.cruise_setting = cp.vl["SCM_BUTTONS"]['CRUISE_SETTING']
     self.read_distance_lines = self.trMode + 1
       
-    if self.read_distance_lines <> self.read_distance_lines_prev:
+    if self.read_distance_lines != self.read_distance_lines_prev:
       self.read_distance_lines_prev = self.read_distance_lines
 
     # TODO: discover the CAN msg that has the imperial unit bit for all other cars
