@@ -2180,7 +2180,7 @@ void handle_message(UIState *s, void *which) {
     //s->scene.gps_planner_active = datad.gpsPlannerActive;
     s->scene.monitoring_active = datad.driverMonitoringOn;
     s->scene.output_scale = pdata.output + rdata.output + qdata.output;
-    }
+    
     s->scene.frontview = datad.rearViewCam;
 
     s->scene.decel_for_model = datad.decelForModel; 
