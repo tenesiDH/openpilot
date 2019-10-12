@@ -48,11 +48,11 @@ param = ["Kp", "Ki", "Kf", "steerRatio", "steerRateCost", "deadzone", \
 
 j = 0
 while True:
-  print ""
-  print print_letters(param[j][0:9])
-  print ""
-  print print_letters(kegman.conf[param[j]])
-  print ""
+  print ("")
+  print (print_letters(param[j][0:9]))
+  print ("")
+  print (print_letters(kegman.conf[param[j]]))
+  print ("")
   print ("1,3,5,7,r to incr 0.1,0.05,0.01,0.001,0.00001")
   print ("a,d,g,j,v to decr 0.1,0.05,0.01,0.001,0.00001")
   print ("0 / L to make the value 0 / 1")
