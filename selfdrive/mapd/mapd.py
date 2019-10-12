@@ -34,7 +34,7 @@ last_query_result = None
 last_query_pos = None
 cache_valid = False
 
-def connected_to_internet(url='https://z.overpass-api.de/api/interpreter', timeout=5):
+def connected_to_internet(url='https://lz4.overpass-api.de/api/interpreter', timeout=5):
     try:
         requests.get(url, timeout=timeout)
         return True
@@ -84,7 +84,7 @@ def query_thread():
         try:
           try:
             new_result = api.query(q)
-          except overpy.exception.OverpassGatewayTimeout:
+          except:
             api2 = overpy.Overpass(url=OVERPASS_API_URL2)
             print("Using backup Server")
             new_result = api2.query(q)
