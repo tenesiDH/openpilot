@@ -17,7 +17,7 @@ def pub_sock(port, addr="*"):
     sock.bind("tcp://%s:%d" % (addr, port))
   except zmq.error.ZMQError:
     sock.unbind("tcp://%s:%d" % (addr, port))
-    print "sock was unbound"
+    print("sock was unbound")
     sock.bind("tcp://%s:%d" % (addr, port))
   return sock
 
