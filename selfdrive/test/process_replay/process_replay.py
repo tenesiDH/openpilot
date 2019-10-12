@@ -1,7 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import os
 import threading
 import importlib
+import shutil
 import zmq
 
 if "CI" in os.environ:
@@ -111,7 +112,7 @@ class FakePubMaster(messaging.PubMaster):
 
   def send(self, s, dat):
     self.last_updated = s
-    if isinstance(dat, str):
+    if isinstance(dat, bytes):
       self.data[s] = log.Event.from_bytes(dat)
     else:
       self.data[s] = dat.as_reader()
@@ -127,11 +128,11 @@ class FakePubMaster(messaging.PubMaster):
     return dat
 
 def fingerprint(msgs, fsm, can_sock):
-  print "start fingerprinting"
+  print("start fingerprinting")
   fsm.wait_on_getitem = True
 
   # populate fake socket with data for fingerprinting
-  canmsgs = filter(lambda msg: msg.which() == "can", msgs)
+  canmsgs = [msg for msg in msgs if msg.which() == "can"]
   can_sock.recv_called.wait()
   can_sock.recv_called.clear()
   can_sock.data = [msg.as_builder().to_bytes() for msg in canmsgs[:300]]
@@ -147,13 +148,13 @@ def fingerprint(msgs, fsm, can_sock):
   can_sock.data = []
 
   fsm.update_ready.set()
-  print "finished fingerprinting"
+  print("finished fingerprinting")
 
 def get_car_params(msgs, fsm, can_sock):
   can = FakeSocket(wait=False)
   sendcan = FakeSocket(wait=False)
 
-  canmsgs = filter(lambda msg: msg.which() == 'can', msgs)
+  canmsgs = [msg for msg in msgs if msg.which() == 'can']
   for m in canmsgs[:300]:
     can.send(m.as_builder().to_bytes())
   _, CP = get_car(can, sendcan)
@@ -225,15 +226,17 @@ def replay_process(cfg, lr):
   fsm = FakeSubMaster(pub_sockets)
   fpm = FakePubMaster(sub_sockets)
   args = (fsm, fpm)
-  if 'can' in cfg.pub_sub.keys():
+  if 'can' in list(cfg.pub_sub.keys()):
     can_sock = FakeSocket()
     args = (fsm, fpm, can_sock)
 
   all_msgs = sorted(lr, key=lambda msg: msg.logMonoTime)
-  pub_msgs = filter(lambda msg: msg.which() in cfg.pub_sub.keys(), all_msgs)
+  pub_msgs = [msg for msg in all_msgs if msg.which() in list(cfg.pub_sub.keys())]
 
+  shutil.rmtree('/data/params', ignore_errors=True)
   params = Params()
   params.manager_start()
+  params.put("OpenpilotEnabledToggle", "1")
   params.put("Passive", "0")
 
   os.environ['NO_RADAR_SLEEP'] = "1"
@@ -244,14 +247,14 @@ def replay_process(cfg, lr):
   thread.start()
 
   if cfg.init_callback is not None:
-    if 'can' not in cfg.pub_sub.keys():
+    if 'can' not in list(cfg.pub_sub.keys()):
       can_sock = None
     cfg.init_callback(all_msgs, fsm, can_sock)
 
   CP = car.CarParams.from_bytes(params.get("CarParams", block=True))
 
   # wait for started process to be ready
-  if 'can' in cfg.pub_sub.keys():
+  if 'can' in list(cfg.pub_sub.keys()):
     can_sock.wait_for_recv()
   else:
     fsm.wait_for_update()

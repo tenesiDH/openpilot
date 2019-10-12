@@ -1,10 +1,10 @@
 from collections import defaultdict
-from selfdrive.test.plant.maneuverplots import ManeuverPlot
-from selfdrive.test.plant.plant import Plant
+from selfdrive.test.longitudinal_maneuvers.maneuverplots import ManeuverPlot
+from selfdrive.test.longitudinal_maneuvers.plant import Plant
 import numpy as np
 
 
-class Maneuver(object):
+class Maneuver():
   def __init__(self, title, duration, **kwargs):
     # Was tempted to make a builder class
     self.distance_lead = kwargs.get("initial_distance_lead", 200.0)
@@ -79,7 +79,7 @@ class Maneuver(object):
     for check in self.checks:
       c = check(logs)
       if not c:
-        print check.__name__ + " not valid!"
+        print(check.__name__ + " not valid!")
       valid = valid and c
 
     print("maneuver end", valid)

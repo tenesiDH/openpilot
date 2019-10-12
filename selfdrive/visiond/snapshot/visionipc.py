@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import subprocess
 from cffi import FFI
@@ -8,7 +8,6 @@ import numpy as np
 gf_dir = os.path.dirname(os.path.abspath(__file__))
 
 subprocess.check_call(["make"], cwd=gf_dir)
-
 
 ffi = FFI()
 ffi.cdef("""
@@ -69,33 +68,19 @@ void visionstream_destroy(VisionStream *s);
 """
 )
 
-clib = ffi.dlopen(os.path.join(gf_dir, "libvisionipc.so"))
+class VisionIPC():
+  def __init__(self, front=False):
+    self.clib = ffi.dlopen(os.path.join(gf_dir, "libvisionipc.so"))
 
+    self.s = ffi.new("VisionStream*")
+    self.buf_info = ffi.new("VisionStreamBufs*")
 
-def getframes(front=False):
-  s = ffi.new("VisionStream*")
-  buf_info = ffi.new("VisionStreamBufs*")
+    err = self.clib.visionstream_init(self.s, self.clib.VISION_STREAM_RGB_FRONT if front else self.clib.VISION_STREAM_RGB_BACK, True, self.buf_info)
+    assert err == 0
 
-  if front:
-   stream_type = clib.VISION_STREAM_RGB_FRONT
-  else:
-   stream_type = clib.VISION_STREAM_RGB_BACK
-
-  err = clib.visionstream_init(s, stream_type, True, buf_info)
-  assert err == 0
-
-  w = buf_info.width
-  h = buf_info.height
-  assert buf_info.stride == w*3
-  assert buf_info.buf_len == w*h*3
-
-  while True:
-    buf = clib.visionstream_get(s, ffi.NULL)
-
+  def get(self):
+    buf = self.clib.visionstream_get(self.s, ffi.NULL)
     pbuf = ffi.buffer(buf.addr, buf.len)
-    yield np.frombuffer(pbuf, dtype=np.uint8).reshape((h, w, 3))
+    ret = np.frombuffer(pbuf, dtype=np.uint8).reshape((-1, self.buf_info.stride//3, 3))
+    return ret[:self.buf_info.height, :self.buf_info.width, [2,1,0]]
 
-
-if __name__ == "__main__":
-  for buf in getframes():
-    print("{0} {1}".format(buf.shape, buf[101, 101]))

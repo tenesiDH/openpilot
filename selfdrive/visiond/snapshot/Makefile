@@ -18,9 +18,15 @@ visionipc.o: ../../common/visionipc.c ../../common/visionipc.h
           -I../.. -I../../.. \
           -c -o '$@' ../../common/visionipc.c
 
-libvisionipc.so: visionipc.o
-	$(CC) -shared -fPIC -o '$@' visionipc.o
+ipc.o: ../../common/ipc.c ../../common/ipc.h 
+	@echo "[ CC ] $@"
+	$(CC) $(CFLAGS) -MMD \
+          -I../.. -I../../.. \
+          -c -o '$@' ../../common/ipc.c
+
+libvisionipc.so: visionipc.o ipc.o
+	$(CC) -shared -fPIC -o '$@' visionipc.o ipc.o
 
 .PHONY: clean
 clean:
-	rm visionipc.o libvisionipc.so
+	rm visionipc.o ipc.o libvisionipc.so

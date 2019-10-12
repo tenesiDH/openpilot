@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import os
 import sys
 
 from selfdrive.test.openpilotci_upload import upload_file
-from selfdrive.test.tests.process_replay.compare_logs import save_log
-from selfdrive.test.tests.process_replay.process_replay import replay_process, CONFIGS
-from selfdrive.test.tests.process_replay.test_processes import segments, get_segment
+from selfdrive.test.process_replay.compare_logs import save_log
+from selfdrive.test.process_replay.process_replay import replay_process, CONFIGS
+from selfdrive.test.process_replay.test_processes import segments, get_segment
 from selfdrive.version import get_git_commit
 from tools.lib.logreader import LogReader
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     rlog_fn = get_segment(segment)
 
     if rlog_fn is None:
-      print "failed to get segment %s" % segment
+      print("failed to get segment %s" % segment)
       sys.exit(1)
 
     lr = LogReader(rlog_fn)
@@ -39,4 +39,4 @@ if __name__ == "__main__":
         os.remove(log_fn)
     os.remove(rlog_fn)
 
-  print "done"
+  print("done")

@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import os
 import requests
 import sys
 import tempfile
 
-from selfdrive.test.tests.process_replay.compare_logs import compare_logs
-from selfdrive.test.tests.process_replay.process_replay import replay_process, CONFIGS
+from selfdrive.test.process_replay.compare_logs import compare_logs
+from selfdrive.test.process_replay.process_replay import replay_process, CONFIGS
 from tools.lib.logreader import LogReader
 
 segments = [
@@ -36,22 +36,22 @@ if __name__ == "__main__":
   ref_commit_fn = os.path.join(process_replay_dir, "ref_commit")
 
   if not os.path.isfile(ref_commit_fn):
-    print "couldn't find reference commit"
+    print("couldn't find reference commit")
     sys.exit(1)
 
   ref_commit = open(ref_commit_fn).read().strip()
-  print "***** testing against commit %s *****" % ref_commit
+  print("***** testing against commit %s *****" % ref_commit)
 
   results = {}
   for segment in segments:
-    print "***** testing route segment %s *****\n" % segment
+    print("***** testing route segment %s *****\n" % segment)
 
     results[segment] = {}
 
     rlog_fn = get_segment(segment)
 
     if rlog_fn is None:
-      print "failed to get segment %s" % segment
+      print("failed to get segment %s" % segment)
       sys.exit(1)
 
     lr = LogReader(rlog_fn)
@@ -84,16 +84,16 @@ if __name__ == "__main__":
   with open(os.path.join(process_replay_dir, "diff.txt"), "w") as f:
     f.write("***** tested against commit %s *****\n" % ref_commit)
 
-    for segment, result in results.items():
+    for segment, result in list(results.items()):
       f.write("***** differences for segment %s *****\n" % segment)
-      print "***** results for segment %s *****" % segment
+      print("***** results for segment %s *****" % segment)
 
-      for proc, diff in result.items():
+      for proc, diff in list(result.items()):
         f.write("*** process: %s ***\n" % proc)
-        print "\t%s" % proc
+        print("\t%s" % proc)
 
         if isinstance(diff, str):
-          print "\t\t%s" % diff
+          print("\t\t%s" % diff)
           failed = True
         elif len(diff):
           cnt = {}
@@ -104,15 +104,15 @@ if __name__ == "__main__":
             cnt[k] = 1 if k not in cnt else cnt[k] + 1
 
           for k, v in sorted(cnt.items()):
-            print "\t\t%s: %s" % (k, v)
+            print("\t\t%s: %s" % (k, v))
           failed = True
 
     if failed:
-      print "TEST FAILED"
+      print("TEST FAILED")
     else:
-      print "TEST SUCCEEDED"
+      print("TEST SUCCEEDED")
 
-  print "\n\nTo update the reference logs for this test run:"
-  print "./update_refs.py"
+  print("\n\nTo update the reference logs for this test run:")
+  print("./update_refs.py")
 
   sys.exit(int(False))

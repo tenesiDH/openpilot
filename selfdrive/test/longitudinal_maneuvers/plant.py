@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import binascii
 import os
 import struct
 import time
@@ -24,7 +25,7 @@ from common.dbc import dbc
 honda = dbc(os.path.join(DBC_PATH, "honda_civic_touring_2016_can_generated.dbc"))
 
 # Trick: set 0x201 (interceptor) in fingerprints for gas is controlled like if there was an interceptor
-CP = CarInterface.get_params(CAR.CIVIC, {0x201})
+CP = CarInterface.get_params(CAR.CIVIC, {0: {0x201: 6}, 1: {}, 2: {}, 3: {}})
 
 
 def car_plant(pos, speed, grade, gas, brake):
@@ -81,12 +82,15 @@ def get_car_can_parser():
   return CANParser(dbc_f, signals, checks)
 
 def to_3_byte(x):
-  return struct.pack("!H", int(x)).encode("hex")[1:]
+  # Convert into 12 bit value
+  s = struct.pack("!H", int(x))
+  return binascii.hexlify(s)[1:]
 
 def to_3s_byte(x):
-  return struct.pack("!h", int(x)).encode("hex")[1:]
+  s = struct.pack("!h", int(x))
+  return binascii.hexlify(s)[1:]
 
-class Plant(object):
+class Plant():
   messaging_initialized = False
 
   def __init__(self, lead_relevancy=False, rate=100, speed=0.0, distance_lead=2.0):
@@ -105,6 +109,7 @@ class Plant(object):
       Plant.plan = messaging.sub_sock(service_list['plan'].port)
       Plant.messaging_initialized = True
 
+    self.frame = 0
     self.angle_steer = 0.
     self.gear_choice = 0
     self.speed, self.speed_prev = 0., 0.
@@ -221,7 +226,7 @@ class Plant(object):
     lateral_pos_rel = 0.
 
     # print at 5hz
-    if (self.rk.frame % (self.rate//5)) == 0:
+    if (self.frame % (self.rate//5)) == 0:
       print("%6.2f m  %6.2f m/s  %6.2f m/s2   %.2f ang   gas: %.2f  brake: %.2f  steer: %5.2f     lead_rel: %6.2f m  %6.2f m/s" % (distance, speed, acceleration, self.angle_steer, gas, brake, steer_torque, d_rel, v_rel))
 
     # ******** publish the car ********
@@ -301,10 +306,10 @@ class Plant(object):
         msg_struct[sgs[i]] = getattr(vls, sgs[i])
 
       if "COUNTER" in honda.get_signals(msg):
-        msg_struct["COUNTER"] = self.rk.frame % 4
+        msg_struct["COUNTER"] = self.frame % 4
 
       if "COUNTER_PEDAL" in honda.get_signals(msg):
-        msg_struct["COUNTER_PEDAL"] = self.rk.frame % 0xf
+        msg_struct["COUNTER_PEDAL"] = self.frame % 0xf
 
       msg = honda.lookup_msg_id(msg)
       msg_data = honda.encode(msg, msg_struct)
@@ -313,24 +318,26 @@ class Plant(object):
         msg_data = fix(msg_data, msg)
 
       if "CHECKSUM_PEDAL" in honda.get_signals(msg):
-        msg_struct["CHECKSUM_PEDAL"] = crc8_pedal([ord(i) for i in msg_data][:-1])
+        msg_struct["CHECKSUM_PEDAL"] = crc8_pedal(msg_data[:-1])
         msg_data = honda.encode(msg, msg_struct)
 
       can_msgs.append([msg, 0, msg_data, 0])
 
     # add the radar message
     # TODO: use the DBC
-    if self.rk.frame % 5 == 0:
-      radar_state_msg = '\x79\x00\x00\x00\x00\x00\x00\x00'
+    if self.frame % 5 == 0:
+      radar_state_msg = b'\x79\x00\x00\x00\x00\x00\x00\x00'
       radar_msg = to_3_byte(d_rel*16.0) + \
                   to_3_byte(int(lateral_pos_rel*16.0)&0x3ff) + \
                   to_3s_byte(int(v_rel*32.0)) + \
-                  "0f00000"
+                  b"0f00000"
+
+      radar_msg = binascii.unhexlify(radar_msg)
       can_msgs.append([0x400, 0, radar_state_msg, 1])
-      can_msgs.append([0x445, 0, radar_msg.decode("hex"), 1])
+      can_msgs.append([0x445, 0, radar_msg, 1])
 
     # add camera msg so controlsd thinks it's alive
-    msg_struct["COUNTER"] = self.rk.frame % 4
+    msg_struct["COUNTER"] = self.frame % 4
     msg = honda.lookup_msg_id(0xe4)
     msg_data = honda.encode(msg, msg_struct)
     msg_data = fix(msg_data, 0xe4)
@@ -366,7 +373,7 @@ class Plant(object):
 
     # ******** publish a fake model going straight and fake calibration ********
     # note that this is worst case for MPC, since model will delay long mpc by one time step
-    if publish_model and self.rk.frame % 5 == 0:
+    if publish_model and self.frame % 5 == 0:
       md = messaging.new_message()
       cal = messaging.new_message()
       md.init('model')
@@ -406,18 +413,23 @@ class Plant(object):
     Plant.logcan.send(can_list_to_can_capnp(can_msgs))
 
     # ******** update prevs ********
-    self.speed = speed
-    self.distance = distance
-    self.distance_lead = distance_lead
-
-    self.speed_prev = speed
-    self.distance_prev = distance
-    self.distance_lead_prev = distance_lead
+    self.frame += 1
 
     if self.response_seen:
       self.rk.monitor_time()
+
+      self.speed = speed
+      self.distance = distance
+      self.distance_lead = distance_lead
+
+      self.speed_prev = speed
+      self.distance_prev = distance
+      self.distance_lead_prev = distance_lead
+
     else:
+      # Don't advance time when controlsd is not yet ready
       self.rk.keep_time()
+      self.rk._frame = 0
 
     return {
       "distance": distance,

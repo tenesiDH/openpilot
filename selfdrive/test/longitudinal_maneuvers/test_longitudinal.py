@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 os.environ['OLD_CAN'] = '1'
 os.environ['NOCRASH'] = '1'
@@ -11,7 +11,7 @@ matplotlib.use('svg')
 
 from selfdrive.config import Conversions as CV
 from selfdrive.car.honda.values import CruiseButtons as CB
-from selfdrive.test.plant.maneuver import Maneuver
+from selfdrive.test.longitudinal_maneuvers.maneuver import Maneuver
 import selfdrive.manager as manager
 from common.params import Params
 
@@ -332,6 +332,7 @@ class LongitudinalControl(unittest.TestCase):
     shutil.rmtree('/data/params', ignore_errors=True)
     params = Params()
     params.put("Passive", "1" if os.getenv("PASSIVE") else "0")
+    params.put("OpenpilotEnabledToggle", "1")
 
     manager.gctx = {}
     manager.prepare_managed_process('radard')
