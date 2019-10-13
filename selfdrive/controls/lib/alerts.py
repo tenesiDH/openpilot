@@ -58,6 +58,13 @@ class Alert():
 
 
 ALERTS = [
+  Alert(
+      "turningIndicatorOn",
+      "TAKE CONTROL",
+      "Steer Unavailable while Turning",
+      AlertStatus.userPrompt, AlertSize.mid,
+      Priority.HIGH, VisualAlert.steerRequired, AudibleAlert.chimeWarning1, 0., 0., 1.),
+
   # Miscellaneous alerts
   Alert(
       "enable",
