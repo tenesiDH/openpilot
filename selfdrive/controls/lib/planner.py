@@ -60,12 +60,19 @@ _MODEL_V_K = [[0.07068858], [0.04826294]]
 # 75th percentile
 SPEED_PERCENTILE_IDX = 7
 
-
-def calc_cruise_accel_limits(v_ego):
+def calc_cruise_accel_limits(v_ego, following, gasbuttonstatus):
   a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V)
-  a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
-  return np.vstack([a_cruise_min, a_cruise_max])
 
+  if following:
+    a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_FOLLOWING)
+  else:
+    if gasbuttonstatus == 1:
+      a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_SPORT)
+    elif gasbuttonstatus == 2:
+      a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_ECO)
+    else:
+      a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
+  return np.vstack([a_cruise_min, a_cruise_max])
 
 def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
   """
@@ -141,11 +148,20 @@ class Planner():
     for socket, _ in self.poller.poll(0):
       if socket is self.arne182Status:
         self.arne182 = arne182.Arne182Status.from_bytes(socket.recv())
-    
+    if self.arne182 is None:
+      gasbuttonstatus = 0
+    else:
+      gasbuttonstatus = self.arne182.gasbuttonstatus
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
-    speed_ahead_distance = 250
+    
+    if gasbuttonstatus == 1:
+      speed_ahead_distance = 150
+    elif gasbuttonstatus == 2:
+      speed_ahead_distance = 350
+    else:
+      speed_ahead_distance = 250
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -222,7 +238,7 @@ class Planner():
     
     # Calculate speed for normal cruise control
     if enabled:
-      accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego)]
+      accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following, gasbuttonstatus)]
       jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]  # TODO: make a separate lookup for jerk tuning
       accel_limits_turns = limit_accel_in_turns(v_ego, sm['carState'].steeringAngle, accel_limits, self.CP)
 
