@@ -1,1 +1,1 @@
-const uint8_t gitversion[] = "v2.5.3-EON-unknown-DEBUG";
+const uint8_t gitversion[] = "v1.4.7-EON-unknown-DEBUG";
