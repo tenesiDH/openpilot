@@ -292,9 +292,6 @@ class CarState():
       else:
         self.gear_shifter = GearShifter.unknown
 
-
-
-
     self.lkas_button_on = 7 > cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"] != 0
 
     # save the entire LKAS11 and CLU11
