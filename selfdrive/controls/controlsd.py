@@ -4,7 +4,7 @@ import gc
 import json
 import capnp
 import zmq
-from cereal import car, log
+from cereal import car, log, arne182
 from common.numpy_fast import clip
 from common.realtime import sec_since_boot, set_realtime_priority, Ratekeeper, DT_CTRL
 from common.profiler import Profiler
@@ -220,7 +220,7 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
 
 
 def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cruise_kph, v_cruise_kph_last,
-                  AM, rk, driver_status, LaC, LoC, read_only, is_metric, cal_perc, sm):
+                  AM, rk, driver_status, LaC, LoC, read_only, is_metric, cal_perc, sm, poller, arne182Status):
   """Given the state, this function returns an actuators packet"""
 
   actuators = car.CarControl.Actuators.new_message()
@@ -273,8 +273,16 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
     leadOne = sm['radarState'].leadOne
   except KeyError:
     leadOne = None
+  gasstatus = None
+  for socket, _ in poller.poll(0):
+    if socket is arne182Status:
+      gasstatus = arne182.Arne182Status.from_bytes(socket.recv())
+  if gasstatus is None:
+    gasbuttonstatus = 0
+  else:
+    gasbuttonstatus = gasstatus.gasbuttonstatus
   actuators.gas, actuators.brake = LoC.update(active, CS.vEgo, CS.brakePressed, CS.standstill, CS.cruiseState.standstill,
-                                              v_cruise_kph, v_acc_sol, plan.vTargetFuture, a_acc_sol, CP, gasinterceptor, 0, plan.decelForTurn, plan.longitudinalPlanSource,
+                                              v_cruise_kph, v_acc_sol, plan.vTargetFuture, a_acc_sol, CP, gasinterceptor, gasbuttonstatus, plan.decelForTurn, plan.longitudinalPlanSource,
                                               leadOne, CS.gasPressed)
   # Steering PID loop and lateral MPC
   actuators.steer, actuators.steerAngle, lac_log = LaC.update(active, CS.vEgo, CS.steeringAngle, CS.steeringRate, CS.steeringTorqueEps, CS.steeringPressed, CP, path_plan)
@@ -452,7 +460,8 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
                               'gpsLocation', 'radarState'], ignore_alive=['gpsLocation'])
 
   can_poller = zmq.Poller()
-
+  poller = zmq.Poller()
+  arne182Status = messaging.sub_sock(service_list['arne182Status'].port, conflate=True, poller)
   if can_sock is None:
     can_timeout = None if os.environ.get('NO_CAN_TIMEOUT', False) else 100
     can_sock = messaging.sub_sock(service_list['can'].port, timeout=can_timeout)
@@ -570,7 +579,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     # Compute actuators (runs PID loops and lateral MPC)
     actuators, v_cruise_kph, driver_status, v_acc, a_acc, lac_log = \
       state_control(sm.frame, sm.rcv_frame, sm['plan'], sm['pathPlan'], CS, CP, state, events, v_cruise_kph, v_cruise_kph_last, AM, rk,
-                    driver_status, LaC, LoC, read_only, is_metric, cal_perc, sm)
+                    driver_status, LaC, LoC, read_only, is_metric, cal_perc, sm, poller, arne182Status)
 
     prof.checkpoint("State Control")
 
