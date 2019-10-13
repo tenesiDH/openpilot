@@ -461,7 +461,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
 
   can_poller = zmq.Poller()
   poller = zmq.Poller()
-  arne182Status = messaging.sub_sock(service_list['arne182Status'].port, conflate=True, poller)
+  arne182Status = messaging.sub_sock(poller, service_list['arne182Status'].port, conflate=True)
   if can_sock is None:
     can_timeout = None if os.environ.get('NO_CAN_TIMEOUT', False) else 100
     can_sock = messaging.sub_sock(service_list['can'].port, timeout=can_timeout)
