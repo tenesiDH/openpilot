@@ -69,6 +69,7 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if ((addr == 832) && (bus == hyundai_camera_bus) && (hyundai_camera_bus != 0)) {
     hyundai_giraffe_switch_2 = 1;
   }
+  controls_allowed = 1;
 }
 
 static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
@@ -152,13 +153,15 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
 
   int bus_fwd = -1;
+  int addr = GET_ADDR(to_fwd);
   // forward cam to ccan and viceversa, except lkas cmd
   if (!hyundai_camera_detected) {
     if (bus_num == 0) {
-      bus_fwd = hyundai_camera_bus;
+      if ((addr != 593) || (!OP_LKAS_live)) {
+        bus_fwd = hyundai_camera_bus;
+      }
     }
     if (bus_num == hyundai_camera_bus) {
-      int addr = GET_ADDR(to_fwd);
       if (addr != 832) {
         bus_fwd = 0;
       }
