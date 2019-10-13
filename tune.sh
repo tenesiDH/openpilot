@@ -1,1 +1,1 @@
-python2.7 tune.py
+python3 tune.py

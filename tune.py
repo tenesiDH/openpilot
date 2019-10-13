@@ -48,11 +48,11 @@ param = ["Kp", "Ki", "Kf", "steerRatio", "steerRateCost", "deadzone", \
 
 j = 0
 while True:
-  print ""
-  print print_letters(param[j][0:9])
-  print ""
-  print print_letters(kegman.conf[param[j]])
-  print ""
+  print ("")
+  print (print_letters(param[j][0:9]))
+  print ("")
+  print (print_letters(kegman.conf[param[j]]))
+  print ("")
   print ("1,3,5,7,r to incr 0.1,0.05,0.01,0.001,0.00001")
   print ("a,d,g,j,v to decr 0.1,0.05,0.01,0.001,0.00001")
   print ("0 / L to make the value 0 / 1")
@@ -62,43 +62,43 @@ while True:
   char  = getch()
   write_json = False
   if (char == "v"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) - 0.00001)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) - 0.00001),5))
     write_json = True
 
   if (char == "r"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) + 0.00001)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) + 0.00001),5))
     write_json = True
     
   if (char == "7"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) + 0.001)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) + 0.001),5))
     write_json = True
 
   if (char == "5"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) + 0.01)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) + 0.01),5))
     write_json = True
 
   elif (char == "3"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) + 0.05)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) + 0.05),5))
     write_json = True
 
   elif (char == "1"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) + 0.1)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) + 0.1),5))
     write_json = True
 
   elif (char == "j"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) - 0.001)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) - 0.001),5))
     write_json = True
 
   elif (char == "g"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) - 0.01)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) - 0.01),5))
     write_json = True
 
   elif (char == "d"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) - 0.05)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) - 0.05),5))
     write_json = True
 
   elif (char == "a"):
-    kegman.conf[param[j]] = str(float(kegman.conf[param[j]]) - 0.1)
+    kegman.conf[param[j]] = str(round((float(kegman.conf[param[j]]) - 0.1),5))
     write_json = True
 
   elif (char == "0"):
