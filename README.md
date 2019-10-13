@@ -11,6 +11,7 @@ Here's how to flash back to v9 NEOS if you want to downgrade (it's not that bad)
 
 <b>NOTICE:</b>  Due to feedback I have turned on OTA updates.  You will receive updates automatically (after rebooting 2X) on your Eon so you don't have to reclone or git pull any longer to receive new features *MADE BETWEEN COMMA RELEASES*.  The reason why I separate the branches by release is because some releases can sometimes cause issues.  Features that I or others add, will continue to be updated when you are on the most current release.  If you DO NOT want OTA updates then create a file called "/data/no_ota_updates" and it will not perform OTA updates as long as that file exists.  
 
+<b>GM Users:</b> Execute the script, `selfdrive/car/lock_safety_model.py gm` from the root directory of this Openpilot installation. This sets the Panda safety mode to `gm` (from the default of `noOutput`), allowing OP to control the vehicle. Otherwise a "Steering Temporarily Unavailable" error is thrown when attempting to enagage OP.
 
 I will attempt to detail the changes in each of the branches here:
 
@@ -43,9 +44,9 @@ List of changes and tweaks (latest changes at the top):
   
 - <b> New! Added kF feedforward param to live tuner.</b>
 
-- <b> New! Enable / Disable Model based Slowdowns on turns:  On tight turns, the model will slow down the car so that you can make the turn.  Some like this, some people don't.  Set slowOnCurve = "1" to enable slowdowns on curves, or "0" (default) to disable.
-  
-- <b> New! Live long tuning for city speeds < 19.44 m/s </b>:</b> Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.  
+- <b> New! Enable / Disable Model based Slowdowns on turns: </b>  On tight turns, the model will slow down the car so that you can make the turn.  Some like this, some people don't.  Set slowOnCurve = "1" to enable slowdowns on curves, or "0" (default) to disable.
+
+- <b> New! Live long tuning for city speeds < 19.44 m/s (43.5 mph, 70 km/h): </b> Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.
   
 <b>Be careful and ready to take over at any time when doing this!!!</b>  The "distance" in s is the target distance the car will try to maintain.  The default distancces are 0.9s, 1.3s, 1.8s for 1,2 and 3 bar intervals.  I manipulate this value to pass to the MPC to scale the behavior which leads to harder braking or sooner braking or softer braking.  Essentially when you are approaching a car, the distance changes depending on your approach speed.  When the lead car pulls away, the distance returns to whatever your bar setting is
   
@@ -179,5 +180,3 @@ Enjoy everyone.
 <b>NOTE:</b> If you have upgraded at any time to v0.5.10, v0.6.x and you want to go back to a branch with v0.5.9 or v0.5.8, then you have to SSH into the Eon and edit the file /data/params/d/ControlsParams and rename "angle_model_bias" to "angle_offset" or your car will have Dash Errors and you'll be scratching your head for hours! 
 
 <b>Pedal Users:</b> Also note that you need to flash your Pedal to go to v0.5.10.  If you want to go back to 0.5.9 or 0.5.8 you need to flash your pedal back to 0.5.9.  Instructions are here:  https://medium.com/@jfrux/comma-pedal-updating-the-firmware-over-can-fa438a3cf910.  Also. After you flash your Pedal..  All hell will break loose on your dash.  Traction control error, Power Steering Error, Trailer Error, OMFG the sky is falling error etc.  DON'T PANIC.  Just drive around a bit and it will disappear after about 2-3 restarts of the car.  Don't rush it I believe it's time dependent as well.  Just drive as normal.  They'll go away.
-
-
