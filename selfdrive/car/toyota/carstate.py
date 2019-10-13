@@ -1,9 +1,10 @@
 import numpy as np
 from selfdrive.services import service_list
-from cereal import car
 from cereal import arne182
 import selfdrive.messaging as messaging
 from common.numpy_fast import interp
+from cereal import car
+from common.numpy_fast import mean
 from common.kalman.simple_kalman import KF1D
 from selfdrive.can.can_define import CANDefine
 from selfdrive.can.parser import CANParser
@@ -20,7 +21,7 @@ def parse_gear_shifter(gear, vals):
   try:
     return val_to_capnp[vals[gear]]
   except KeyError:
-    return "unknown"
+    return GearShifter.unknown
 
 
 def get_can_parser(CP):
@@ -110,7 +111,7 @@ def get_cam_can_parser(CP):
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 2)
 
 
-class CarState(object):
+class CarState():
   def __init__(self, CP):
 
     self.CP = CP
@@ -166,7 +167,7 @@ class CarState(object):
     self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.KPH_TO_MS
     self.v_wheel_rl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RL'] * CV.KPH_TO_MS
     self.v_wheel_rr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RR'] * CV.KPH_TO_MS
-    v_wheel = float(np.mean([self.v_wheel_fl, self.v_wheel_fr, self.v_wheel_rl, self.v_wheel_rr]))
+    v_wheel = mean([self.v_wheel_fl, self.v_wheel_fr, self.v_wheel_rl, self.v_wheel_rr])
 
     # Kalman filter
     if abs(v_wheel - self.v_ego) > 2.0:  # Prevent large accelerations when car starts at non zero speed
@@ -177,9 +178,7 @@ class CarState(object):
     self.v_ego = float(v_ego_x[0])
     self.a_ego = float(v_ego_x[1])
     self.standstill = not v_wheel > 0.001
-    if self.CP.carFingerprint == CAR.OLD_CAR:
-      self.angle_steers = -(cp.vl["STEER_ANGLE_SENSOR"]['STEER_ANGLE'] + cp.vl["STEER_ANGLE_SENSOR"]['STEER_FRACTION']/3)
-    elif self.CP.carFingerprint in TSS2_CAR:
+    if self.CP.carFingerprint in TSS2_CAR:
       self.angle_steers = cp.vl["STEER_TORQUE_SENSOR"]['STEER_ANGLE']
     elif self.CP.carFingerprint in NO_DSU_CAR:
       # cp.vl["STEER_TORQUE_SENSOR"]['STEER_ANGLE'] is zeroed to where the steering angle is at start.
@@ -224,7 +223,7 @@ class CarState(object):
         self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
       else:
         self.acc_slow_on = False
-    if self.acc_slow_on and self.CP.carFingerprint != CAR.OLD_CAR:
+    if self.acc_slow_on:
       self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
     if not self.left_blinker_on and not self.right_blinker_on:
       self.Angles[self.Angle_counter] = abs(self.angle_steers)

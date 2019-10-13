@@ -1,20 +1,14 @@
 import os
 import zmq
-import json
-import threading
 from cereal import car
 from common.params import Params
-from common.vin import get_vin, VIN_UNKNOWN
 from common.basedir import BASEDIR
-from common.fingerprints import eliminate_incompatible_cars, all_known_cars
+from selfdrive.car.fingerprints import eliminate_incompatible_cars, all_known_cars
+from selfdrive.car.vin import get_vin, VIN_UNKNOWN
 from selfdrive.swaglog import cloudlog
 import selfdrive.messaging as messaging
-import selfdrive.crash as crash
-from selfdrive.op_params import opParams
-from common.travis_checker import travis
+from selfdrive.car import gen_empty_fingerprint
 
-op_params = opParams()
-use_car_caching = op_params.get('useCarCaching', True)
 
 def get_one_can(logcan):
   while True:
@@ -74,25 +68,15 @@ def only_toyota_left(candidate_cars):
 
 # BOUNTY: every added fingerprint in selfdrive/car/*/values.py is a $100 coupon code on shop.comma.ai
 # **** for use live only ****
-def fingerprint(logcan, sendcan, is_panda_black):
-  if os.getenv("SIMULATOR2") is not None:
-    return ("simulator2", None, "")
-  elif os.getenv("SIMULATOR") is not None:
-    return ("simulator", None, "")
-
+def fingerprint(logcan, sendcan, has_relay):
   params = Params()
   car_params = params.get("CarParams")
-
-  if not travis:
-    cached_fingerprint = params.get('CachedFingerprint')
-  else:
-    cached_fingerprint = None
 
   if car_params is not None:
     # use already stored VIN: a new VIN query cannot be done, since panda isn't in ELM327 mode
     car_params = car.CarParams.from_bytes(car_params)
     vin = VIN_UNKNOWN if car_params.carVin == "" else car_params.carVin
-  elif is_panda_black:
+  elif has_relay:
     # Vin query only reliably works thorugh OBDII
     vin = get_vin(logcan, sendcan, 1)
   else:
@@ -101,18 +85,12 @@ def fingerprint(logcan, sendcan, is_panda_black):
   cloudlog.warning("VIN %s", vin)
   Params().put("CarVin", vin)
 
-  finger = {i: {} for i in range(0, 4)}  # collect on all buses
+  finger = gen_empty_fingerprint()
   candidate_cars = {i: all_known_cars() for i in [0, 1]}  # attempt fingerprint on both bus 0 and 1
   frame = 0
   frame_fingerprint = 10  # 0.1s
   car_fingerprint = None
   done = False
-
-  if cached_fingerprint is not None and use_car_caching:  # if we previously identified a car and fingerprint and user hasn't disabled caching
-    cached_fingerprint = json.loads(cached_fingerprint)
-    finger[0] = {long(key): value for key, value in cached_fingerprint[1].items()}  # not sure if dict of longs is required
-    return (str(cached_fingerprint[0]), finger, vin)
-
 
   while not done:
     a = get_one_can(logcan)
@@ -123,10 +101,11 @@ def fingerprint(logcan, sendcan, is_panda_black):
       # and VIN query response.
       # Include bus 2 for toyotas to disambiguate cars using camera messages
       # (ideally should be done for all cars but we can't for Honda Bosch)
+      if can.src in range(0, 4):
+        finger[can.src][can.address] = len(can.dat)
       for b in candidate_cars:
         if (can.src == b or (only_toyota_left(candidate_cars[b]) and can.src == 2)) and \
            can.address < 0x800 and can.address not in [0x7df, 0x7e0, 0x7e8]:
-          finger[can.src][can.address] = len(can.dat)
           candidate_cars[b] = eliminate_incompatible_cars(can, candidate_cars[b])
 
     # if we only have one car choice and the time since we got our first
@@ -141,36 +120,25 @@ def fingerprint(logcan, sendcan, is_panda_black):
           car_fingerprint = candidate_cars[b][0]
 
     # bail if no cars left or we've been waiting for more than 2s
-    failed = all(len(cc) == 0 for cc in candidate_cars.itervalues()) or frame > 200
+    failed = all(len(cc) == 0 for cc in candidate_cars.values()) or frame > 200
     succeeded = car_fingerprint is not None
     done = failed or succeeded
 
     frame += 1
 
   cloudlog.warning("fingerprinted %s", car_fingerprint)
-
-  params.put("CachedFingerprint", json.dumps([car_fingerprint, {int(key): value for key, value in finger[0].items()}])) # probably can remove long to int conversion
   return car_fingerprint, finger, vin
 
-def crash_log(candidate):
-  crash.capture_warning("fingerprinted %s" % candidate)
 
-def crash_log2(fingerprints):
-  crash.capture_warning("car doesn't match any fingerprints: %s" % fingerprints)
+def get_car(logcan, sendcan, has_relay=False):
 
-def get_car(logcan, sendcan, is_panda_black=False):
-
-  candidate, fingerprints, vin = fingerprint(logcan, sendcan, is_panda_black)
+  candidate, fingerprints, vin = fingerprint(logcan, sendcan, has_relay)
 
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
-    y = threading.Thread(target=crash_log2, args=(fingerprints,))
-    y.start()
     candidate = "mock"
-  if not travis:
-    x = threading.Thread(target=crash_log, args=(candidate,))
-    x.start()
+
   CarInterface, CarController = interfaces[candidate]
-  car_params = CarInterface.get_params(candidate, fingerprints[0], vin, is_panda_black)
+  car_params = CarInterface.get_params(candidate, fingerprints, vin, has_relay)
 
   return CarInterface(car_params, CarController), car_params

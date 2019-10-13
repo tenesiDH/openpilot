@@ -13,12 +13,7 @@ def new_message():
 def pub_sock(port, addr="*"):
   context = zmq.Context.instance()
   sock = context.socket(zmq.PUB)
-  try:
-    sock.bind("tcp://%s:%d" % (addr, port))
-  except zmq.error.ZMQError:
-    sock.unbind("tcp://%s:%d" % (addr, port))
-    print "sock was unbound"
-    sock.bind("tcp://%s:%d" % (addr, port))
+  sock.bind("tcp://%s:%d" % (addr, port))
   return sock
 
 def sub_sock(port, poller=None, addr="127.0.0.1", conflate=False, timeout=None):
@@ -35,6 +30,24 @@ def sub_sock(port, poller=None, addr="127.0.0.1", conflate=False, timeout=None):
   if poller is not None:
     poller.register(sock, zmq.POLLIN)
   return sock
+
+
+def drain_sock_raw_poller(poller, sock, wait_for_one=False):
+  ret = []
+
+  if wait_for_one:
+    try:
+      ret.append(sock.recv())
+    except zmq.error.Again: # Thrown when there is timeout on the socket
+      return ret
+
+  while True:
+    if not poller.poll(0):
+      break # Socket has no more messages
+
+    ret.append(sock.recv())
+
+  return ret
 
 def drain_sock_raw(sock, wait_for_one=False):
   ret = []
@@ -89,7 +102,7 @@ def recv_one_or_none(sock):
     return None
 
 
-class SubMaster(object):
+class SubMaster():
   def __init__(self, services, ignore_alive=None, addr="127.0.0.1"):
     self.poller = zmq.Poller()
     self.frame = -1
@@ -113,8 +126,14 @@ class SubMaster(object):
       if addr is not None:
         self.sock[s] = sub_sock(service_list[s].port, poller=self.poller, addr=addr, conflate=True)
       self.freq[s] = service_list[s].frequency
+
       data = new_message()
-      data.init(s)
+      if s in ['can', 'sensorEvents', 'liveTracks', 'sendCan',
+               'ethernetData', 'cellInfo', 'wifiScan',
+               'trafficEvents', 'orbObservation', 'carEvents']:
+        data.init(s, 0)
+      else:
+        data.init(s)
       self.data[s] = getattr(data, s)
       self.logMonoTime[s] = 0
       self.valid[s] = data.valid
@@ -173,6 +192,6 @@ class PubMaster():
 
   def send(self, s, dat):
     # accept either bytes or capnp builder
-    if not isinstance(dat, str):
+    if not isinstance(dat, bytes):
       dat = dat.to_bytes()
     self.sock[s].send(dat)
