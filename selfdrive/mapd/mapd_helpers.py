@@ -184,7 +184,7 @@ class Way:
     best_score = None
     for way in ways:
       way = Way(way, query_results)
-      points = way.points_in_car_frame(lat, lon, heading)
+      points = way.points_in_car_frame(lat, lon, heading, True)
 
       on_way = way.on_way(lat, lon, heading, points)
       if not on_way:
@@ -279,7 +279,7 @@ class Way:
     lookahead_ways = 5
     way = self
     for i in range(lookahead_ways):
-      way_pts = way.points_in_car_frame(lat, lon, heading)
+      way_pts = way.points_in_car_frame(lat, lon, heading, False)
       #print way_pts
       # Check current lookahead distance
       if way_pts[0,0] < 0 and way_pts[-1,0] < 0:
@@ -473,6 +473,10 @@ class Way:
                     break
               except (KeyError, ValueError):
                 pass
+          if 'railway' in n.tags and n.tags['railway']=='level_crossing':
+            speed_ahead = 0
+            speed_ahead_dist = way_pts[count, 0]
+            loop_must_break = True
           count += 1
         if loop_must_break: break
       except (KeyError, IndexError, ValueError):
@@ -499,22 +503,22 @@ class Way:
 
   def on_way(self, lat, lon, heading, points=None):
     if points is None:
-      points = self.points_in_car_frame(lat, lon, heading)
+      points = self.points_in_car_frame(lat, lon, heading, True)
     x = points[:, 0]
     return np.min(x) < 0. and np.max(x) > 0.
 
   def closest_point(self, lat, lon, heading, points=None):
     if points is None:
-      points = self.points_in_car_frame(lat, lon, heading)
+      points = self.points_in_car_frame(lat, lon, heading, True)
     i = np.argmin(np.linalg.norm(points, axis=1))
     return points[i]
 
   def distance_to_closest_node(self, lat, lon, heading, points=None):
     if points is None:
-      points = self.points_in_car_frame(lat, lon, heading)
+      points = self.points_in_car_frame(lat, lon, heading, True)
     return np.min(np.linalg.norm(points, axis=1))
 
-  def points_in_car_frame(self, lat, lon, heading):
+  def points_in_car_frame(self, lat, lon, heading, flip):
     lc = LocalCoord.from_geodetic([lat, lon, 0.])
 
     # Build rotation matrix
@@ -528,7 +532,7 @@ class Way:
     # Rotate with heading of car
     points_carframe = np.dot(rot, points_carframe[(1, 0, 2), :]).T
     
-    if points_carframe[-1,0] < points_carframe[0,0]:
+    if points_carframe[-1,0] < points_carframe[0,0] and flip:
       points_carframe = np.flipud(points_carframe)
       
     return points_carframe
@@ -647,7 +651,7 @@ class Way:
     
     for i in range(5):
       # Get new points and append to list
-      new_pnts = way.points_in_car_frame(lat, lon, heading)
+      new_pnts = way.points_in_car_frame(lat, lon, heading, True)
 
       try:
         if way.way.tags['junction']=='roundabout' or way.way.tags['junction']=='circular':

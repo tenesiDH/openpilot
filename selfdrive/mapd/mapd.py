@@ -2,6 +2,7 @@
 
 # Add phonelibs openblas to LD_LIBRARY_PATH if import fails
 from scipy import spatial
+import selfdrive.crash as crash
 
 #DEFAULT_SPEEDS_BY_REGION_JSON_FILE = BASEDIR + "/selfdrive/mapd/default_speeds_by_region.json"
 #from selfdrive.mapd import default_speeds_generator
@@ -14,8 +15,9 @@ import threading
 import numpy as np
 import overpy
 from cereal import arne182
-#from common.params import Params
+from common.params import Params
 from collections import defaultdict
+from selfdrive.version import version, dirty
 
 from common.transformations.coordinates import geodetic2ecef
 import selfdrive.mapd.messaging as messaging
@@ -121,6 +123,7 @@ def query_thread():
 
         except Exception as e:
           print(e)
+          crash.capture_warning(e)
           query_lock.acquire()
           last_query_result = None
           query_lock.release()
@@ -343,6 +346,11 @@ def mapsd_thread():
 
 
 def main(gctx=None):
+  params = Params()
+  dongle_id = params.get("DongleId")
+  crash.bind_user(id=dongle_id)
+  crash.bind_extra(version=version, dirty=dirty, is_eon=True)
+  crash.install()
 
   main_thread = threading.Thread(target=mapsd_thread)
   main_thread.daemon = True
