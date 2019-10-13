@@ -2,7 +2,11 @@
 import math
 from datetime import datetime
 import time
+from selfdrive.services import service_list
+import selfdrive.messaging as messaging
+import zmq
 import numpy as np
+from cereal import arne182
 from common.params import Params
 from common.numpy_fast import interp
 
@@ -35,8 +39,12 @@ _A_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 
 # need fast accel at very low speed for stop and go
 # make sure these accelerations are smaller than mpc limits
-_A_CRUISE_MAX_V = [1.6, 1.6, 0.65, .4]
-_A_CRUISE_MAX_BP = [0.,  6.4, 22.5, 40.]
+
+_A_CRUISE_MAX_V = [3.5, 3.0, 1.5, .5, .3]
+_A_CRUISE_MAX_V_ECO = [1.0, 1.5, 1.0, 0.3, 0.1]
+_A_CRUISE_MAX_V_SPORT = [3.5, 3.5, 3.5, 3.5, 3.5]
+_A_CRUISE_MAX_V_FOLLOWING = [1.3, 1.6, 1.2, .7, .3]
+_A_CRUISE_MAX_BP = [0., 5., 10., 20., 55.]
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [2.3, 3.0, 3.9]
@@ -78,7 +86,9 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 class Planner():
   def __init__(self, CP):
     self.CP = CP
-
+    self.poller = zmq.Poller()
+    self.arne182Status = messaging.sub_sock(service_list['arne182Status'].port, poller=self.poller, conflate=True)
+   
     self.mpc1 = LongitudinalMpc(1)
     self.mpc2 = LongitudinalMpc(2)
 
@@ -127,6 +137,11 @@ class Planner():
     self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
 
   def update(self, sm, pm, CP, VM, PP):
+    self.arne182 = None
+    for socket, _ in self.poller.poll(0):
+      if socket is self.arne182Status:
+        self.arne182 = arne182.Arne182Status.from_bytes(socket.recv())
+    
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
