@@ -389,6 +389,7 @@ def data_send(sm, pm, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk
     "jerkFactor": float(sm['plan'].jerkFactor),
     "gpsPlannerActive": sm['plan'].gpsPlannerActive,
     "vCurvature": sm['plan'].vCurvature,
+    "decelForTurn": sm['plan'].decelForTurn,
     "decelForModel": sm['plan'].longitudinalPlanSource == log.Plan.LongitudinalPlanSource.model,
     "cumLagMs": -rk.remaining * 1000.,
     "startMonoTime": int(start_time * 1e9),
