@@ -216,7 +216,8 @@ class CarState():
     msg = arne182.Arne182Status.new_message()
     msg.gasbuttonstatus = self.gasbuttonstatus
     msg.readdistancelines = cp.vl["PCM_CRUISE_SM"]['DISTANCE_LINES']
-    self.arne182Status_sock.send(msg.to_bytes())
+    if not travis:
+      self.arne182Status_sock.send(msg.to_bytes())
     if self.CP.carFingerprint == CAR.LEXUS_IS:
       self.main_on = cp.vl["DSU_CRUISE"]['MAIN_ON']
     else:
