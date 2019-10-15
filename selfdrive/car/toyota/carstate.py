@@ -128,7 +128,6 @@ class CarState():
     self.angle_offset = 0.
     self.init_angle_offset = False
     self.v_cruise_pcmlast = 41
-    self.acc_slow_on = False
     self.pcm_acc_status = False
     self.setspeedoffset = 34.0
     self.Angles = np.zeros(250)
