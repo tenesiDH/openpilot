@@ -90,6 +90,7 @@ class Planner():
 
     self.params = Params()
     self.kegman = kegman_conf()
+    self.mpc_frame = 0
 
   def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
@@ -133,6 +134,12 @@ class Planner():
 
     enabled = (long_control_state == LongCtrlState.pid) or (long_control_state == LongCtrlState.stopping)
 
+    if self.mpc_frame % 1000 == 0:
+      self.kegman = kegman_conf()
+      self.mpc_frame = 0
+      
+    self.mpc_frame += 1
+    
     if len(sm['model'].path.poly) and int(self.kegman.conf['slowOnCurves']):
       path = list(sm['model'].path.poly)
 
