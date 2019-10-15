@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from selfdrive.services import service_list
 from cereal import arne182
 import selfdrive.messaging as messaging
@@ -126,7 +127,7 @@ class CarState():
     self.right_blinker_on = 0
     self.angle_offset = 0.
     self.init_angle_offset = False
-    
+    self.v_cruise_pcmlast = 41
     self.acc_slow_on = False
     self.pcm_acc_status = False
     self.setspeedoffset = 34.0
@@ -242,14 +243,22 @@ class CarState():
     else:
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
+
     if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
       if self.v_ego < 11.38:
-        self.acc_slow_on = True
         self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
+        self.v_cruise_pcmlast = self.v_cruise_pcm
       else:
-        self.acc_slow_on = False
-    if self.acc_slow_on:
-      self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
+        self.setspeedoffset = 0
+        self.v_cruise_pcmlast = self.v_cruise_pcm
+    if self.v_cruise_pcm < self.v_cruise_pcmlast:
+      self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
+    if self.v_cruise_pcmlast < self.v_cruise_pcm:
+      self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
+        
+    self.v_cruise_pcmlast = self.v_cruise_pcm
+    self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
+
     if not self.left_blinker_on and not self.right_blinker_on:
       self.Angles[self.Angle_counter] = abs(self.angle_steers)
       self.v_cruise_pcm = int(min(self.v_cruise_pcm, interp(np.max(self.Angles), self.Angle, self.Angle_Speed)))
