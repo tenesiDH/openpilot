@@ -70,7 +70,9 @@ class CarController():
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
-    if not enabled:
+    # Fix for Genesis hard fault when steer request sent while the speed is low 
+
+    if not enabled or self.car_fingerprint == CAR.GENESIS and CS.v_ego < 15:
       apply_steer = 0
 
     steer_req = 1 if apply_steer else 0
