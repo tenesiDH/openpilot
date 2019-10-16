@@ -5,7 +5,7 @@ from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_clu11, create_spas11, create_spas12
 from selfdrive.car.hyundai.values import CAR, Buttons
 from selfdrive.can.packer import CANPacker
-
+import numpy as np
 
 # Steer torque limits
 
@@ -88,7 +88,7 @@ class CarController():
       self.apply_steer_ang = apply_steer_ang_req
 
     # Use LKAS or SPAS
-    if CS.mdps11_stat == 7 or CS.v_wheel > 2.7:
+    if CS.mdps11_stat == 7 or CS.v_ego > 2.7:
       self.lkas = True
     elif CS.v_ego < 15:
       self.lkas = False
@@ -98,32 +98,12 @@ class CarController():
 
     # Fix for Genesis hard fault when steer request sent while the speed is low 
 
-    if not enabled or not self.lkas:
+    if not enabled or CS.v_ego < 15:
       apply_steer = 0
 
     steer_req = 1 if apply_steer else 0
 
     self.apply_steer_last = apply_steer
-
-    # SPAS limit angle extremes for safety
-    apply_steer_ang_req = np.clip(actuators.steerAngle, -1*(SteerLimitParams.STEER_ANG_MAX), SteerLimitParams.STEER_ANG_MAX)
-    # SPAS limit angle rate for safety
-    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.6:
-      if apply_steer_ang_req > self.apply_steer_ang:
-        self.apply_steer_ang += 0.5
-      else:
-        self.apply_steer_ang -= 0.5
-    else:
-      self.apply_steer_ang = apply_steer_ang_req
-
-    # Use LKAS or SPAS
-    if CS.mdps11_stat == 7 or CS.v_wheel > 2.7:
-      self.lkas = True
-    elif CS.v_wheel < 0.1:
-      self.lkas = False
-    if self.spas_present:
-      self.lkas = True
-
 
     hud_alert, lane_visible, left_lane_warning, right_lane_warning =\
             process_hud_alert(enabled, self.car_fingerprint, visual_alert,
@@ -146,7 +126,7 @@ class CarController():
                                    enabled, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
     # SPAS11 50hz
-    if (self.cnt % 2) == 0 and not self.spas_present:
+    if (frame % 2) == 0 and not self.spas_present:
       if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
         self.en_spas == 7
         self.en_cnt = 0
@@ -170,7 +150,7 @@ class CarController():
       can_sends.append(create_spas11(self.packer, self.car_fingerprint, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang))
 
     # SPAS12 20Hz
-    if (self.cnt % 5) == 0 and not self.spas_present:
+    if (frame % 5) == 0 and not self.spas_present:
       can_sends.append(create_spas12(self.packer))
 
     if pcm_cancel_cmd:

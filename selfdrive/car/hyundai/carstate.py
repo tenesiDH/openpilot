@@ -55,6 +55,8 @@ def get_can_parser(CP):
     ("CF_Lvr_GearInf", "LVR11", 0),        #Transmission Gear (0 = N or P, 1-8 = Fwd, 14 = Rev)
 
     ("CR_Mdps_DrvTq", "MDPS11", 0),
+    ("CR_Mdps_StrAng", "MDPS11", 0),
+    ("CF_Mdps_Stat", "MDPS11", 0),
 
     ("CR_Mdps_StrColTq", "MDPS12", 0),
     ("CF_Mdps_ToiActive", "MDPS12", 0),
@@ -222,6 +224,9 @@ class CarState():
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["MDPS11"]['CR_Mdps_DrvTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
+    self.mdps11_strang = cp.vl["MDPS11"]["CR_Mdps_StrAng"]
+    self.mdps11_stat = cp.vl["MDPS11"]["CF_Mdps_Stat"]
+
     self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if not self.no_radar else False
     self.lead_distance = cp.vl["SCC11"]['ACC_ObjDist'] if not self.no_radar else 0
 
