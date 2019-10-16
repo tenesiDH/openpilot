@@ -5,7 +5,6 @@ from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_clu11, create_spas11, create_spas12
 from selfdrive.car.hyundai.values import CAR, Buttons
 from selfdrive.can.packer import CANPacker
-import numpy as np
 
 # Steer torque limits
 
