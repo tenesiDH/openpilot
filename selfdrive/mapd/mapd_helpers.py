@@ -279,7 +279,7 @@ class Way:
     lookahead_ways = 5
     way = self
     for i in range(lookahead_ways):
-      way_pts = way.points_in_car_frame(lat, lon, heading, False)
+      way_pts = way.points_in_car_frame(lat, lon, heading, True)
       #print way_pts
       # Check current lookahead distance
       if way_pts[0,0] < 0 and way_pts[-1,0] < 0:
@@ -363,6 +363,9 @@ class Way:
           #print min_dist
           
           break
+      way_pts = way.points_in_car_frame(lat, lon, heading, False)
+      #print(way_pts)
+
       try:
         if backwards:
           if way.way.nodes[0].tags['highway']=='mini_roundabout':

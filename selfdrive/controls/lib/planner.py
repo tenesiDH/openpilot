@@ -2,7 +2,11 @@
 import math
 from datetime import datetime
 import time
+from selfdrive.services import service_list
+import selfdrive.messaging as messaging
+import zmq
 import numpy as np
+from cereal import arne182
 from common.params import Params
 from common.numpy_fast import interp
 
@@ -35,8 +39,12 @@ _A_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 
 # need fast accel at very low speed for stop and go
 # make sure these accelerations are smaller than mpc limits
-_A_CRUISE_MAX_V = [1.6, 1.6, 0.65, .4]
-_A_CRUISE_MAX_BP = [0.,  6.4, 22.5, 40.]
+
+_A_CRUISE_MAX_V = [3.5, 3.0, 1.5, .5, .3]
+_A_CRUISE_MAX_V_ECO = [1.0, 1.5, 1.0, 0.3, 0.1]
+_A_CRUISE_MAX_V_SPORT = [3.5, 3.5, 3.5, 3.5, 3.5]
+_A_CRUISE_MAX_V_FOLLOWING = [1.3, 1.6, 1.2, .7, .3]
+_A_CRUISE_MAX_BP = [0., 5., 10., 20., 55.]
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [2.3, 3.0, 3.9]
@@ -52,12 +60,19 @@ _MODEL_V_K = [[0.07068858], [0.04826294]]
 # 75th percentile
 SPEED_PERCENTILE_IDX = 7
 
-
-def calc_cruise_accel_limits(v_ego):
+def calc_cruise_accel_limits(v_ego, following, gasbuttonstatus):
   a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V)
-  a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
-  return np.vstack([a_cruise_min, a_cruise_max])
 
+  if following:
+    a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_FOLLOWING)
+  else:
+    if gasbuttonstatus == 1:
+      a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_SPORT)
+    elif gasbuttonstatus == 2:
+      a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_ECO)
+    else:
+      a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
+  return np.vstack([a_cruise_min, a_cruise_max])
 
 def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
   """
@@ -78,7 +93,9 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 class Planner():
   def __init__(self, CP):
     self.CP = CP
-
+    self.poller = zmq.Poller()
+    self.arne182Status = messaging.sub_sock(service_list['arne182Status'].port, poller=self.poller, conflate=True)
+   
     self.mpc1 = LongitudinalMpc(1)
     self.mpc2 = LongitudinalMpc(2)
 
@@ -127,10 +144,24 @@ class Planner():
     self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
 
   def update(self, sm, pm, CP, VM, PP):
+    self.arne182 = None
+    for socket, _ in self.poller.poll(0):
+      if socket is self.arne182Status:
+        self.arne182 = arne182.Arne182Status.from_bytes(socket.recv())
+    if self.arne182 is None:
+      gasbuttonstatus = 0
+    else:
+      gasbuttonstatus = self.arne182.gasbuttonstatus
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
-    speed_ahead_distance = 250
+    
+    if gasbuttonstatus == 1:
+      speed_ahead_distance = 150
+    elif gasbuttonstatus == 2:
+      speed_ahead_distance = 350
+    else:
+      speed_ahead_distance = 250
 
     long_control_state = sm['controlsState'].longControlState
     v_cruise_kph = sm['controlsState'].vCruise
@@ -207,7 +238,7 @@ class Planner():
     
     # Calculate speed for normal cruise control
     if enabled:
-      accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego)]
+      accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following, gasbuttonstatus)]
       jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]  # TODO: make a separate lookup for jerk tuning
       accel_limits_turns = limit_accel_in_turns(v_ego, sm['carState'].steeringAngle, accel_limits, self.CP)
 

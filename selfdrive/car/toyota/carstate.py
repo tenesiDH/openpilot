@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from selfdrive.services import service_list
 from cereal import arne182
 import selfdrive.messaging as messaging
@@ -11,6 +12,7 @@ from selfdrive.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from selfdrive.car.toyota.values import CAR, DBC, STEER_THRESHOLD, TSS2_CAR, NO_DSU_CAR
 from common.travis_checker import travis
+
 
 GearShifter = car.CarState.GearShifter
 
@@ -30,6 +32,8 @@ def get_can_parser(CP):
     # sig_name, sig_address, default
     ("STEER_ANGLE", "STEER_ANGLE_SENSOR", 0),
     ("GEAR", "GEAR_PACKET", 0),
+    ("SPORT_ON", "GEAR_PACKET", 0),
+    ("ECON_ON", "GEAR_PACKET", 0),
     ("BRAKE_PRESSED", "BRAKE_MODULE", 0),
     ("BRAKE_PRESSURE", "BRAKE_MODULE", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
@@ -54,6 +58,7 @@ def get_can_parser(CP):
     ("IPAS_STATE", "EPS_STATUS", 1),
     ("BRAKE_LIGHTS_ACC", "ESP_CONTROL", 0),
     ("AUTO_HIGH_BEAM", "LIGHT_STALK", 0),
+    ("DISTANCE_LINES", "PCM_CRUISE_SM", 0),
   ]
 
   checks = [
@@ -114,7 +119,7 @@ def get_cam_can_parser(CP):
 
 class CarState():
   def __init__(self, CP):
-
+    self.gasbuttonstatus = 0
     self.CP = CP
     self.can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
     self.shifter_values = self.can_define.dv["GEAR_PACKET"]['GEAR']
@@ -122,8 +127,7 @@ class CarState():
     self.right_blinker_on = 0
     self.angle_offset = 0.
     self.init_angle_offset = False
-    
-    self.acc_slow_on = False
+    self.v_cruise_pcmlast = 41
     self.pcm_acc_status = False
     self.setspeedoffset = 34.0
     self.Angles = np.zeros(250)
@@ -133,6 +137,7 @@ class CarState():
     self.Angle_Speed = [255,160,100,80,70,60,55,50,40,33,27,17,12]
     if not travis:
       self.traffic_data_sock = messaging.pub_sock(service_list['liveTrafficData'].port)
+      self.arne182Status_sock = messaging.pub_sock(service_list['arne182Status'].port)
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
@@ -194,6 +199,25 @@ class CarState():
     self.angle_steers_rate = cp.vl["STEER_ANGLE_SENSOR"]['STEER_RATE']
     can_gear = int(cp.vl["GEAR_PACKET"]['GEAR'])
     self.gear_shifter = parse_gear_shifter(can_gear, self.shifter_values)
+    try:
+      self.econ_on = cp.vl["GEAR_PACKET"]['ECON_ON']
+    except:
+      self.econ_on = 0
+    try:
+      self.sport_on = cp.vl["GEAR_PACKET"]['SPORT_ON']
+    except:
+      self.sport_on = 0
+    if self.sport_on == 1:
+      self.gasbuttonstatus = 1
+    if self.econ_on == 1:
+      self.gasbuttonstatus = 2
+    if self.sport_on == 0 and self.econ_on == 0:
+      self.gasbuttonstatus = 0
+    msg = arne182.Arne182Status.new_message()
+    msg.gasbuttonstatus = self.gasbuttonstatus
+    msg.readdistancelines = cp.vl["PCM_CRUISE_SM"]['DISTANCE_LINES']
+    if not travis:
+      self.arne182Status_sock.send(msg.to_bytes())
     if self.CP.carFingerprint == CAR.LEXUS_IS:
       self.main_on = cp.vl["DSU_CRUISE"]['MAIN_ON']
     else:
@@ -218,14 +242,22 @@ class CarState():
     else:
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
+
     if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
       if self.v_ego < 11.38:
-        self.acc_slow_on = True
         self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
+        self.v_cruise_pcmlast = self.v_cruise_pcm
       else:
-        self.acc_slow_on = False
-    if self.acc_slow_on:
-      self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
+        self.setspeedoffset = 0
+        self.v_cruise_pcmlast = self.v_cruise_pcm
+    if self.v_cruise_pcm < self.v_cruise_pcmlast:
+      self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
+    if self.v_cruise_pcmlast < self.v_cruise_pcm:
+      self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
+        
+    self.v_cruise_pcmlast = self.v_cruise_pcm
+    self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
+
     if not self.left_blinker_on and not self.right_blinker_on:
       self.Angles[self.Angle_counter] = abs(self.angle_steers)
       self.v_cruise_pcm = int(min(self.v_cruise_pcm, interp(np.max(self.Angles), self.Angle, self.Angle_Speed)))
