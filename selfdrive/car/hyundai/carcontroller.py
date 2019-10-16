@@ -16,8 +16,6 @@ class SteerLimitParams:
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
-  STEER_ANG_MAX = 45          # SPAS Max Angle
-  STEER_ANG_MAX_RATE = 1.2    # SPAS Degrees per ms
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -65,7 +63,6 @@ class CarController():
     self.en_spas = 3
     self.mdps11_stat_last = 0
     self.lkas = False
-    self.spas_present = False # TODO Make Automatic
     self.packer = CANPacker(dbc_name)
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, visual_alert,
@@ -76,24 +73,21 @@ class CarController():
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
-    # SPAS limit angle extremes for safety
-    apply_steer_ang_req = np.clip(actuators.steerAngle, -1*(SteerLimitParams.STEER_ANG_MAX), SteerLimitParams.STEER_ANG_MAX)
+    apply_steer_ang_req = actuators.steerAngle
     # SPAS limit angle rate for safety
-    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.6:
+    if self.apply_steer_ang - apply_steer_ang_req > 2.6:
       if apply_steer_ang_req > self.apply_steer_ang:
-        self.apply_steer_ang += 0.5
+        self.apply_steer_ang += 2.5
       else:
-        self.apply_steer_ang -= 0.5
+        self.apply_steer_ang -= 2.5
     else:
       self.apply_steer_ang = apply_steer_ang_req
 
     # Use LKAS or SPAS
-    if CS.mdps11_stat == 7 or CS.v_ego > 2.7:
+    if CS.mdps11_stat == 7 or CS.v_ego > 15:
       self.lkas = True
     elif CS.v_ego < 15:
       self.lkas = False
-    if self.spas_present:
-      self.lkas = True
 
 
     # Fix for Genesis hard fault when steer request sent while the speed is low 
@@ -126,7 +120,7 @@ class CarController():
                                    enabled, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
     # SPAS11 50hz
-    if (frame % 2) == 0 and not self.spas_present:
+    if (frame % 2) == 0:
       if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
         self.en_spas == 7
         self.en_cnt = 0
