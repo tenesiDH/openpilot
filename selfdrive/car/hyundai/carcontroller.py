@@ -28,11 +28,10 @@ def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
 
   # initialize to no line visible
   lane_visible = 1
-  if left_line and right_line:
-    if enabled:
-      lane_visible = 3
-    else:
-      lane_visible = 4
+  if left_line and right_line or enabled:
+    lane_visible = 3
+    #else:if not enabled:    
+      #lane_visible = 4
   elif left_line:
     lane_visible = 5
   elif right_line:
@@ -70,10 +69,12 @@ class CarController():
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
-    if not enabled:
+    # Fix for Genesis hard fault when steer request sent while the speed is low 
+
+    if not enabled or self.car_fingerprint == CAR.GENESIS and CS.v_ego < 15:
       apply_steer = 0
 
-    steer_req = 1 if enabled else 0
+    steer_req = 1 if apply_steer else 0
 
     self.apply_steer_last = apply_steer
 
