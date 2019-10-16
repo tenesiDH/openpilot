@@ -143,7 +143,7 @@ class CarController():
       can_sends.append(create_spas11(self.packer, self.car_fingerprint, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang))
 
     # SPAS12 20Hz
-    if (frame % 5) == 0 and not self.spas_present:
+    if (frame % 5) == 0:
       can_sends.append(create_spas12(self.packer))
 
     if pcm_cancel_cmd:
