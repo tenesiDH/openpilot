@@ -1,4 +1,5 @@
 from cereal import car
+import numpy as np
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
@@ -15,7 +16,9 @@ class SteerLimitParams:
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
-
+  STEER_ANG_MAX = 20          # SPAS Max Angle
+  STEER_ANG_MAX_RATE = 0.4    # SPAS Degrees per ms
+  
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
 def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
@@ -72,20 +75,22 @@ class CarController():
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
-    apply_steer_ang_req = actuators.steerAngle
+
+    # SPAS limit angle extremes for safety
+    apply_steer_ang_req = np.clip(actuators.steerAngle, -1*(SteerLimitParams.STEER_ANG_MAX), SteerLimitParams.STEER_ANG_MAX)
     # SPAS limit angle rate for safety
-    if self.apply_steer_ang - apply_steer_ang_req > 2.6:
+    if abs(self.apply_steer_ang - apply_steer_ang_req) > 0.6:
       if apply_steer_ang_req > self.apply_steer_ang:
-        self.apply_steer_ang += 2.5
+        self.apply_steer_ang += 0.5
       else:
-        self.apply_steer_ang -= 2.5
+        self.apply_steer_ang -= 0.5
     else:
       self.apply_steer_ang = apply_steer_ang_req
 
     # Use LKAS or SPAS
     if CS.mdps11_stat == 7 or CS.v_ego > 15:
       self.lkas = True
-    elif CS.v_ego < 15:
+    else:
       self.lkas = False
 
 
