@@ -73,8 +73,7 @@ def main(gctx=None):
     params.put("LastUpdateTime", t.encode('utf8'))
     
     if NEED_REBOOT:
-      health = None
-      health = messaging.recv_one_or_none(health_sock)
+      health = messaging.recv_sock(health_sock, wait=True)
       if health is not None:
         if not health.health.started:
           NEED_REBOOT = False
