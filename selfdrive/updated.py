@@ -57,7 +57,8 @@ def main(gctx=None):
           returncode=e.returncode)
         time.sleep(60)
         continue
-      cloudlog.info("git pull success: %s", r)
+      if NEED_REBOOT:
+        cloudlog.info("git pull success: %s", r)
     except:
       params.put("UpdateAvailable", "0")
 
