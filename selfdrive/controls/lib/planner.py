@@ -215,7 +215,10 @@ class Planner():
     try:
       if sm['liveMapData'].speedLimitValid and osm and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         speed_limit = sm['liveMapData'].speedLimit
-        v_speedlimit = speed_limit + offset if v_speedlimit > offset else v_speedlimit = speed_limit
+        if v_speedlimit is not None and offset is not None and v_speedlimit > offset:
+          v_speedlimit = speed_limit + offset
+        else:
+          v_speedlimit = speed_limit
       else:
         speed_limit = None
       if sm['liveMapData'].speedLimitAheadValid and sm['liveMapData'].speedLimitAheadDistance < speed_ahead_distance and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
@@ -232,7 +235,10 @@ class Planner():
           speed_limit_ahead = sm['liveMapData'].speedLimitAhead + (speed_limit - sm['liveMapData'].speedLimitAhead)*(sm['liveMapData'].speedLimitAheadDistance - distanceatlowlimit)/(speed_ahead_distance - distanceatlowlimit)
         else:
           speed_limit_ahead = sm['liveMapData'].speedLimitAhead
-        v_speedlimit_ahead = speed_limit_ahead + offset if v_speedlimit_ahead > offset else v_speedlimit_ahead = speed_limit_ahead
+        if v_speedlimit_ahead is not None and offset is not None and v_speedlimit_ahead > offset:
+          v_speedlimit_ahead = speed_limit_ahead + offset
+        else:
+          v_speedlimit_ahead = speed_limit_ahead
       if sm['liveMapData'].curvatureValid and osm and (sm['liveMapData'].lastGps.timestamp -time.mktime(now.timetuple()) * 1000) < 10000:
         curvature = abs(sm['liveMapData'].curvature)
         radius = 1/max(1e-4, curvature)
