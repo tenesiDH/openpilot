@@ -332,7 +332,7 @@ class Way:
         if 'maxspeed:backward' in way.way.tags:
           spd = way.way.tags['maxspeed:backward']
           spd = parse_speed_unit(spd)
-          if spd < current_speed_limit:
+          if spd is not None and spd < current_speed_limit:
             speed_ahead = spd
             min_dist = min(np.linalg.norm(way_pts[1, :]),np.linalg.norm(way_pts[0, :]),np.linalg.norm(way_pts[-1, :]))
             speed_ahead_dist = min_dist
@@ -341,7 +341,7 @@ class Way:
         if 'maxspeed:forward' in way.way.tags:
           spd = way.way.tags['maxspeed:forward']
           spd = parse_speed_unit(spd)
-          if spd < current_speed_limit:
+          if spd is not None and spd < current_speed_limit:
             speed_ahead = spd
             min_dist = min(np.linalg.norm(way_pts[1, :]),np.linalg.norm(way_pts[0, :]),np.linalg.norm(way_pts[-1, :]))
             speed_ahead_dist = min_dist
@@ -355,7 +355,7 @@ class Way:
           spd = geocode_maxspeed(way.way.tags, location_info)
           #print "spd is actually"
           #print spd
-        if spd < current_speed_limit:
+        if spd is not None and spd < current_speed_limit:
           speed_ahead = spd
           min_dist = min(np.linalg.norm(way_pts[1, :]),np.linalg.norm(way_pts[0, :]),np.linalg.norm(way_pts[-1, :]))
           speed_ahead_dist = min_dist

@@ -74,17 +74,19 @@ def calc_cruise_accel_limits(v_ego, following, gasbuttonstatus):
       a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V)
   return np.vstack([a_cruise_min, a_cruise_max])
 
-def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
+def limit_accel_in_turns(v_ego, angle_steers, a_target, CP, angle_later):
   """
   This function returns a limited long acceleration allowed, depending on the existing lateral acceleration
   this should avoid accelerating when losing the target in turns
   """
 
   a_total_max = interp(v_ego, _A_TOTAL_MAX_BP, _A_TOTAL_MAX_V)
-  a_y = v_ego**2 * angle_steers * CV.DEG_TO_RAD / (CP.steerRatio * CP.wheelbase)
+  a_y = v_ego**2 * abs(angle_steers) * CV.DEG_TO_RAD / (CP.steerRatio * CP.wheelbase)
+  a_y2 = v_ego**2 * abs(angle_later) * CV.DEG_TO_RAD / (CP.steerRatio * CP.wheelbase)
   a_x_allowed = a_total_max - a_y
+  a_x_allowed2 = a_total_max - a_y2
   
-  a_target[1] = min(a_target[1], a_x_allowed)
+  a_target[1] = min(a_target[1], a_x_allowed, a_x_allowed2)
   a_target[0] = min(a_target[0], a_target[1])
   
   return a_target
@@ -95,7 +97,7 @@ class Planner():
     self.CP = CP
     self.poller = zmq.Poller()
     self.arne182Status = messaging.sub_sock(service_list['arne182Status'].port, poller=self.poller, conflate=True)
-   
+    self.latcontolStatus = messaging.sub_sock(service_list['latControl'].port, poller=self.poller, conflate=True)
     self.mpc1 = LongitudinalMpc(1)
     self.mpc2 = LongitudinalMpc(2)
 
@@ -145,9 +147,12 @@ class Planner():
 
   def update(self, sm, pm, CP, VM, PP):
     self.arne182 = None
+    self.latcontrol = None
     for socket, _ in self.poller.poll(0):
       if socket is self.arne182Status:
         self.arne182 = arne182.Arne182Status.from_bytes(socket.recv())
+      elif socket is self.latcontolStatus:
+        self.latcontrol = arne182.LatControl.from_bytes(socket.recv())
     if self.arne182 is None:
       gasbuttonstatus = 0
     else:
@@ -155,6 +160,16 @@ class Planner():
     """Gets called when new radarState is available"""
     cur_time = sec_since_boot()
     v_ego = sm['carState'].vEgo
+    blinkers = sm['carState'].leftBlinker or sm['carState'].rightBlinker
+    if blinkers:
+      steering_angle = 0.
+      angle_later = 0.
+    else:
+      steering_angle = sm['carState'].steeringAngle
+      if self.latcontrol is None or v_ego < 11:
+        angle_later = 0.
+      else:
+        angle_later = self.latcontrol.anglelater
     
     if gasbuttonstatus == 1:
       speed_ahead_distance = 150
@@ -240,7 +255,7 @@ class Planner():
     if enabled:
       accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following, gasbuttonstatus)]
       jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]  # TODO: make a separate lookup for jerk tuning
-      accel_limits_turns = limit_accel_in_turns(v_ego, sm['carState'].steeringAngle, accel_limits, self.CP)
+      accel_limits_turns = limit_accel_in_turns(v_ego, steering_angle, accel_limits, self.CP, angle_later)
 
       if force_slow_decel:
         # if required so, force a smooth deceleration
@@ -297,7 +312,7 @@ class Planner():
     if self.mpc1.new_lead:
       self.fcw_checker.reset_lead(cur_time)
 
-    blinkers = sm['carState'].leftBlinker or sm['carState'].rightBlinker
+    
     fcw = self.fcw_checker.update(self.mpc1.mpc_solution, cur_time,
                                   sm['controlsState'].active,
                                   v_ego, sm['carState'].aEgo,

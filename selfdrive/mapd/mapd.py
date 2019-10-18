@@ -36,11 +36,19 @@ last_query_result = None
 last_query_pos = None
 cache_valid = False
 
-def connected_to_internet(url='https://lz4.overpass-api.de/api/interpreter', timeout=5):
+def connected_to_internet(url='https://z.overpass-api.de/api/interpreter', timeout=5):
     try:
         requests.get(url, timeout=timeout)
         return True
-    except (requests.ReadTimeout, requests.ConnectionError):
+    except:
+        print("No internet connection available.")
+    return False
+
+def connected_to_internet2(url='https://lz4.overpass-api.de/api/interpreter', timeout=5):
+    try:
+        requests.get(url, timeout=timeout)
+        return True
+    except:
         print("No internet connection available.")
     return False
 
@@ -82,7 +90,7 @@ def query_thread():
           cache_valid = False
 
       q = build_way_query(last_gps.latitude, last_gps.longitude, radius=4000)
-      if connected_to_internet():
+      if connected_to_internet() or connected_to_internet2():
         try:
           try:
             new_result = api.query(q)
