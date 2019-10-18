@@ -136,7 +136,7 @@ class CarController():
                                    keep_stock=(not self.camera_disconnected)))
     
     # SPAS11 50hz
-    if (self.cnt % 2) == 0 and not self.spas_present:
+    if (frame % 2) == 0 and not self.spas_present:
       if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
         self.en_spas == 7
         self.en_cnt = 0
@@ -160,7 +160,7 @@ class CarController():
       can_sends.append(create_spas11(self.packer, self.car_fingerprint, (self.spas_cnt / 2), self.en_spas, self.apply_steer_ang))
 
     # SPAS12 20Hz
-    if (self.cnt % 5) == 0 and not self.spas_present:
+    if (frame % 5) == 0 and not self.spas_present:
       can_sends.append(create_spas12(self.packer))
       
     #if pcm_cancel_cmd:
