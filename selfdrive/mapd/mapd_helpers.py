@@ -476,6 +476,16 @@ class Way:
                     break
               except (KeyError, ValueError):
                 pass
+            else:
+              if way_pts[count, 0] > 0:
+                print("no direction")
+                speed_ahead_dist = max(0. , way_pts[count, 0] - 10.0)
+                print(speed_ahead_dist)
+                speed_ahead = 5/3.6
+                if n.tags['highway']=='stop':
+                  speed_ahead = 0
+                loop_must_break = True
+                break
           if 'railway' in n.tags and n.tags['railway']=='level_crossing':
             speed_ahead = 0
             speed_ahead_dist = max(0. , way_pts[count, 0] - 5.0)
