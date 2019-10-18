@@ -122,7 +122,6 @@ def create_spas11(packer, car_fingerprint, cnt, en_spas, apply_steer):
     dat = dat[:6]
     values["CF_Spas_Chksum"] = hyundai_checksum(dat)
   else:
-    dat = [ord(i) for i in dat]
     values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
 
   return packer.make_can_msg("SPAS11", 0, values)
