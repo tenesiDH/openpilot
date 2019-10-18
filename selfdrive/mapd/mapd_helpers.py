@@ -478,7 +478,7 @@ class Way:
                 pass
           if 'railway' in n.tags and n.tags['railway']=='level_crossing':
             speed_ahead = 0
-            speed_ahead_dist = way_pts[count, 0]
+            speed_ahead_dist = min(0. , way_pts[count, 0] - 5.0)
             loop_must_break = True
           count += 1
         if loop_must_break: break
