@@ -5,7 +5,7 @@ from datetime import datetime
 from common.basedir import BASEDIR
 from selfdrive.config import Conversions as CV
 from common.transformations.coordinates import LocalCoord, geodetic2ecef
-
+Traffic_Debug = False # if traffic signals do not have a direction stop for them anyway
 LOOKAHEAD_TIME = 10.
 MAPS_LOOKAHEAD_DISTANCE = 50 * LOOKAHEAD_TIME
 
@@ -477,7 +477,7 @@ class Way:
               except (KeyError, ValueError):
                 pass
             else:
-              if way_pts[count, 0] > 0:
+              if way_pts[count, 0] > 0 and Traffic_Debug:
                 print("no direction")
                 speed_ahead_dist = max(0. , way_pts[count, 0] - 10.0)
                 print(speed_ahead_dist)
@@ -488,7 +488,7 @@ class Way:
                 break
           if 'railway' in n.tags and n.tags['railway']=='level_crossing':
             speed_ahead = 0
-            speed_ahead_dist = max(0. , way_pts[count, 0] - 5.0)
+            speed_ahead_dist = max(0. , way_pts[count, 0] - 10.0)
             loop_must_break = True
           count += 1
         if loop_must_break: break
