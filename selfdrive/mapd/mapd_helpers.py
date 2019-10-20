@@ -310,7 +310,7 @@ class Way:
             a = 111132.954*math.cos(float(latmax+latmin)/360*3.141592)*float(lonmax-lonmin)
           else:
             if way.way.nodes[1].id == way.way.nodes[-1].id:
-              circle = 30
+              circle = [0,0,30]
             else:
               circle = circle_through_points([way.way.nodes[0].lat,way.way.nodes[0].lon,1], [way.way.nodes[1].lat,way.way.nodes[1].lon,1], [way.way.nodes[-1].lat,way.way.nodes[-1].lon,1])
             a = 111132.954*math.cos(float(latmax+latmin)/360*3.141592)*float(circle[2])*2
