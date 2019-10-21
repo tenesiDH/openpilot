@@ -10,7 +10,7 @@ def op_edit():  # use by running `python /data/openpilot/op_edit.py`
   while True:
     print('\n'.join(['{}. {}: {} ({})'.format(idx + 1, i, values_list[idx], str(type(params[i]))[7:-2]) for idx, i in enumerate(params)]))
     print('\nChoose a parameter to edit (by index): ')
-    choice = raw_input('>> ')
+    choice = input('>> ')
     try:
       choice = int(choice)
     except:
@@ -23,17 +23,17 @@ def op_edit():  # use by running `python /data/openpilot/op_edit.py`
     old_value = params[chosen_key]
     print('Chosen parameter: {}'.format(chosen_key))
     print('Enter your new value:')
-    new_value = raw_input('>> ')
+    new_value = input('>> ')
     try:
       new_value = ast.literal_eval(new_value)
       print('New value: {} ({})\nOld value: {} ({})'.format(new_value, str(type(new_value))[7:-2], old_value,
                                                             str(type(old_value))[7:-2]))
       print('Do you want to save this?')
-      choice = raw_input('[Y/n]: ').lower()
+      choice = input('[Y/n]: ').lower()
       if choice == 'y':
         op_params.put(chosen_key, new_value)
         print('Saved! Anything else?')
-        choice = raw_input('[Y/n]: ').lower()
+        choice = input('[Y/n]: ').lower()
         if choice == 'n':
           return
       else:
