@@ -5,7 +5,7 @@ from datetime import datetime
 from common.basedir import BASEDIR
 from selfdrive.config import Conversions as CV
 from common.transformations.coordinates import LocalCoord, geodetic2ecef
-
+Traffic_Debug = False # if traffic signals do not have a direction stop for them anyway
 LOOKAHEAD_TIME = 10.
 MAPS_LOOKAHEAD_DISTANCE = 50 * LOOKAHEAD_TIME
 
@@ -19,7 +19,7 @@ DEFAULT_SPEEDS_BY_REGION = {}
 with open(DEFAULT_SPEEDS_BY_REGION_JSON_FILE, "rb") as f:
   DEFAULT_SPEEDS_BY_REGION = json.loads(f.read())
 
-def circle_through_points(p1, p2, p3):
+def circle_through_points(p1, p2, p3, force=False):
   """Fits a circle through three points
   Formulas from: http://www.ambrsoft.com/trigocalc/circle3d.htm"""
   x1, y1, _ = p1
@@ -31,7 +31,7 @@ def circle_through_points(p1, p2, p3):
   C = (x1**2 + y1**2) * (x2 - x3) + (x2**2 + y2**2) * (x3 - x1) + (x3**2 + y3**2) * (x1 - x2)
   D = (x1**2 + y1**2) * (x3 * y2 - x2 * y3) + (x2**2 + y2**2) * (x1 * y3 - x3 * y1) + (x3**2 + y3**2) * (x2 * y1 - x1 * y2)
   try:
-    if abs((y3-y1)*x2-(x3-x1)*y2+x3*y1-y3*x1)/np.sqrt((y3-y1)**2+(x3-x1)**2) > 0.1:
+    if abs((y3-y1)*x2-(x3-x1)*y2+x3*y1-y3*x1)/np.sqrt((y3-y1)**2+(x3-x1)**2) > 0.1 or force:
       return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
     else:
       return (-B / (2 * A), - C / (2 * A), 10000)
@@ -184,7 +184,7 @@ class Way:
     best_score = None
     for way in ways:
       way = Way(way, query_results)
-      points = way.points_in_car_frame(lat, lon, heading)
+      points = way.points_in_car_frame(lat, lon, heading, True)
 
       on_way = way.on_way(lat, lon, heading, points)
       if not on_way:
@@ -279,7 +279,7 @@ class Way:
     lookahead_ways = 5
     way = self
     for i in range(lookahead_ways):
-      way_pts = way.points_in_car_frame(lat, lon, heading)
+      way_pts = way.points_in_car_frame(lat, lon, heading, True)
       #print way_pts
       # Check current lookahead distance
       if way_pts[0,0] < 0 and way_pts[-1,0] < 0:
@@ -310,9 +310,9 @@ class Way:
             a = 111132.954*math.cos(float(latmax+latmin)/360*3.141592)*float(lonmax-lonmin)
           else:
             if way.way.nodes[1].id == way.way.nodes[-1].id:
-              circle = 30
+              circle = [0,0,30]
             else:
-              circle = circle_through_points([way.way.nodes[0].lat,way.way.nodes[0].lon,1], [way.way.nodes[1].lat,way.way.nodes[1].lon,1], [way.way.nodes[-1].lat,way.way.nodes[-1].lon,1])
+              circle = circle_through_points([way.way.nodes[0].lat,way.way.nodes[0].lon,1], [way.way.nodes[1].lat,way.way.nodes[1].lon,1], [way.way.nodes[-1].lat,way.way.nodes[-1].lon,1],True)
             a = 111132.954*math.cos(float(latmax+latmin)/360*3.141592)*float(circle[2])*2
           speed_ahead = np.sqrt(1.6075*a)
           min_dist = 999.9
@@ -332,7 +332,7 @@ class Way:
         if 'maxspeed:backward' in way.way.tags:
           spd = way.way.tags['maxspeed:backward']
           spd = parse_speed_unit(spd)
-          if spd < current_speed_limit:
+          if spd is not None and spd < current_speed_limit:
             speed_ahead = spd
             min_dist = min(np.linalg.norm(way_pts[1, :]),np.linalg.norm(way_pts[0, :]),np.linalg.norm(way_pts[-1, :]))
             speed_ahead_dist = min_dist
@@ -341,7 +341,7 @@ class Way:
         if 'maxspeed:forward' in way.way.tags:
           spd = way.way.tags['maxspeed:forward']
           spd = parse_speed_unit(spd)
-          if spd < current_speed_limit:
+          if spd is not None and spd < current_speed_limit:
             speed_ahead = spd
             min_dist = min(np.linalg.norm(way_pts[1, :]),np.linalg.norm(way_pts[0, :]),np.linalg.norm(way_pts[-1, :]))
             speed_ahead_dist = min_dist
@@ -355,7 +355,7 @@ class Way:
           spd = geocode_maxspeed(way.way.tags, location_info)
           #print "spd is actually"
           #print spd
-        if spd < current_speed_limit:
+        if spd is not None and spd < current_speed_limit:
           speed_ahead = spd
           min_dist = min(np.linalg.norm(way_pts[1, :]),np.linalg.norm(way_pts[0, :]),np.linalg.norm(way_pts[-1, :]))
           speed_ahead_dist = min_dist
@@ -363,6 +363,9 @@ class Way:
           #print min_dist
           
           break
+      way_pts = way.points_in_car_frame(lat, lon, heading, False)
+      #print(way_pts)
+
       try:
         if backwards:
           if way.way.nodes[0].tags['highway']=='mini_roundabout':
@@ -473,6 +476,20 @@ class Way:
                     break
               except (KeyError, ValueError):
                 pass
+            else:
+              if way_pts[count, 0] > 0 and Traffic_Debug:
+                print("no direction")
+                speed_ahead_dist = max(0. , way_pts[count, 0] - 10.0)
+                print(speed_ahead_dist)
+                speed_ahead = 5/3.6
+                if n.tags['highway']=='stop':
+                  speed_ahead = 0
+                loop_must_break = True
+                break
+          if 'railway' in n.tags and n.tags['railway']=='level_crossing':
+            speed_ahead = 0
+            speed_ahead_dist = max(0. , way_pts[count, 0] - 10.0)
+            loop_must_break = True
           count += 1
         if loop_must_break: break
       except (KeyError, IndexError, ValueError):
@@ -499,22 +516,22 @@ class Way:
 
   def on_way(self, lat, lon, heading, points=None):
     if points is None:
-      points = self.points_in_car_frame(lat, lon, heading)
+      points = self.points_in_car_frame(lat, lon, heading, True)
     x = points[:, 0]
     return np.min(x) < 0. and np.max(x) > 0.
 
   def closest_point(self, lat, lon, heading, points=None):
     if points is None:
-      points = self.points_in_car_frame(lat, lon, heading)
+      points = self.points_in_car_frame(lat, lon, heading, True)
     i = np.argmin(np.linalg.norm(points, axis=1))
     return points[i]
 
   def distance_to_closest_node(self, lat, lon, heading, points=None):
     if points is None:
-      points = self.points_in_car_frame(lat, lon, heading)
+      points = self.points_in_car_frame(lat, lon, heading, True)
     return np.min(np.linalg.norm(points, axis=1))
 
-  def points_in_car_frame(self, lat, lon, heading):
+  def points_in_car_frame(self, lat, lon, heading, flip):
     lc = LocalCoord.from_geodetic([lat, lon, 0.])
 
     # Build rotation matrix
@@ -528,7 +545,7 @@ class Way:
     # Rotate with heading of car
     points_carframe = np.dot(rot, points_carframe[(1, 0, 2), :]).T
     
-    if points_carframe[-1,0] < points_carframe[0,0]:
+    if points_carframe[-1,0] < points_carframe[0,0] and flip:
       points_carframe = np.flipud(points_carframe)
       
     return points_carframe
@@ -647,7 +664,7 @@ class Way:
     
     for i in range(5):
       # Get new points and append to list
-      new_pnts = way.points_in_car_frame(lat, lon, heading)
+      new_pnts = way.points_in_car_frame(lat, lon, heading, True)
 
       try:
         if way.way.tags['junction']=='roundabout' or way.way.tags['junction']=='circular':

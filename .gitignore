@@ -36,6 +36,7 @@ selfdrive/visiond/visiond
 selfdrive/loggerd/loggerd
 selfdrive/sensord/gpsd
 selfdrive/sensord/sensord
+selfdrive/data_collection/gps-data
 /src/
 
 one
