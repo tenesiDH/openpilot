@@ -1,14 +1,16 @@
 from selfdrive.op_params import opParams
 import ast
 
+
 def op_edit():  # use by running `python /data/openpilot/op_edit.py`
   op_params = opParams()
-  params = op_params.params
+  params = op_params.get()
   print('Welcome to the opParams command line editor!')
   print('Here are your parameters:\n')
   values_list = [params[i] if len(str(params[i])) < 20 else '{} ... {}'.format(str(params[i])[:30], str(params[i])[-15:]) for i in params]
   while True:
-    print('\n'.join(['{}. {}: {} ({})'.format(idx + 1, i, values_list[idx], str(type(params[i]))[7:-2]) for idx, i in enumerate(params)]))
+    params = op_params.get()
+    print('\n'.join(['{}. {}: {} ({})'.format(idx + 1, i, values_list[idx], str(type(params[i]))[8:-2]) for idx, i in enumerate(params)]))
     print('\nChoose a parameter to edit (by index): ')
     choice = input('>> ')
     try:
@@ -26,8 +28,7 @@ def op_edit():  # use by running `python /data/openpilot/op_edit.py`
     new_value = input('>> ')
     try:
       new_value = ast.literal_eval(new_value)
-      print('New value: {} ({})\nOld value: {} ({})'.format(new_value, str(type(new_value))[7:-2], old_value,
-                                                            str(type(old_value))[7:-2]))
+      print('New value: {} ({})\nOld value: {} ({})'.format(new_value, str(type(new_value))[8:-2], old_value, str(type(old_value))[8:-2]))
       print('Do you want to save this?')
       choice = input('[Y/n]: ').lower()
       if choice == 'y':
@@ -41,5 +42,6 @@ def op_edit():  # use by running `python /data/openpilot/op_edit.py`
     except:
       print('Cannot parse input, exiting!')
       break
+
 
 op_edit()
