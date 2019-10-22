@@ -159,7 +159,7 @@ def get_car(logcan, sendcan, has_relay=False):
 
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
-    if not travis
+    if not travis:
       y = threading.Thread(target=crash_log2, args=(fingerprints,))
       y.start()
     candidate = "mock"
