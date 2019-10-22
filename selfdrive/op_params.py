@@ -27,7 +27,7 @@ class opParams:
     self.kegman_file = "/data/kegman.json"
     self.last_read_time = time.time()
     self.read_timeout = 1.0  # max frequency to read with self.get(...) (sec)
-    self.default_params = {'cameraOffset': 0.06, 'wheelTouchFactor': 10.0, 'speed_offset': 0.0, 'osm': True}
+    self.default_params = {'cameraOffset': 0.06, 'wheelTouchFactor': 10.0, 'speed_offset': 0.0, 'osm': True, 'useCarCaching': True}
     self.travis_params = {'wheelTouchFactor': 1.0}  # optional params to overwrite default_params for travis
     self.run_init()  # restores, reads, and updates params
 
