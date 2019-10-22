@@ -15,7 +15,7 @@ from common.op_params import opParams
 from common.travis_checker import travis
 
 op_params = opParams()
-use_car_caching = op_params.get('useCarCaching', True)
+use_car_caching = op_params.get('use_car_caching', True)
 
 def get_one_can(logcan):
   while True:
