@@ -1,6 +1,6 @@
 from common.numpy_fast import interp
 import numpy as np
-from selfdrive.op_params import opParams
+from common.op_params import opParams
 op_params = opParams()
 
 CAMERA_OFFSET = float(op_params.get('cameraOffset', 0.06)) # m
