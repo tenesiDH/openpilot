@@ -3,7 +3,6 @@ import math
 from datetime import datetime
 import time
 from selfdrive.services import service_list
-import selfdrive.messaging as messaging
 import zmq
 import numpy as np
 from cereal import arne182
@@ -19,7 +18,7 @@ from selfdrive.controls.lib.speed_smoother import speed_smoother
 from selfdrive.controls.lib.longcontrol import LongCtrlState, MIN_CAN_SPEED
 from selfdrive.controls.lib.fcw import FCWChecker
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
-from selfdrive.op_params import opParams
+from common.op_params import opParams
 op_params = opParams()
 offset = op_params.get('speed_offset', 0) # m/s
 osm = op_params.get('osm', True)

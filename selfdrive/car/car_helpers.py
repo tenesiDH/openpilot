@@ -11,7 +11,7 @@ from selfdrive.swaglog import cloudlog
 import selfdrive.messaging as messaging
 from selfdrive.car import gen_empty_fingerprint
 import selfdrive.crash as crash
-from selfdrive.op_params import opParams
+from common.op_params import opParams
 from common.travis_checker import travis
 
 op_params = opParams()

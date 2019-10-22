@@ -3,7 +3,7 @@ from common.realtime import DT_CTRL, DT_DMON
 from selfdrive.controls.lib.drive_helpers import create_event, EventTypes as ET
 from common.filter_simple import FirstOrderFilter
 from common.stat_live import RunningStatFilter
-from selfdrive.op_params import opParams
+from common.op_params import opParams
 op_params = opParams()
 factor = op_params.get('wheelTouchFactor', 1.0)
 

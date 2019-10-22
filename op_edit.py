@@ -1,4 +1,4 @@
-from selfdrive.op_params import opParams
+from common.op_params import opParams
 import ast
 
 
