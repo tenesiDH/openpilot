@@ -18,6 +18,8 @@ I will attempt to detail the changes in each of the branches here:
 
 <b>kegman</b> - this is the default branch which does not include Gernby's resonant feed forward steering (i.e. it's comma's default steering)
 
+<b>kegman-plusBoschGasPress</b> - this branch gives Honda Bosch users the ability to press the gas without disengaging OP for more "stock ACC"-like behaviour.  Remember to manually flash panda after checking out.  cd /data/openpilot/panda/board && pkill -f boardd && make - then reboot.
+
 <b>kegman-stockUI</b> - for 0.6 some people were having trouble with devUI so I separated the branches out.  
 
 <b>kegman-trafficML</b> - for CommunityPilot traffic signal machine learning and stop signs.  These branches also upload driving videos to CommunityPilot machine learning servers for the development of stopping at intersections.  Want this feature?  Contribute your videos by using this branch in your intersection laiden drives.
