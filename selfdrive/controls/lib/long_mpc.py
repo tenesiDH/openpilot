@@ -10,12 +10,24 @@ from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
 from selfdrive.controls.lib.drive_helpers import MPC_COST_LONG
 from selfdrive.kegman_conf import kegman_conf
 
-
 # One, two and three bar distances (in s)
-ONE_BAR_DISTANCE = 0.9  # in seconds
-TWO_BAR_DISTANCE = 1.3  # in seconds
-THREE_BAR_DISTANCE = 1.8  # in seconds
-FOUR_BAR_DISTANCE = 2.3   # in seconds
+kegman = kegman_conf()
+if "ONE_BAR_DISTANCE" in kegman.conf:
+    ONE_BAR_DISTANCE = float(kegman.conf['ONE_BAR_DISTANCE'])
+else:
+    ONE_BAR_DISTANCE = 0.9  # in seconds
+if "TWO_BAR_DISTANCE" in kegman.conf:
+    TWO_BAR_DISTANCE = float(kegman.conf['TWO_BAR_DISTANCE'])
+else:
+    TWO_BAR_DISTANCE = 1.3  # in seconds
+if "THREE_BAR_DISTANCE" in kegman.conf:
+    THREE_BAR_DISTANCE = float(kegman.conf['THREE_BAR_DISTANCE'])
+else:
+    THREE_BAR_DISTANCE = 1.8  # in seconds
+if "FOUR_BAR_DISTANCE" in kegman.conf:
+    FOUR_BAR_DISTANCE = float(kegman.conf['FOUR_BAR_DISTANCE'])
+else:
+    FOUR_BAR_DISTANCE = 2.3   # in seconds
 
 TR = TWO_BAR_DISTANCE  # default interval
 
