@@ -52,6 +52,15 @@ List of changes and tweaks (latest changes at the top):
 
 - <b> New! Live long tuning for city speeds < 19.44 m/s (43.5 mph, 70 km/h): </b> Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.
   
+<b>Instructions for tuning steering with live tuner:</b>
+- Kp too high = the car overshoots and undershoots center
+- Kp too low = the car doesn't turn enough
+- Ki - dampens the overshoot / undershoot of Kp and allows the car to be centered faster, allowing for a higher Kp value
+- Ki too high = it gets to center without oscillations, but it takes too long to center.  If you hit a bump or give the wheel a quick nudge, it should oscillate 3 - 5 times before coming to steady-state.  If the wheel oscillates forever (critically damped), then your Kp or Ki or both are too high.
+- SteerRatio - too high, and the car ping pongs on straights and turns, too low, and the car doesn't turn enough on curves.  If you're on a turn and the wheel is oversteering and then correcting, steerRatio is too high, and it's fighting with Kp and Ki (which you don't want) - although in the past I've been able to have an oscillating oversteering tune which could do tighter turns, but the turns werent pleasant.
+- Kf - lower this if your car oscillates and you've done everything else.  It can be lowered to 0
+- All of these parameters interact with each other so finding the balance is a bit experimental  
+  
 <b>Be careful and ready to take over at any time when doing this!!!</b>  The "distance" in s is the target distance the car will try to maintain.  The default distancces are 0.9s, 1.3s, 1.8s for 1,2 and 3 bar intervals.  I manipulate this value to pass to the MPC to scale the behavior which leads to harder braking or sooner braking or softer braking.  Essentially when you are approaching a car, the distance changes depending on your approach speed.  When the lead car pulls away, the distance returns to whatever your bar setting is
   
 There are 3 parameters for one two and three bar distance intervals:
