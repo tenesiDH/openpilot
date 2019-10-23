@@ -38,6 +38,8 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
+- <b> New! Adjustable stopping distance, one, two, and three bar distance intervals</b>:  BE CAREFUL WITH THESE OPTIONAL SETTINGS IN kegman.json!  Add ONE_BAR_DISTANCE, TWO_BAR_DISTANCE, THREE_BAR_DISTANCE, FOUR_BAR_DISTANCE values in kegman.json to change the following distance interval.  Add STOPPING_DISTANCE to change the distance between you and the lead car at a stop.  If these values do not exist in kegman.json, they just assume default values of 0.9, 1.3, 1.8, 2.3, and 2 respectively.  Thanks to @joeljacobs for adding the optional distance intervals.
+
 - <b> New! Disable Auto Emergency Braking (Nidec Hondas)</b>:  Since 0.6.4 Comma passes through the AEB signal.  This causes unexpected emergency braking on 2 lane highways with oncoming traffic and is unsafe.  I have disabled this.  Ensure that you reflash you Panda if you get AEBs:  cd /data/openpilot/panda/board && pkill -f boardd && make  - after a successful flash, reboot.
 
 - <b> New! Toyota support</b>:  Thanks to @j4z for adding distance interval support with his Arduino solution and also helping to debug the kegman.json issues to make Kegman fork work with Toyotas!
