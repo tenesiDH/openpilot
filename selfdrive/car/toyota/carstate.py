@@ -130,6 +130,7 @@ class CarState():
     self.v_cruise_pcmlast = 41
     self.pcm_acc_status = False
     self.setspeedoffset = 34.0
+    self.setspeedcounter = 0
     self.Angles = np.zeros(250)
     self.Angles_later = np.zeros(250)
     self.Angle_counter = 0
@@ -251,12 +252,27 @@ class CarState():
         self.setspeedoffset = 0
         self.v_cruise_pcmlast = self.v_cruise_pcm
     if self.v_cruise_pcm < self.v_cruise_pcmlast:
-      self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
+      if self.setspeedcounter > 0:
+        self.setspeedoffset = self.setspeedoffset - 4
+      else:
+        self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
+      self.setspeedcounter = 100
     if self.v_cruise_pcmlast < self.v_cruise_pcm:
-      self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
-        
+      if self.setspeedcounter > 0:
+        self.setspeedoffset = self.setspeedoffset + 4
+      else:
+        self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
+      self.setspeedcounter = 100
+    if self.setspeedcounter > 0:
+      self.setspeedcounter = self.setspeedcounter - 1
     self.v_cruise_pcmlast = self.v_cruise_pcm
-    self.v_cruise_pcm = max(7, int(self.v_cruise_pcm) - self.setspeedoffset)
+    if int(self.v_cruise_pcm) - self.setspeedoffset < 7:
+      self.setspeedoffset = int(self.v_cruise_pcm) - 7
+    if int(self.v_cruise_pcm) - self.setspeedoffset > 169:
+      self.setspeedoffset = int(self.v_cruise_pcm) - 169
+    
+      
+    self.v_cruise_pcm = min(max(7, int(self.v_cruise_pcm) - self.setspeedoffset),169)
 
     if not self.left_blinker_on and not self.right_blinker_on:
       self.Angles[self.Angle_counter] = abs(self.angle_steers)
