@@ -41,7 +41,7 @@ button_delay = 0.2
 kegman = kegman_conf()
 kegman.conf['tuneGernby'] = "1"
 #kegman.write_config(kegman.conf)
-param = ["Kp", "Ki", "Kf", "steerRatio", "steerRateCost", "deadzone", \
+param = ["Kp", "Ki", "Kf", "steerRatio", "steerRateCost", "deadzone", "slowOnCurves", \
          "1barBP0", "1barBP1", "1barMax", "2barBP0", "2barBP1", \
          "2barMax", "3barBP0", "3barBP1", "3barMax", \
          "1barHwy", "2barHwy", "3barHwy"]
@@ -223,9 +223,8 @@ while True:
     kegman.conf['2barHwy'] = "2"
     
   if float(kegman.conf['3barHwy']) > 2:
-    kegman.conf['3barHwy'] = "2"  
-    
-    
+    kegman.conf['3barHwy'] = "2" 
+        
   if float(kegman.conf['Kf']) > 0.01:
     kegman.conf['Kf'] = "0.01"    
     
@@ -235,6 +234,12 @@ while True:
   #if float(kegman.conf['Kf']) < 0.00001:
   kegman.conf['Kf'] = str("{:.5f}".format(float(kegman.conf['Kf'])))
 
+  if float(kegman.conf['slowOnCurves']) > 0.00001:
+    kegman.conf['slowOnCurves'] = "1"
+  
+  if float(kegman.conf['slowOnCurves']) <= 0.99999:
+    kegman.conf['slowOnCurves'] = "0"  
+    
 
   if write_json:
     kegman.write_config(kegman.conf)

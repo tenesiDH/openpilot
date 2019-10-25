@@ -20,7 +20,7 @@ I will attempt to detail the changes in each of the branches here:
 
 <b>kegman</b> - this is the default branch which does not include Gernby's resonant feed forward steering (i.e. it's comma's default steering)
 
-<b>kegman-noAEB</b> - this branch disables the Honda Nidec AEB passthrough introduced in 0.6.4 as it gives problems and unexpectedly brakes on tight curves and oncoming traffic.
+<b>kegman-plusBoschGasPress</b> - this branch gives Honda Bosch users the ability to press the gas without disengaging OP for more "stock ACC"-like behaviour.  Remember to manually flash panda after checking out.  cd /data/openpilot/panda/board && pkill -f boardd && make - then reboot.
 
 <b>kegman-stockUI</b> - for 0.6 some people were having trouble with devUI so I separated the branches out.  
 
@@ -40,6 +40,10 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
+- <b> New! Adjustable stopping distance, one, two, and three bar distance intervals</b>:  BE CAREFUL WITH THESE OPTIONAL SETTINGS IN kegman.json!  Add ONE_BAR_DISTANCE, TWO_BAR_DISTANCE, THREE_BAR_DISTANCE, FOUR_BAR_DISTANCE values in kegman.json to change the following distance interval.  Add STOPPING_DISTANCE to change the distance between you and the lead car at a stop.  If these values do not exist in kegman.json, they just assume default values of 0.9, 1.3, 1.8, 2.3, and 2 respectively.  Thanks to @joeljacobs for adding the optional distance intervals.
+
+- <b> New! Disable Auto Emergency Braking (Nidec Hondas)</b>:  Since 0.6.4 Comma passes through the AEB signal.  This causes unexpected emergency braking on 2 lane highways with oncoming traffic and is unsafe.  I have disabled this.  Ensure that you reflash you Panda if you get AEBs:  cd /data/openpilot/panda/board && pkill -f boardd && make  - after a successful flash, reboot.
+
 - <b> New! Toyota support</b>:  Thanks to @j4z for adding distance interval support with his Arduino solution and also helping to debug the kegman.json issues to make Kegman fork work with Toyotas!
 
 - <b> New! Added highway speed braking profile tweaks</b>.  Note that 1barHwy, 2barHwy and 3barHwy are DELTAS.  For example if One bar distance is 0.9 seconds, 1barHwy of 0.3 will add 3 seconds to the distance during braking making you brake harder.
@@ -49,6 +53,15 @@ List of changes and tweaks (latest changes at the top):
 - <b> New! Enable / Disable Model based Slowdowns on turns: </b>  On tight turns, the model will slow down the car so that you can make the turn.  Some like this, some people don't.  Set slowOnCurve = "1" to enable slowdowns on curves, or "0" (default) to disable.
 
 - <b> New! Live long tuning for city speeds < 19.44 m/s (43.5 mph, 70 km/h): </b> Execute cd /data/openpilot && ./tune.sh to access live tuner on your mobile device while driving.
+  
+<b>Instructions for tuning steering with live tuner:</b>
+- Kp too high = the car overshoots and undershoots center
+- Kp too low = the car doesn't turn enough
+- Ki - dampens the overshoot / undershoot of Kp and allows the car to be centered faster, allowing for a higher Kp value
+- Ki too high = it gets to center without oscillations, but it takes too long to center.  If you hit a bump or give the wheel a quick nudge, it should oscillate 3 - 5 times before coming to steady-state.  If the wheel oscillates forever (critically damped), then your Kp or Ki or both are too high.
+- SteerRatio - too high, and the car ping pongs on straights and turns, too low, and the car doesn't turn enough on curves.  If you're on a turn and the wheel is oversteering and then correcting, steerRatio is too high, and it's fighting with Kp and Ki (which you don't want) - although in the past I've been able to have an oscillating oversteering tune which could do tighter turns, but the turns werent pleasant.
+- Kf - lower this if your car oscillates and you've done everything else.  It can be lowered to 0
+- All of these parameters interact with each other so finding the balance is a bit experimental  
   
 <b>Be careful and ready to take over at any time when doing this!!!</b>  The "distance" in s is the target distance the car will try to maintain.  The default distancces are 0.9s, 1.3s, 1.8s for 1,2 and 3 bar intervals.  I manipulate this value to pass to the MPC to scale the behavior which leads to harder braking or sooner braking or softer braking.  Essentially when you are approaching a car, the distance changes depending on your approach speed.  When the lead car pulls away, the distance returns to whatever your bar setting is
   
@@ -70,18 +83,9 @@ Example:
 
 Everything inbetween -0.25 m/s and 3 m/s is interpolated, which adjusts the distance smoothly as you slow down depending on the lead car approach relative speed.  
 
-
-- <b>(Not functional in 0.6.x yet) Toggle Comma's live tuning</b>:  Comma live tunes things like alignment, steerRatio etc.  But sometimes it doesn't converge to the right value and throws lane centering off during turns.  This allows you to use /data/openpilot/.tune.sh to toggle the auto-tune to off when the car feels right so that it doesn't tune the car any further than necessary.
-
 - <b>Highway speed braking profiles</b>:  Added highway braking profiles so that you won't follow so closely at speeds > 70 kph.  This affects kegman-0.5.8-gold, kegman-0.5.11, kegman-plusGernbySteering-0.5.11, kegman-0.12, kegman-0.13-stockUI, kegman-0.6 kegman-plusGernbySteering-0.6 branches only.
   
 - <b>Live tuner for Kp and Ki</b>:  Tune your Kp and Ki values live using your cell phone by SSHing into the Eon and executing cd /data/openpilot && ./tune.sh
-
-- <b>Kill services if plugged in and Eon batt < kegman.json --> battPercOff</b>  Shutting down of the Eon never worked on Nidec vehicles because the Panda always supplies power.  When Eon senses power it just starts up again.  So I have mitigated the power drain by about 40% when it is discharging in the car.  Reminder that the Eon continues to charge cycling between battChargeMax and battChargeMin in the /data/kegman.json file.  If the car battery falls below carVoltageMinEonShutdown in the /data/kegman.json file WHILE CHARGING THE EON then charging is disabled.  As charging is disabled, the Eon battery will continue to drain until it reaches battPercOff (again in /data/kegman.json) at which point it will shut down services to conserve power.  This will not prevent the Eon from discharging completely but will cut the drainage by about 40%, buying you some more time before it goes dead.  If the Eon is in this "Power Saving" mode you will need to reboot the Eon by pressing on the power button and touching somewhere near the center of the screen (note that the screen will note work).  Also note that if you unplug the Eon and the battery is below battPercOff it will shutdown.  If you reboot the Eon while unplugged, it will give you 3 minutes until it shuts down again unless it is plugged in during this time.  If you unplugged the Eon and forgot to turn it off, it will shutdown when the battery falls below battPercOff.  Hopefully this mitigates the "dead Eon" syndrome that occurs when people have trouble powering their device back up after the battery is completely drained.
-  
-For Bosch vehicles, the Eon will just simply shutdown as usual when battery falls below battPercOff.  Killing of services only occurs for Nidecs.
-
-
 
 - <b>Add @pjlao307's Dashcam Recording</b>:  Sometimes you just want to record a wicked OP run on a twisty highway to show your friends.  Sometimes you want to record a big flashing red error and complain about it and show your friends.  This does a screen video capture of the Eon screen and stores the files in /sdcard/videos on your Eon when the REC button is pressed.  Thanks to @pjlao307 and @theantihero for submitting the PR.
 
@@ -90,9 +94,7 @@ For Bosch vehicles, the Eon will just simply shutdown as usual when battery fall
 - <b>Added primitive tuning script</b>: To invoke live tuning:  (a) turn on tethering on your Eon,  (b) install JuiceSSH or similar and connect your cellphone to the wifi of the Eon using 192.168.43.1 and import the Comma private key,  (c) in JuiceSSH in the SSH session on the Eon issue cd /data/openpilot command, then ./tune.sh.  The text UI will be shown.  (d) turn "tuneGernby" to a "1"  (e) start driving and change the values to tune your steering.  It is best to have a cell phone mount in your car.  Note:  It takes 3 seconds for any changes to take effect.  
 
 - <b>Replaced dev UI</b> with @perpetuoviator dev UI with brake light icon by @berno22 - Thank you both!  NOTE:  There are lots of conveniences in this UI.  When the car is on, you have to press the top left corner to get to the Settings screen.  If you tap the lower right corner you can see the tmux session.  The brake light icon doesn't work properly with some cars (needs a fingerprint tweak I believe.  The wifi IP address and upload speed is printed on the screen.  The brake icon is so that you can see if OP is causing the brake lights to turn on and off and pissing the guy or gal off behind you. NOTE:  For GM vehicles, the brake icon indicates use of the friction brakes on the vehicle instead of the brake lights themselves.
-<b>UI touch controls:</b>
-[Acess "EON Settings" by touching the top left hand corner (left side of the Speed Limit sign)]
-[Acess "TmuxLog" by touching the bottom right hand corner]
+
 
 - <b>Added moar JSON parameters</b>:  
 
