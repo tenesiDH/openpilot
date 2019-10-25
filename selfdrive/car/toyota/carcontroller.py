@@ -12,7 +12,7 @@ from selfdrive.can.packer import CANPacker
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
 # Accel limits
-ACCEL_HYST_GAP = 0.01  # don't change accel command for small oscilalitons within this value
+ACCEL_HYST_GAP = 0.02  # don't change accel command for small oscilalitons within this value
 ACCEL_MAX = 2.7  # 2.7   m/s2
 ACCEL_MIN = -2.7 # -2.7   m/s2
 ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
