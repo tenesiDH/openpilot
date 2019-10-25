@@ -252,13 +252,13 @@ class CarState():
         self.setspeedoffset = 0
         self.v_cruise_pcmlast = self.v_cruise_pcm
     if self.v_cruise_pcm < self.v_cruise_pcmlast:
-      if self.setspeedcounter > 0:
+      if self.setspeedcounter > 0 and self.v_cruise_pcm > 41:
         self.setspeedoffset = self.setspeedoffset + 4
       else:
         self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
       self.setspeedcounter = 50
     if self.v_cruise_pcmlast < self.v_cruise_pcm:
-      if self.setspeedcounter > 0:
+      if self.setspeedcounter > 0 and (self.setspeedoffset - 4) > 0:
         self.setspeedoffset = self.setspeedoffset - 4
       else:
         self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
