@@ -43,22 +43,11 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
   int addr = GET_ADDR(to_fwd);
   int bus_fwd = -1;
 
-  if (addr == 832) {
-    if (bus_num == 0) {
-      HKG_forwarding_enabled = 0;
-    }
-    else if (HKG_OP_LKAS_live < 1) {
-      HKG_LKAS_forwarded = 1;
-      return 10;
-    }
-    else if (HKG_OP_LKAS_live > 0) {
-      HKG_OP_LKAS_live -= 1;
-      return -1;
-    }
-  }
-
   if (HKG_forwarding_enabled) {
     if (bus_num == 0) {
+      if (addr == 832) {
+        HKG_forwarding_enabled = 0;
+        }
       if ((!HKG_OP_LKAS_live) || (addr != 1265)) {
         bus_fwd = 12;
       } else {
@@ -71,6 +60,13 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
     if (bus_num == 2) {
       if (addr != 832) {
         bus_fwd = 10;
+      }
+      else if (HKG_OP_LKAS_live < 1) {
+        HKG_LKAS_forwarded = 1;
+        bus_fwd = 10;
+      }
+      else if (HKG_OP_LKAS_live > 0) {
+        HKG_OP_LKAS_live -= 1;
       }
     } 
   } else {
