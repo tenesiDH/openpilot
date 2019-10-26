@@ -59,19 +59,27 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
 
   if (HKG_forwarding_enabled) {
     if (bus_num == 0) {
-      bus_fwd = 21;
+      if ((!HKG_OP_LKAS_live) || (addr != 1265)) {
+        bus_fwd = 12;
+      } else {
+        bus_fwd = 2;
+      }
+    }
+    if (bus_num == 1) {
+      bus_fwd = 20;
     }
     if (bus_num == 2) {
-      bus_fwd = 10;
-    }
-  }
-  else {
+      if (addr != 832) {
+        bus_fwd = 10;
+      }
+    } 
+  } else {
     if (bus_num == 0) {
       bus_fwd = 1;
     }
-  }
-  if (bus_num == 1) {
-    bus_fwd = 20;
+    if (bus_num == 1) {
+      bus_fwd = 0;
+    }
   }
   return bus_fwd;
 }
