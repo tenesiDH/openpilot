@@ -39,7 +39,7 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
   return false;
 }
 
- static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
+static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   int addr = GET_ADDR(to_fwd);
   int bus_fwd = -1;
 
@@ -58,16 +58,18 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
       bus_fwd = 20;
     }
     if (bus_num == 2) {
-      if (addr != 832) {
-        bus_fwd = 10;
-      }
-      else if (HKG_OP_LKAS_live < 1) {
-        HKG_LKAS_forwarded = 1;
-        bus_fwd = 10;
-      }
-      else if (HKG_OP_LKAS_live > 0) {
+      if (addr == 832) {
+        if (HKG_OP_LKAS_live < 1) {
+          HKG_LKAS_forwarded = 1;
+          bus_fwd = 10;
+        }
+		else {
         HKG_OP_LKAS_live -= 1;
+        }
       }
+      else {
+        bus_fwd = 10;
+	  }
     } 
   } else {
     if (bus_num == 0) {
