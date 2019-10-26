@@ -22,10 +22,7 @@ with open(DEFAULT_SPEEDS_BY_REGION_JSON_FILE, "rb") as f:
 def rate_curvature_points(p2,p3,curvature2,curvature3):
   x2, y2, _ = p2
   x3, y3, _ = p3
-  if curvature3 > curvature2:
-    return (curvature3-curvature2)/(np.sqrt((x3-x2)**2+(y3-y2)**2))
-  else:
-    return 0
+  return abs((curvature3-curvature2)/(np.sqrt((x3-x2)**2+(y3-y2)**2)))
 
 def circle_through_points(p1, p2, p3, force=False, direction=False):
   """Fits a circle through three points
