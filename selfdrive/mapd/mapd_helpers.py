@@ -19,6 +19,14 @@ DEFAULT_SPEEDS_BY_REGION = {}
 with open(DEFAULT_SPEEDS_BY_REGION_JSON_FILE, "rb") as f:
   DEFAULT_SPEEDS_BY_REGION = json.loads(f.read())
 
+def rate_curvature_points(p2,p3,curvature2,curvature3):
+  x2, y2, _ = p2
+  x3, y3, _ = p3
+  if curvature3 > curvature2:
+    return (curvature3-curvature2)/(np.sqrt((x3-x2)**2+(y3-y2)**2))
+  else:
+    return 0
+
 def circle_through_points(p1, p2, p3, force=False):
   """Fits a circle through three points
   Formulas from: http://www.ambrsoft.com/trigocalc/circle3d.htm"""
