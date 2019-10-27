@@ -7,7 +7,7 @@ from common.op_params import opParams
 from common.travis_checker import travis
 
 op_params = opParams()
-factor = op_params.get('awareness_factor', 2.0)
+factor = op_params.get('awareness_factor', 10.0)
 
 if travis:
   factor = 1.0
