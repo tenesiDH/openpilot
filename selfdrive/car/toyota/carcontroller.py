@@ -44,9 +44,9 @@ def accel_hysteresis(accel, accel_steady, enabled):
     # send 0 when disabled, otherwise acc faults
     accel_steady = 0.
   elif accel > accel_steady + ACCEL_HYST_GAP:
-    accel_steady = accel - ACCEL_HYST_GAP + 0.0111
+    accel_steady = accel - ACCEL_HYST_GAP
   elif accel < accel_steady - ACCEL_HYST_GAP:
-    accel_steady = accel + ACCEL_HYST_GAP + 0.0111
+    accel_steady = accel + ACCEL_HYST_GAP
   accel = accel_steady
 
   return accel, accel_steady

@@ -19,7 +19,15 @@ DEFAULT_SPEEDS_BY_REGION = {}
 with open(DEFAULT_SPEEDS_BY_REGION_JSON_FILE, "rb") as f:
   DEFAULT_SPEEDS_BY_REGION = json.loads(f.read())
 
-def circle_through_points(p1, p2, p3, force=False):
+def rate_curvature_points(p2,p3,curvature2,curvature3):
+  x2, y2, _ = p2
+  x3, y3, _ = p3
+  if abs(curvature3) > abs(curvature2):
+    return abs((curvature3-curvature2)/(np.sqrt((x3-x2)**2+(y3-y2)**2)))
+  else:
+    return 0
+
+def circle_through_points(p1, p2, p3, force=False, direction=False):
   """Fits a circle through three points
   Formulas from: http://www.ambrsoft.com/trigocalc/circle3d.htm"""
   x1, y1, _ = p1
@@ -32,7 +40,13 @@ def circle_through_points(p1, p2, p3, force=False):
   D = (x1**2 + y1**2) * (x3 * y2 - x2 * y3) + (x2**2 + y2**2) * (x1 * y3 - x3 * y1) + (x3**2 + y3**2) * (x2 * y1 - x1 * y2)
   try:
     if abs((y3-y1)*x2-(x3-x1)*y2+x3*y1-y3*x1)/np.sqrt((y3-y1)**2+(x3-x1)**2) > 0.1 or force:
-      return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
+      if direction:
+        if (x2-x1)*(y3-y1)-(y2-y1)*(x3-x1)>0:
+          return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
+        else:
+          return (-B / (2 * A), - C / (2 * A), -np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
+      else:
+        return (-B / (2 * A), - C / (2 * A), np.sqrt((B**2 + C**2 - 4 * A * D) / (4 * A**2)))
     else:
       return (-B / (2 * A), - C / (2 * A), 10000)
   except RuntimeWarning:
