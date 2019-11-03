@@ -31,8 +31,8 @@ class Phantom:
     else:
       if self.to_disable:  # if last message is status: False, disable phantom mode, also disable by default
         self.data = {"status": False, "speed": 0.0}
-      elif time.time() - self.last_receive_time > self.timeout:  # lost connection, don't disable. keep phantom on but set speed to 0
-        self.data = {"status": True, "speed": 0.0, "angle": 0.0, "time": 0.0}
+      elif time.time() - self.last_receive_time >= self.timeout:  # lost connection, don't disable. keep phantom on but set speed to 0
+        self.data = {"status": True, "speed": 0.0, "angle": 0.0, "time": 0.0, "lost_connection": True}
       else:  # if waiting between messages from app, message becomes none, this uses the data from last message
         self.data = dict(self.last_phantom_data)
 

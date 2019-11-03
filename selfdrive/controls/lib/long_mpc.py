@@ -214,9 +214,12 @@ class LongitudinalMpc():
     if self.phantom.data["status"]:
       if self.phantom.data["speed"] != 0.0:
         x_lead, v_lead = self.process_phantom(lead)
-      else:
+      elif 'lost_connection' in self.phantom.data:
+        x_lead = 1.5
+        v_lead = 0.  # stop as quickly as possible
+      else:  # else, smooth deceleration
         x_lead = 3.75
-        v_lead = max(self.v_ego - (.7 / max(max(self.v_ego, 0)**.4, .01)), 0.0)  # smoothly decelerate to 0 todo: tune this!
+        v_lead = max(self.v_ego - (.7 / max(max(self.v_ego, 0) ** .4, .01)), 0.0)  # smoothly decelerate to 0 todo: tune this!
 
       a_lead = 0.0
       self.a_lead_tau = lead.aLeadTau
