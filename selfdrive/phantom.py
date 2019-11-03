@@ -50,7 +50,7 @@ class Phantom:
     if result == 0:
       with open(sshd_config_file, "r") as f:
         sshd_config = f.read()
-      print(sshd_config)
+      return sshd_config
       raise Exception
       if "UseDNS no" not in sshd_config:
         if sshd_config[-1:] != "\n":
