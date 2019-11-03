@@ -11,7 +11,7 @@ class Phantom:
   def __init__(self, timeout=False, do_sshd_mod=False):
     context = zmq.Context()
     op_params = opParams()
-    self.phantom_Data_sock = messaging.sub_sock(context, service_list['phantomData'].port, conflate=True)
+    #self.phantom_Data_sock = messaging.sub_sock(context, service_list['phantomData'].port, conflate=True)
     self.data = {"status": False, "speed": 0.0}
     self.last_receive_counter = 0
     self.last_phantom_data = {"status": False, "speed": 0.0}
