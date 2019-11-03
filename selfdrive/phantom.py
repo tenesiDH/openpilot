@@ -3,41 +3,38 @@ import selfdrive.messaging as messaging
 from selfdrive.services import service_list
 from common.op_params import opParams
 import subprocess
-from common.basedir import BASEDIR
 from common.travis_checker import travis
+import time
 
 
 class Phantom:
-  def __init__(self, timeout=False, do_sshd_mod=False):
+  def __init__(self, timeout=1.):
     context = zmq.Context()
-    op_params = opParams()
-    #self.phantom_Data_sock = messaging.sub_sock(context, service_list['phantomData'].port, conflate=True)
+    self.op_params = opParams()
+    self.phantom_Data_sock = messaging.sub_sock(context, service_list['phantomData'].port, conflate=True)
     self.data = {"status": False, "speed": 0.0}
-    self.last_receive_counter = 0
+    self.last_receive_time = time.time()
     self.last_phantom_data = {"status": False, "speed": 0.0}
-    self.timeout = timeout
+    self.timeout = timeout  # in seconds
     self.to_disable = True
-    if not travis and not op_params.get("UseDNS", None) and do_sshd_mod:  # ensure we only run once
+    if not travis and not self.op_params.get("UseDNS", None):  # ensure we only run once
       self.mod_sshd_config()
 
-  def update(self,
-             rate=40.43):  # in the future, pass in the current rate of long_mpc to accurate calculate disconnect time
-    phantomData = messaging.recv_one_or_none(self.phantom_Data_sock)
-    if phantomData is not None:
-      self.data = {"status": phantomData.phantomData.status, "speed": phantomData.phantomData.speed,
-                   "angle": phantomData.phantomData.angle, "time": phantomData.phantomData.time}
+  def update(self):
+    phantom_data = messaging.recv_one_or_none(self.phantom_Data_sock)
+    if phantom_data is not None:
+      self.data = {"status": phantom_data.phantomData.status, "speed": phantom_data.phantomData.speed,
+                   "angle": phantom_data.phantomData.angle, "time": phantom_data.phantomData.time}
       self.last_phantom_data = dict(self.data)
-      self.last_receive_counter = 0
+      self.last_receive_time = time.time()
       self.to_disable = not self.data["status"]
     else:
       if self.to_disable:  # if last message is status: False, disable phantom mode, also disable by default
         self.data = {"status": False, "speed": 0.0}
-      elif self.last_receive_counter > int(
-              rate * 1.0) and self.timeout:  # lost connection, don't disable. keep phantom on but set speed to 0
+      elif time.time() - self.last_receive_time > self.timeout:  # lost connection, don't disable. keep phantom on but set speed to 0
         self.data = {"status": True, "speed": 0.0, "angle": 0.0, "time": 0.0}
       else:  # if waiting between messages from app, message becomes none, this uses the data from last message
         self.data = dict(self.last_phantom_data)
-      self.last_receive_counter = min(self.last_receive_counter + 1, 900)  # don't infinitely increment
 
   def mod_sshd_config(self):
     # this disables dns lookup when connecting to EON to speed up commands from phantom app, reboot required
@@ -50,21 +47,15 @@ class Phantom:
     if result == 0:
       with open(sshd_config_file, "r") as f:
         sshd_config = f.read()
-      return sshd_config
-      raise Exception
       if "UseDNS no" not in sshd_config:
-        if sshd_config[-1:] != "\n":
-          use_dns = "\nUseDNS no\n"
-        else:
-          use_dns = "UseDNS no\n"
+        use_dns = "{}UseDNS no\n"
+        use_dns = use_dns.format("") if sshd_config[-1] == "\n" else use_dns.format("\n")
         with open(sshd_config_file, "w") as f:
           f.write(sshd_config + use_dns)
-        kegman.save({"UseDNS": True})
-      else:
-        kegman.save({"UseDNS": True})
+      self.op_params.put("UseDNS", True)
       try:
         subprocess.call(["mount", "-o", "remount,ro", "/system"])  # remount system as read only
       except:
         pass
     else:
-      kegman.save({"UseDNS": False})
+      self.op_params.put("UseDNS", False)

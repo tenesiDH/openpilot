@@ -1764,6 +1764,13 @@ struct LiveMapData {
   mapValid @11 :Bool;
 }
 
+struct PhantomData {
+  status @0 :Bool;
+  speed @1 :Float32;
+  angle @2 :Float32;
+  time @3 :Float32;
+}
+
 struct CameraOdometry {
   frameId @4 :UInt32;
   timestampEof @5 :UInt64;
@@ -1854,5 +1861,6 @@ struct Event {
     thumbnail @66: Thumbnail;
     carEvents @68: List(Car.CarEvent);
     carParams @69: Car.CarParams;
+    phantomData @70 :PhantomData;
   }
 }
