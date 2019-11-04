@@ -1,5 +1,5 @@
 import zmq
-import selfdrive.messaging as messaging
+import selfdrive.messaging_arne as messaging_arne
 from selfdrive.services import service_list
 from common.op_params import opParams
 import subprocess
@@ -11,7 +11,7 @@ class Phantom:
   def __init__(self, timeout=1.):
     context = zmq.Context()
     self.op_params = opParams()
-    self.phantom_Data_sock = messaging.sub_sock(service_list['phantomData'].port, conflate=True)
+    self.phantom_Data_sock = messaging_arne.sub_sock(service_list['phantomData'].port, conflate=True)
     self.data = {"status": False, "speed": 0.0}
     self.last_receive_time = time.time()
     self.last_phantom_data = {"status": False, "speed": 0.0}
@@ -21,7 +21,7 @@ class Phantom:
       self.mod_sshd_config()
 
   def update(self):
-    phantom_data = messaging.recv_one_or_none(self.phantom_Data_sock)
+    phantom_data = messaging_arne.recv_one_or_none(self.phantom_Data_sock)
     if phantom_data is not None:
       self.data = {"status": phantom_data.phantomData.status, "speed": phantom_data.phantomData.speed,
                    "angle": phantom_data.phantomData.angle, "time": phantom_data.phantomData.time}
