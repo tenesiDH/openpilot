@@ -106,7 +106,6 @@ class CarInterface(CarInterfaceBase):
                        candidate == CAR.CADILLAC_CT6
     ret.openpilotLongitudinalControl = ret.enableCamera
     tire_stiffness_factor = 0.444  # not optimized yet
-    ret.safetyModelPassive = car.CarParams.SafetyModel.gmPassive
 
 
     # same tuning for Volt and CT6 for now
