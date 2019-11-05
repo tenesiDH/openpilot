@@ -17,9 +17,9 @@ from selfdrive.loggerd.config import get_available_percent
 from selfdrive.kegman_conf import kegman_conf
 
 kegman = kegman_conf()
-#from selfdrive.pandad import get_expected_version
+from selfdrive.pandad import get_expected_version
 
-#FW_VERSION = get_expected_version()
+FW_VERSION = get_expected_version()
 
 ThermalStatus = log.ThermalData.ThermalStatus
 CURRENT_TAU = 15.   # 15s time constant
