@@ -1,4 +1,3 @@
-import zmq
 from selfdrive.services import service_list
 import selfdrive.messaging_arne as messaging_arne
 
@@ -18,7 +17,7 @@ class PhantomReceiver:
     self.phantomData_sock.send(data.to_bytes())
 
   def open_socket(self):
-    self.phantomData_sock = messaging_arne.pub_sock(zmq.Context(), service_list['phantomData'].port)
+    self.phantomData_sock = messaging_arne.pub_sock(service_list['phantomData'].port)
 
   def close_socket(self):
     self.phantomData_sock.close()
