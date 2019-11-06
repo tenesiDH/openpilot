@@ -19,7 +19,11 @@ class PhantomReceiver:
     self.phantomData_sock.send(data.to_bytes())
 
   def open_socket(self):
+    with open('/data/bd.test', 'a') as f:
+      f.write('{}\n'.format('open socket'))
     self.phantomData_sock = messaging_arne.pub_sock(service_list['phantomData'].port)
 
   def close_socket(self):
+    with open('/data/bd.test', 'a') as f:
+      f.write('{}\n'.format('close socket'))
     self.phantomData_sock.close()
