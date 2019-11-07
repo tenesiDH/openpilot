@@ -21,8 +21,10 @@ class PhantomReceiver:
     with open('/data/bd.test', 'a') as f:
       f.write('{}\n'.format('open socket'))
     self.phantomData_sock = messaging_arne.pub_sock(service_list['phantomData'].port)
+    return "ENABLED"
 
   def disable_phantom(self):
     with open('/data/bd.test', 'a') as f:
       f.write('{}\n'.format('close socket'))
     self.phantomData_sock.close()
+    return "DISABLED"
