@@ -151,9 +151,9 @@ class CarController():
     # steer torque
     self.phantom.update()
     if self.phantom.data['status']:
-      apply_steer = int(round(self.phantom.data["angle"]))
+      apply_steer = int(round(self.phantom.data["angle"])) if abs(CS.angle_steers) <= 400 else 0
     else:
-      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
+      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX)) if abs(CS.angle_steers) <= 100 else 0
     
     # only cut torque when steer state is a known fault
     if CS.steer_state in [9, 25] and self.last_steer > 0:
