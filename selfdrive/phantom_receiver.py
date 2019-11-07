@@ -6,13 +6,12 @@ class PhantomReceiver:
   def __init__(self):
     self.phantomData_sock = None
 
-  def broadcast_data(self, status, speed, angle, time):
+  def broadcast_data(self, speed, angle, time):
     with open('/data/bd.test', 'a') as f:
-      f.write('{}\n'.format([status, speed, angle, time]))
-    status = True if status == "true" or status else False
+      f.write('{}\n'.format([speed, angle, time]))
     data = messaging_arne.new_message()
     data.init('phantomData')
-    data.phantomData.status = status
+    data.phantomData.status = True
     data.phantomData.speed = speed
     data.phantomData.angle = angle
     data.phantomData.time = time
