@@ -8,6 +8,7 @@ from selfdrive.car.toyota.toyotacan import make_can_msg, create_video_target,\
                                            create_acc_cancel_command, create_fcw_command
 from selfdrive.car.toyota.values import CAR, ECU, STATIC_MSGS, TSS2_CAR
 from selfdrive.can.packer import CANPacker
+from selfdrive.phantom import Phantom
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -102,6 +103,7 @@ class CarController():
     self.last_standstill = False
     self.standstill_req = False
     self.angle_control = False
+    self.phantom = Phantom()
 
     self.steer_angle_enabled = False
     self.ipas_reset_counter = 0
@@ -147,7 +149,11 @@ class CarController():
         apply_accel = min(apply_accel, 0.0)
       
     # steer torque
-    apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
+    self.phantom.update()
+    if self.phantom.data['status']:
+      apply_steer = int(round(self.phantom.data["angle"]))
+    else:
+      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
     
     # only cut torque when steer state is a known fault
     if CS.steer_state in [9, 25] and self.last_steer > 0:
