@@ -152,7 +152,7 @@ def mapsd_thread():
   global last_gps
   context = zmq.Context()
   poller = zmq.Poller()
-  gps_external_sock = messaging.sub_sock(context, 8032, poller, conflate=True)
+  gps_external_sock = messaging.sub_sock(context, 8026, poller, conflate=True)
   map_data_sock = messaging.pub_sock(context, 8065)
   traffic_data_sock = messaging.sub_sock(context, 8208, poller, conflate=True)
 
