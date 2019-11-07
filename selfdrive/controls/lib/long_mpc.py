@@ -120,16 +120,16 @@ class LongitudinalMpc():
       TR = interp(self.v_ego, x, y)
 
     if self.v_lead is not None:  # since the new mpc now handles braking nicely, simplify mods
-      x = [0, 0.61, 1.26, 2.1, 2.68]  # relative velocity values
+      x = [0, 0.61, 1.26, 2.1, 2.68]  # relative velocity values todo: add back negative values to get farther away from lead when it's slower
       y = [0, -0.017, -0.053, -0.154, -0.272]  # modification values
       TR_mod = interp(self.v_lead + self.v_ego, x, y)  # quicker acceleration/don't brake when lead is overtaking
 
-      '''x = [-1.49, -1.1, -0.67, 0.0, 0.67, 1.1, 1.49]
-      y = [0.056, 0.032, 0.016, 0.0, -0.016, -0.032, -0.056]
-      TR_mod += interp(self.get_acceleration(), x, y)  # when lead car has been braking over the past 3 seconds, slightly increase TR'''
+      # x = [-1.49, -1.1, -0.67, 0.0, 0.67, 1.1, 1.49]  # todo: work on adding this back
+      # y = [0.056, 0.032, 0.016, 0.0, -0.016, -0.032, -0.056]
+      # TR_mod += interp(self.get_acceleration(), x, y)  # when lead car has been braking over the past 3 seconds, slightly increase TR
 
       TR += TR_mod
-      #TR *= self.get_traffic_level()  # modify TR based on last minute of traffic data
+      #TR *= self.get_traffic_level()  # modify TR based on last minute of traffic data  # todo: look at getting this to work, a model could be used
     if TR < 0.9:
       return 0.9
     else:
@@ -194,7 +194,8 @@ class LongitudinalMpc():
       v_lead = max(0.0, lead.vLead)
       if v_lead < 0.1 or -lead.aLeadK / 2.0 > v_lead:
         v_lead = 0.0
-      #  if radar lead is available, ensure we use that as the real lead rather than ignoring it and running into it
+      # if radar lead is available, ensure we use that as the real lead rather than ignoring it and running into it
+      # todo: this is buggy and probably needs to be looked at
       x_lead = min(9.144, lead.dRel)
       v_lead = min(self.phantom.data["speed"], v_lead)
     else:
