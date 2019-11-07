@@ -152,7 +152,7 @@ def mapsd_thread():
   global last_gps
   context = zmq.Context()
   poller = zmq.Poller()
-  gps_external_sock = messaging.sub_sock(context, 8032, poller, conflate=True)
+  gps_external_sock = messaging.sub_sock(context, 8026, poller, conflate=True)
   map_data_sock = messaging.pub_sock(context, 8065)
   traffic_data_sock = messaging.sub_sock(context, 8208, poller, conflate=True)
 
@@ -204,7 +204,7 @@ def mapsd_thread():
     
     fix_ok = gps.flags & 1
     
-    if gps.accuracy > 2.0 and not speedLimittrafficvalid:
+    if gps.accuracy > 10.0 and not speedLimittrafficvalid:
       fix_ok = False
     if not fix_ok or last_query_result is None or not cache_valid:
       cur_way = None
