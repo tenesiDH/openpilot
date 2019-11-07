@@ -27,8 +27,8 @@ class PhantomReceiver:
     return "ENABLED"  # needed to tell the app we're all done with this function
 
   def disable_phantom(self):
-    with open('/data/bd.test', 'a') as f:
-      f.write('{}\n'.format('close socket'))
     self.broadcast_data(False, 0.0, 0.0, 0.0)
     self.phantom_data_sock.close()
+    with open('/data/bd.test', 'a') as f:
+      f.write('{}\n'.format('close socket'))
     return "DISABLED"
