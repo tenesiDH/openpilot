@@ -318,7 +318,7 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
 
-    elif candidate in (CAR.PILOT, CAR.PILOT_2019):
+    elif candidate in (CAR.PILOT, CAR.PILOT_2018, CAR.PILOT_2019):
       stop_and_go = False
       ret.mass = 4204. * CV.LB_TO_KG + STD_CARGO_KG # average weight
       ret.wheelbase = 2.82
