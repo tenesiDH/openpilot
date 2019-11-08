@@ -119,9 +119,9 @@ def create_fcw_command(packer, fcw):
 
 def create_ui_command(packer, steer, chime, left_line, right_line, barriers):
   values = {
-    "RIGHT_LINE": right_line,
-    "LEFT_LINE": left_line,
-    "BARRIERS" : barriers,
+    "RIGHT_LINE": int(right_line),
+    "LEFT_LINE": int(left_line),
+    "BARRIERS" : int(barriers),
     "SET_ME_X0C": 0x0c,
     "SET_ME_X2C": 0x2c,
     "SET_ME_X38": 0x38,
