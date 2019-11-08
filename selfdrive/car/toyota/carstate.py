@@ -297,7 +297,7 @@ class CarState():
     self.barriers = cp_cam.vl["LKAS_HUD"]['BARRIERS']
     self.rightline = cp_cam.vl["LKAS_HUD"]['RIGHT_LINE']
     self.leftline = cp_cam.vl["LKAS_HUD"]['LEFT_LINE']
-    print(self.leftline)
+    
     
     self.tsgn1 = cp_cam.vl["RSA1"]['TSGN1']
     self.spdval1 = cp_cam.vl["RSA1"]['SPDVAL1']
