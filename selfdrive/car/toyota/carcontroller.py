@@ -278,7 +278,7 @@ class CarController():
       send_ui = True
 
     if (frame % 100 == 0 or send_ui) and ECU.CAM in self.fake_ecus:
-      can_sends.append(create_ui_command(self.packer, steer, pcm_cancel_cmd, CS.leftline, CS.rightline, CS.barriers))
+      can_sends.append(create_ui_command(self.packer, steer, pcm_cancel_cmd, left_line, right_line, left_lane_depart, right_lane_depart))
 
     if frame % 100 == 0 and ECU.DSU in self.fake_ecus and self.car_fingerprint not in TSS2_CAR:
       can_sends.append(create_fcw_command(self.packer, fcw))
