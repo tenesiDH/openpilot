@@ -1252,10 +1252,10 @@ static void bb_ui_draw_measures_left(UIState *s, int bb_x, int bb_y, int bb_w ) 
     char uom_str[3];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
     //show red/orange if gps accuracy is high
-      if(scene->gpsAccuracy > 0.59) {
+      if(scene->gpsAccuracy > 1.0) {
          val_color = nvgRGBA(255, 188, 3, 200);
       }
-      if(scene->gpsAccuracy > 0.8) {
+      if(scene->gpsAccuracy > 2.0) {
          val_color = nvgRGBA(255, 0, 0, 200);
       }
 
@@ -1382,16 +1382,16 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
     char val_str[16];
     char uom_str[6];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
-      //show Orange if more than 6 degrees
-      //show red if  more than 12 degrees
-      if(((int)(scene->angleSteers) < -6) || ((int)(scene->angleSteers) > 6)) {
+      //show Orange if more than 50 degrees
+      //show red if  more than 100 degrees
+      if(((int)(scene->angleSteers) < -50) || ((int)(scene->angleSteers) > 50)) {
         val_color = nvgRGBA(255, 188, 3, 200);
       }
-      if(((int)(scene->angleSteers) < -12) || ((int)(scene->angleSteers) > 12)) {
+      if(((int)(scene->angleSteers) < -100) || ((int)(scene->angleSteers) > 100)) {
         val_color = nvgRGBA(255, 0, 0, 200);
       }
       // steering is in degrees
-      snprintf(val_str, sizeof(val_str), "%.0f°",(scene->angleSteers));
+      snprintf(val_str, sizeof(val_str), "%.1f°",(scene->angleSteers));
 
       snprintf(uom_str, sizeof(uom_str), "");
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "REAL STEER",
@@ -1406,16 +1406,16 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
     char val_str[16];
     char uom_str[6];
     NVGcolor val_color = nvgRGBA(255, 255, 255, 200);
-      //show Orange if more than 6 degrees
-      //show red if  more than 12 degrees
-      if(((int)(scene->angleSteersDes) < -6) || ((int)(scene->angleSteersDes) > 6)) {
+      //show Orange if more than 50 degrees
+      //show red if  more than 100 degrees
+      if(((int)(scene->angleSteersDes) < -50) || ((int)(scene->angleSteersDes) > 50)) {
         val_color = nvgRGBA(255, 188, 3, 200);
       }
-      if(((int)(scene->angleSteersDes) < -12) || ((int)(scene->angleSteersDes) > 12)) {
+      if(((int)(scene->angleSteersDes) < -100) || ((int)(scene->angleSteersDes) > 100)) {
         val_color = nvgRGBA(255, 0, 0, 200);
       }
       // steering is in degrees
-      snprintf(val_str, sizeof(val_str), "%.0f°",(scene->angleSteersDes));
+      snprintf(val_str, sizeof(val_str), "%.1f°",(scene->angleSteersDes));
 
       snprintf(uom_str, sizeof(uom_str), "");
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "DESIR STEER",
