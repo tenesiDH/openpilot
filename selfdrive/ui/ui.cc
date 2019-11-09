@@ -992,8 +992,8 @@ const UIScene *scene = &s->scene;
         nvgRGBA(0, 191, 255, 255), nvgRGBA(0, 95, 128, 50));
     } else {
       int torque_scale = (int)fabs(510*(float)s->scene.output_scale);
-      int red_lvl = min(255, torque_scale);
-      int green_lvl = min(255, 510-torque_scale);
+      int red_lvl = fmin(255, torque_scale);
+      int green_lvl = fmin(255, 510-torque_scale);
       track_bg = nvgLinearGradient(s->vg, vwp_w, vwp_h, vwp_w, vwp_h*.4,
         nvgRGBA(          red_lvl,            green_lvl,  0, 255),
         nvgRGBA((int)(0.5*red_lvl), (int)(0.5*green_lvl), 0, 50));
