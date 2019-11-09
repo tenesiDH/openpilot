@@ -2,27 +2,22 @@ from cereal import car
 from common.numpy_fast import clip, interp
 from selfdrive.car import apply_toyota_steer_torque_limits
 from selfdrive.car import create_gas_command
-from selfdrive.car.toyota.toyotacan import make_can_msg, create_video_target,\
+from selfdrive.car.toyota.toyotacan import make_can_msg, \
                                            create_steer_command, create_ui_command, \
                                            create_ipas_steer_command, create_accel_command, \
                                            create_acc_cancel_command, create_fcw_command
-from selfdrive.car.toyota.values import CAR, ECU, STATIC_MSGS, TSS2_CAR
+from selfdrive.car.toyota.values import CAR, ECU, STATIC_MSGS, TSS2_CAR, SteerLimitParams
 from selfdrive.can.packer import CANPacker
+from selfdrive.phantom import Phantom
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
 # Accel limits
 ACCEL_HYST_GAP = 0.02  # don't change accel command for small oscilalitons within this value
-ACCEL_MAX = 2.7  # 2.7   m/s2
-ACCEL_MIN = -2.7 # -2.7   m/s2
+ACCEL_MAX = 3.5  # 2.7   m/s2
+ACCEL_MIN = -4.0 # -2.7   m/s2
 ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
 
-# Steer torque limits
-class SteerLimitParams:
-  STEER_MAX = 1500
-  STEER_DELTA_UP = 10       # 1.5s time to peak torque
-  STEER_DELTA_DOWN = 44     # always lower than 45 otherwise the Rav4 faults (Prius seems ok with 50)
-  STEER_ERROR_MAX = 250     # max delta between torque cmd and torque motor
 
 # Steer angle limits (tested at the Crows Landing track and considered ok)
 ANGLE_MAX_BP = [0., 5.]
@@ -102,6 +97,7 @@ class CarController():
     self.last_standstill = False
     self.standstill_req = False
     self.angle_control = False
+    self.phantom = Phantom()
 
     self.steer_angle_enabled = False
     self.ipas_reset_counter = 0
@@ -114,9 +110,8 @@ class CarController():
 
     self.packer = CANPacker(dbc_name)
 
-  def update(self, enabled, CS, frame, actuators,
-             pcm_cancel_cmd, hud_alert, forwarding_camera, left_line,
-             right_line, lead, left_lane_depart, right_lane_depart):
+  def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, hud_alert,
+             left_line, right_line, lead, left_lane_depart, right_lane_depart):
 
     # *** compute control surfaces ***
 
@@ -147,7 +142,11 @@ class CarController():
         apply_accel = min(apply_accel, 0.0)
       
     # steer torque
-    apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX))
+    self.phantom.update()
+    if self.phantom.data['status']:
+      apply_steer = int(round(self.phantom.data["angle"])) if abs(CS.angle_steers) <= 400 else 0
+    else:
+      apply_steer = int(round(actuators.steer * SteerLimitParams.STEER_MAX)) if abs(CS.angle_steers) <= 100 else 0
     
     # only cut torque when steer state is a known fault
     if CS.steer_state in [9, 25] and self.last_steer > 0:
@@ -256,10 +255,6 @@ class CarController():
         # This prevents unexpected pedal range rescaling
         can_sends.append(create_gas_command(self.packer, apply_gas, frame//2))
 
-    if frame % 10 == 0 and ECU.CAM in self.fake_ecus and not forwarding_camera:
-      for addr in TARGET_IDS:
-        can_sends.append(create_video_target(frame//10, addr))
-
     # ui mesg is at 100Hz but we send asap if:
     # - there is something to display
     # - there is something to stop displaying
@@ -286,19 +281,7 @@ class CarController():
     #*** static msgs ***
 
     for (addr, ecu, cars, bus, fr_step, vl) in STATIC_MSGS:
-      if frame % fr_step == 0 and ecu in self.fake_ecus and self.car_fingerprint in cars and not (ecu == ECU.CAM and forwarding_camera):
-        # special cases
-        if fr_step == 5 and ecu == ECU.CAM and bus == 1:
-          cnt = (((frame // 5) % 7) + 1) << 5
-          vl = bytes([cnt]) + vl
-        elif addr in (0x489, 0x48a) and bus == 0:
-          # add counter for those 2 messages (last 4 bits)
-          cnt = ((frame // 100) % 0xf) + 1
-          if addr == 0x48a:
-            # 0x48a has a 8 preceding the counter
-            cnt += 1 << 7
-          vl += bytes([cnt])
-
+      if frame % fr_step == 0 and ecu in self.fake_ecus and self.car_fingerprint in cars:
         can_sends.append(make_can_msg(addr, vl, bus, False))
 
     return can_sends

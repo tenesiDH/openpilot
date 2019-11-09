@@ -17,15 +17,6 @@ from common.travis_checker import travis
 op_params = opParams()
 use_car_caching = op_params.get('use_car_caching', True)
 
-def get_one_can(logcan):
-  while True:
-    try:
-      can = messaging.recv_one(logcan)
-      if len(can.can) > 0:
-        return can
-    except zmq.error.Again:
-      continue
-
 
 def get_startup_alert(car_recognized, controller_available):
   alert = 'startup'
@@ -110,7 +101,7 @@ def fingerprint(logcan, sendcan, has_relay):
     return (str(cached_fingerprint[0]), finger, vin)
   
   while not done:
-    a = get_one_can(logcan)
+    a = messaging.get_one_can(logcan)
 
     for can in a.can:
       # need to independently try to fingerprint both bus 0 and 1 to work
