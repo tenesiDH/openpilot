@@ -43,9 +43,9 @@ extern "C"{
 }
 
 #include "messaging.hpp"
-
+extern "C"{
 #include "devicestate.c"
-
+}
 #define STATUS_STOPPED 0
 #define STATUS_DISENGAGED 1
 #define STATUS_ENGAGED 2
