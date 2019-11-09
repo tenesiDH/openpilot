@@ -109,6 +109,10 @@ def get_cam_can_parser(CP):
     ("SPLSGN3", "RSA2", 0),
     ("TSGN4", "RSA2", 0),
     ("SPLSGN4", "RSA2", 0),
+    ("BARRIERS", "LKAS_HUD", 0),
+    ("RIGHT_LINE", "LKAS_HUD", 0),
+    ("LEFT_LINE", "LKAS_HUD", 0),
+    
   ]
 
   # use steering message to check if panda is connected to frc
@@ -289,6 +293,12 @@ class CarState():
       self.generic_toggle = cp.vl["AUTOPARK_STATUS"]['STATE'] != 0
     else:
       self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
+      
+    self.barriers = cp_cam.vl["LKAS_HUD"]['BARRIERS']
+    self.rightline = cp_cam.vl["LKAS_HUD"]['RIGHT_LINE']
+    self.leftline = cp_cam.vl["LKAS_HUD"]['LEFT_LINE']
+    
+    
     self.tsgn1 = cp_cam.vl["RSA1"]['TSGN1']
     self.spdval1 = cp_cam.vl["RSA1"]['SPDVAL1']
     

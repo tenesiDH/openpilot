@@ -40,9 +40,9 @@ _A_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 # need fast accel at very low speed for stop and go
 # make sure these accelerations are smaller than mpc limits
 
-_A_CRUISE_MAX_V = [3.5, 3.0, 1.5, .5, .3]
+_A_CRUISE_MAX_V = [3.0, 3.0, 1.5, .5, .3]
 _A_CRUISE_MAX_V_ECO = [1.0, 1.5, 1.0, 0.3, 0.1]
-_A_CRUISE_MAX_V_SPORT = [3.5, 3.5, 3.5, 3.5, 3.5]
+_A_CRUISE_MAX_V_SPORT = [3.0, 3.0, 3.0, 3.0, 3.0]
 _A_CRUISE_MAX_V_FOLLOWING = [1.3, 1.6, 1.2, .7, .3]
 _A_CRUISE_MAX_BP = [0., 5., 10., 20., 55.]
 
@@ -61,7 +61,10 @@ _MODEL_V_K = [[0.07068858], [0.04826294]]
 SPEED_PERCENTILE_IDX = 7
 
 def calc_cruise_accel_limits(v_ego, following, gasbuttonstatus):
-  a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V)
+  if following:
+    a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V_FOLLOWING)
+  else:
+    a_cruise_min = interp(v_ego, _A_CRUISE_MIN_BP, _A_CRUISE_MIN_V)
 
   if following:
     a_cruise_max = interp(v_ego, _A_CRUISE_MAX_BP, _A_CRUISE_MAX_V_FOLLOWING)
