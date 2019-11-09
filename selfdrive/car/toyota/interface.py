@@ -247,7 +247,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerMaxBP = [16. * CV.KPH_TO_MS, 45. * CV.KPH_TO_MS]  # breakpoints at 1 and 40 kph
     ret.steerMaxV = [1., 1.]  # 2/3rd torque allowed above 45 kph
     ret.brakeMaxBP = [0., 35., 55.]
-    ret.brakeMaxV = [0.9, 0.8, 0.7]
+    ret.brakeMaxV = [1.0, 0.8, 0.7]
 
     ret.enableCamera = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, ECU.CAM) or has_relay
     ret.enableDsu = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, ECU.DSU) or (has_relay and candidate in TSS2_CAR)
