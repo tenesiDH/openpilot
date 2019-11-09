@@ -14,8 +14,8 @@ VisualAlert = car.CarControl.HUDControl.VisualAlert
 
 # Accel limits
 ACCEL_HYST_GAP = 0.02  # don't change accel command for small oscilalitons within this value
-ACCEL_MAX = 2.7  # 2.7   m/s2
-ACCEL_MIN = -2.7 # -2.7   m/s2
+ACCEL_MAX = 4.0  # 4.0   m/s2
+ACCEL_MIN = -4.0 # -4.0   m/s2
 ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
 
 
