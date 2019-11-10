@@ -141,8 +141,8 @@ class CarState():
     self.Angle = [0, 5, 10, 15,20,25,30,35,60,100,180,270,500]
     self.Angle_Speed = [255,160,100,80,70,60,55,50,40,33,27,17,12]
     if not travis:
-      self.traffic_data_sock = messaging.pub_sock(service_list['liveTrafficData'].port)
-      self.arne182Status_sock = messaging.pub_sock(service_list['arne182Status'].port)
+      self.traffic_data_sock = messaging.pub_sock('liveTrafficData')
+      self.arne182Status_sock = messaging.pub_sock('arne182Status')
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
