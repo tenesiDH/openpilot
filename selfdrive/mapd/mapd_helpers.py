@@ -408,6 +408,33 @@ class Way:
       except KeyError:
         pass
       try:
+        if backwards:
+          if way.way.nodes[0].tags['traffic_calming']=='bump':
+            if way_pts[0,0] < 0 and way_pts[-1,0] < 0:
+              pass
+            elif way_pts[0,0] < 0:
+              speed_ahead_dist = np.linalg.norm(way_pts[-1, :])
+              speed_ahead = 2.24
+              break
+            elif way_pts[-1,0] < 0:
+              speed_ahead_dist = np.linalg.norm(way_pts[0, :])
+              speed_ahead = 2.24
+              break
+        else:
+          if way.way.nodes[-1].tags['traffic_calming']=='bump':
+            if way_pts[0,0] < 0 and way_pts[-1,0] < 0:
+              pass
+            elif way_pts[0,0] < 0:
+              speed_ahead_dist = np.linalg.norm(way_pts[-1, :])
+              speed_ahead = 2.24
+              break
+            elif way_pts[-1,0] < 0:
+              speed_ahead_dist = np.linalg.norm(way_pts[0, :])
+              speed_ahead = 2.24
+              break
+      except KeyError:
+        pass
+      try:
         count = 0
         loop_must_break = False
         for n in way.way.nodes:
