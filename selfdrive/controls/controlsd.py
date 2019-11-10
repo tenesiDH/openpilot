@@ -460,7 +460,6 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     sm = messaging.SubMaster(['thermal', 'health', 'liveCalibration', 'driverMonitoring', 'plan', 'pathPlan', \
                               'gpsLocation', 'radarState'], ignore_alive=['gpsLocation'])
 
-  can_poller = zmq.Poller()
   poller = zmq.Poller()
   arne182Status = messaging_arne.sub_sock(service_list['arne182Status'].port, poller, conflate=True)  # todo: can we use messaging_arne here?
   if can_sock is None:
