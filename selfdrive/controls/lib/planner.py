@@ -8,7 +8,7 @@ import numpy as np
 from cereal import arne182
 from common.params import Params
 from common.numpy_fast import interp
-
+import selfdrive.messaging_arne as messaging_arne
 import selfdrive.messaging as messaging
 from cereal import car
 from common.realtime import sec_since_boot, DT_PLAN
@@ -99,8 +99,8 @@ class Planner():
   def __init__(self, CP):
     self.CP = CP
     self.poller = zmq.Poller()
-    self.arne182Status = messaging.sub_sock('arne182Status', poller=self.poller, conflate=True)
-    self.latcontolStatus = messaging.sub_sock('latControl', poller=self.poller, conflate=True)
+    self.arne182Status = messaging_arne.sub_sock(service_list['arne182Status'].port, poller=self.poller, conflate=True)
+    self.latcontolStatus = messaging_arne.sub_sock(service_list['latControl'].port, poller=self.poller, conflate=True)
     self.mpc1 = LongitudinalMpc(1)
     self.mpc2 = LongitudinalMpc(2)
 
