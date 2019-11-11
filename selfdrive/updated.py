@@ -21,7 +21,7 @@ NICE_LOW_PRIORITY = ["nice", "-n", "19"]
 def main(gctx=None):
   params = Params()
   NEED_REBOOT = False
-  health_sock = messaging.sub_sock(service_list['health'].port, conflate=True)
+  health_sock = messaging.sub_sock('health')
   while True:
     # try network
     ping_failed = subprocess.call(["ping", "-W", "4", "-c", "1", "8.8.8.8"])

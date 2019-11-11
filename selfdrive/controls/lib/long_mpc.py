@@ -8,6 +8,7 @@ from common.realtime import sec_since_boot
 from selfdrive.controls.lib.radar_helpers import _LEAD_ACCEL_TAU
 from selfdrive.controls.lib.longitudinal_mpc import libmpc_py
 from selfdrive.controls.lib.drive_helpers import MPC_COST_LONG
+from selfdrive.phantom import Phantom
 import time
 
 LOG_MPC = os.environ.get('LOG_MPC', False)
@@ -33,8 +34,8 @@ class LongitudinalMpc():
     self.last_time = None
     self.v_lead = None
     self.x_lead = None
-    self.df_data = []
     self.df_frame = 0
+    self.phantom = Phantom(timeout=1.)
 
     self.last_cloudlog_t = 0.0
 
@@ -119,16 +120,16 @@ class LongitudinalMpc():
       TR = interp(self.v_ego, x, y)
 
     if self.v_lead is not None:  # since the new mpc now handles braking nicely, simplify mods
-      x = [0, 0.61, 1.26, 2.1, 2.68]  # relative velocity values
+      x = [0, 0.61, 1.26, 2.1, 2.68]  # relative velocity values todo: add back negative values to get farther away from lead when it's slower
       y = [0, -0.017, -0.053, -0.154, -0.272]  # modification values
-      TR_mod = interp(self.v_lead + self.v_ego, x, y)  # quicker acceleration/don't brake when lead is overtaking
+      TR_mod = interp(self.v_lead - self.v_ego, x, y)  # quicker acceleration/don't brake when lead is overtaking
 
-      '''x = [-1.49, -1.1, -0.67, 0.0, 0.67, 1.1, 1.49]
-      y = [0.056, 0.032, 0.016, 0.0, -0.016, -0.032, -0.056]
-      TR_mod += interp(self.get_acceleration(), x, y)  # when lead car has been braking over the past 3 seconds, slightly increase TR'''
+      # x = [-1.49, -1.1, -0.67, 0.0, 0.67, 1.1, 1.49]  # todo: work on adding this back
+      # y = [0.056, 0.032, 0.016, 0.0, -0.016, -0.032, -0.056]
+      # TR_mod += interp(self.get_acceleration(), x, y)  # when lead car has been braking over the past 3 seconds, slightly increase TR
 
       TR += TR_mod
-      #TR *= self.get_traffic_level()  # modify TR based on last minute of traffic data
+      #TR *= self.get_traffic_level()  # modify TR based on last minute of traffic data  # todo: look at getting this to work, a model could be used
     if TR < 0.9:
       return 0.9
     else:
@@ -188,15 +189,51 @@ class LongitudinalMpc():
       self.last_time = current_time
     return int(round(max(min(rate, max_return), min_return)))  # ensure we return a value between range, in hertz
 
+  def process_phantom(self, lead):
+    if lead is not None and lead.status:
+      v_lead = max(0.0, lead.vLead)
+      if v_lead < 0.1 or -lead.aLeadK / 2.0 > v_lead:
+        v_lead = 0.0
+      # if radar lead is available, ensure we use that as the real lead rather than ignoring it and running into it
+      # todo: this is buggy and probably needs to be looked at
+      x_lead = min(9.144, lead.dRel)
+      v_lead = min(self.phantom.data["speed"], v_lead)
+    else:
+      x_lead = 9.144
+      v_lead = self.phantom.data["speed"]
+    return x_lead, v_lead
+
   def update(self, pm, CS, lead, v_cruise_setpoint):
     v_ego = CS.vEgo
     self.car_state = CS
     self.v_ego = CS.vEgo
-    
+    self.phantom.update()
+
     # Setup current mpc state
     self.cur_state[0].x_ego = 0.0
 
-    if lead is not None and lead.status:
+    if self.phantom.data["status"]:
+      if self.phantom.data["speed"] != 0.0:
+        x_lead, v_lead = self.process_phantom(lead)
+      elif 'lost_connection' in self.phantom.data:
+        x_lead = 1.5
+        v_lead = 0.  # stop as quickly as possible
+      else:  # else, smooth deceleration
+        x_lead = 3.75
+        v_lead = max(self.v_ego - (.7 / max(max(self.v_ego, 0) ** .4, .01)), 0.0)  # smoothly decelerate to 0 todo: tune this!
+
+      a_lead = 0.0
+      self.a_lead_tau = lead.aLeadTau
+      self.new_lead = False
+      if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
+        self.libmpc.init_with_simulation(self.v_mpc, x_lead, v_lead, a_lead, self.a_lead_tau)
+        self.new_lead = True
+
+      self.prev_lead_status = True
+      self.prev_lead_x = x_lead
+      self.cur_state[0].x_l = x_lead
+      self.cur_state[0].v_l = v_lead
+    elif lead is not None and lead.status:
       x_lead = lead.dRel
       v_lead = max(0.0, lead.vLead)
       a_lead = lead.aLeadK
@@ -204,10 +241,10 @@ class LongitudinalMpc():
       if (v_lead < 0.1 or -a_lead / 2.0 > v_lead):
         v_lead = 0.0
         a_lead = 0.0
-        
+
       self.v_lead = v_lead
       self.x_lead = x_lead
-      
+
       self.a_lead_tau = lead.aLeadTau
       self.new_lead = False
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:

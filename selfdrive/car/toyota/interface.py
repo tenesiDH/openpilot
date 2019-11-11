@@ -8,6 +8,7 @@ from selfdrive.car.toyota.values import ECU, ECU_FINGERPRINT, CAR, NO_STOP_TIMER
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, is_ecu_disconnected, gen_empty_fingerprint
 from selfdrive.swaglog import cloudlog
 from selfdrive.car.interfaces import CarInterfaceBase
+from common.op_params import opParams
 
 ButtonType = car.CarState.ButtonEvent.Type
 GearShifter = car.CarState.GearShifter
@@ -28,11 +29,11 @@ class CarInterface(CarInterfaceBase):
     self.cp = get_can_parser(CP)
     self.cp_cam = get_cam_can_parser(CP)
 
-    self.forwarding_camera = False
-
     self.CC = None
     if CarController is not None:
       self.CC = CarController(self.cp.dbc_name, CP.carFingerprint, CP.enableCamera, CP.enableDsu, CP.enableApgs)
+    self.op_params = opParams()
+    self.keep_openpilot_engaged = self.op_params.get('keep_openpilot_engaged', True)
 
   @staticmethod
   def compute_gb(accel, speed):
@@ -176,7 +177,7 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 3585. * CV.LB_TO_KG + STD_CARGO_KG
       ret.lateralTuning.pid.kf = 0.00007818594
 
-    elif candidate == CAR.COROLLA_TSS2:
+    elif candidate in [CAR.COROLLA_TSS2, CAR.COROLLAH_TSS2]:
       stop_and_go = True
       ret.safetyParam = 73
       ret.wheelbase = 2.63906
@@ -186,7 +187,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
       ret.lateralTuning.pid.kf = 0.00007818594
 
-    elif candidate == CAR.LEXUS_ESH_TSS2:
+    elif candidate in [CAR.LEXUS_ES_TSS2, CAR.LEXUS_ESH_TSS2]:
       stop_and_go = True
       ret.safetyParam = 73
       ret.wheelbase = 2.8702
@@ -246,7 +247,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerMaxBP = [16. * CV.KPH_TO_MS, 45. * CV.KPH_TO_MS]  # breakpoints at 1 and 40 kph
     ret.steerMaxV = [1., 1.]  # 2/3rd torque allowed above 45 kph
     ret.brakeMaxBP = [0., 35., 55.]
-    ret.brakeMaxV = [0.9, 0.8, 0.7]
+    ret.brakeMaxV = [1.0, 0.8, 0.7]
 
     ret.enableCamera = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, ECU.CAM) or has_relay
     ret.enableDsu = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, ECU.DSU) or (has_relay and candidate in TSS2_CAR)
@@ -339,7 +340,7 @@ class CarInterface(CarInterfaceBase):
       ret.cruiseState.enabled = bool(self.CS.main_on)
       if not self.CS.pcm_acc_active:
         ret.brakePressed = True
-    if self.CS.v_ego < 1:
+    if self.CS.v_ego < 1 or not self.keep_openpilot_engaged:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
     ret.cruiseState.available = bool(self.CS.main_on)
@@ -377,22 +378,21 @@ class CarInterface(CarInterfaceBase):
 
     # events
     events = []
-    if self.cp_cam.can_valid:
-      self.forwarding_camera = True
+    # todo: arne, do we need this section below? it's not present in 066
       
-    if ret.cruiseState.enabled and not self.cruise_enabled_prev:
+    if ret.cruiseState.enabled and not self.cruise_enabled_prev:  # this lets us modularize which checks we want to turn off op if cc was engaged previoiusly or not
       disengage_event = True
     else:
       disengage_event = False
 
 
     if self.cp_cam.can_invalid_cnt >= 100 and self.CP.enableCamera:
-      events.append(create_event('invalidGiraffeToyota', [ET.PERMANENT]))
+      events.append(create_event('invalidGiraffeToyota', [ET.PERMANENT, ET.NO_ENTRY]))
     if not ret.gearShifter == GearShifter.drive and self.CP.enableDsu:
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen and disengage_event:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if ret.seatbeltUnlatched and disengage_event:
+    if ret.seatbeltUnlatched and disengage_event:  # place `and disengage_event` whereever you want to not disengage openpilot if this occurs. safety issue
       events.append(create_event('seatbeltNotLatched', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if self.CS.esp_disabled and self.CP.enableDsu:
       events.append(create_event('espDisabled', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
@@ -440,8 +440,8 @@ class CarInterface(CarInterfaceBase):
   def apply(self, c):
 
     can_sends = self.CC.update(c.enabled, self.CS, self.frame,
-                               c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
-                               self.forwarding_camera, c.hudControl.leftLaneVisible,
+                               c.actuators, c.cruiseControl.cancel,
+                               c.hudControl.visualAlert, c.hudControl.leftLaneVisible,
                                c.hudControl.rightLaneVisible, c.hudControl.leadVisible,
                                c.hudControl.leftLaneDepart, c.hudControl.rightLaneDepart)
 

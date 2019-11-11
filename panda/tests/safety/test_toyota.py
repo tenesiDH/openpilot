@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import unittest
 import numpy as np
-import libpandasafety_py
+import libpandasafety_py  # pylint: disable=import-error
 from panda import Panda
 
 MAX_RATE_UP = 10
 MAX_RATE_DOWN = 44
 MAX_TORQUE = 1500
 
-MAX_ACCEL = 3000
-MIN_ACCEL = -3000
+MAX_ACCEL = 4000
+MIN_ACCEL = -4000
 
 MAX_RT_DELTA = 375
 RT_INTERVAL = 250000

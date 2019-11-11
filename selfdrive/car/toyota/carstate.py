@@ -109,6 +109,10 @@ def get_cam_can_parser(CP):
     ("SPLSGN3", "RSA2", 0),
     ("TSGN4", "RSA2", 0),
     ("SPLSGN4", "RSA2", 0),
+    ("BARRIERS", "LKAS_HUD", 0),
+    ("RIGHT_LINE", "LKAS_HUD", 0),
+    ("LEFT_LINE", "LKAS_HUD", 0),
+    
   ]
 
   # use steering message to check if panda is connected to frc
@@ -137,8 +141,8 @@ class CarState():
     self.Angle = [0, 5, 10, 15,20,25,30,35,60,100,180,270,500]
     self.Angle_Speed = [255,160,100,80,70,60,55,50,40,33,27,17,12]
     if not travis:
-      self.traffic_data_sock = messaging.pub_sock(service_list['liveTrafficData'].port)
-      self.arne182Status_sock = messaging.pub_sock(service_list['arne182Status'].port)
+      self.traffic_data_sock = messaging.pub_sock('liveTrafficData')
+      self.arne182Status_sock = messaging.pub_sock('arne182Status')
     # initialize can parser
     self.car_fingerprint = CP.carFingerprint
 
@@ -289,6 +293,12 @@ class CarState():
       self.generic_toggle = cp.vl["AUTOPARK_STATUS"]['STATE'] != 0
     else:
       self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
+      
+    self.barriers = cp_cam.vl["LKAS_HUD"]['BARRIERS']
+    self.rightline = cp_cam.vl["LKAS_HUD"]['RIGHT_LINE']
+    self.leftline = cp_cam.vl["LKAS_HUD"]['LEFT_LINE']
+    
+    
     self.tsgn1 = cp_cam.vl["RSA1"]['TSGN1']
     self.spdval1 = cp_cam.vl["RSA1"]['SPDVAL1']
     

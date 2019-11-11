@@ -7,6 +7,7 @@ from selfdrive.controls.lib.lateral_mpc import libmpc_py
 from selfdrive.controls.lib.drive_helpers import MPC_COST_LAT
 from selfdrive.controls.lib.lane_planner import LanePlanner
 import selfdrive.messaging as messaging
+import selfdrive.messaging_arne as messaging_arne
 from common.travis_checker import travis
 #from selfdrive.controls.lib.curvature_learner import CurvatureLearner
 
@@ -24,7 +25,7 @@ class PathPlanner():
 
     self.last_cloudlog_t = 0
     if not travis:
-      self.latControl_sock = messaging.pub_sock(service_list['latControl'].port)
+      self.latControl_sock = messaging_arne.pub_sock(service_list['latControl'].port)
     self.setup_mpc(CP.steerRateCost)
     self.solution_invalid_cnt = 0
     self.path_offset_i = 0.0

@@ -1,7 +1,6 @@
 CC = clang
 CXX = clang++
 
-
 PHONELIBS = ../../phonelibs
 
 WARN_FLAGS = -Werror=implicit-function-declaration \
