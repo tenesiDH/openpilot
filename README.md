@@ -11,8 +11,6 @@ Here's how to flash back to v9 NEOS if you want to downgrade (it's not that bad)
 
 <b>NOTICE:</b>  Due to feedback I have turned on OTA updates.  You will receive updates automatically (after rebooting 2X) on your Eon so you don't have to reclone or git pull any longer to receive new features *MADE BETWEEN COMMA RELEASES*.  The reason why I separate the branches by release is because some releases can sometimes cause issues.  Features that I or others add, will continue to be updated when you are on the most current release.  If you DO NOT want OTA updates then create a file called "/data/no_ota_updates" and it will not perform OTA updates as long as that file exists.  
 
-<b>GM Users:</b> Execute the script, `selfdrive/car/lock_safety_model.py gm` from the root directory of this Openpilot installation. This sets the Panda safety mode to `gm` (from the default of `noOutput`), allowing OP to control the vehicle. Otherwise a "Steering Temporarily Unavailable" error is thrown when attempting to enagage OP.
-
 I will attempt to detail the changes in each of the branches here:
 
 
