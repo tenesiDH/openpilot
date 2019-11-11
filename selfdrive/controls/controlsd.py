@@ -3,6 +3,7 @@ import os
 import gc
 import capnp
 import zmq
+import selfdrive.messaging_arne as messaging_arne
 from selfdrive.services import service_list
 from cereal import car, log, arne182
 from common.numpy_fast import clip
@@ -337,9 +338,9 @@ def data_send(sm, pm, CS, CI, CP, VM, state, events, actuators, v_cruise_kph, rk
   ldw_allowed = CS.vEgo > 12.5 and not blinker
 
   if len(list(sm['pathPlan'].rPoly)) == 4:
-    CC.hudControl.rightLaneDepart = bool(ldw_allowed and sm['pathPlan'].rPoly[3] > -(1.00 + CAMERA_OFFSET) and right_lane_visible)
+    CC.hudControl.rightLaneDepart = bool(ldw_allowed and sm['pathPlan'].rPoly[3] > -(0.93 + CAMERA_OFFSET) and right_lane_visible)
   if len(list(sm['pathPlan'].lPoly)) == 4:
-    CC.hudControl.leftLaneDepart = bool(ldw_allowed and sm['pathPlan'].lPoly[3] < (1.01 - CAMERA_OFFSET) and left_lane_visible)
+    CC.hudControl.leftLaneDepart = bool(ldw_allowed and sm['pathPlan'].lPoly[3] < (0.93 - CAMERA_OFFSET) and left_lane_visible)
 
   CC.hudControl.visualAlert = AM.visual_alert
 
@@ -459,9 +460,8 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     sm = messaging.SubMaster(['thermal', 'health', 'liveCalibration', 'driverMonitoring', 'plan', 'pathPlan', \
                               'gpsLocation', 'radarState'], ignore_alive=['gpsLocation'])
 
-  can_poller = zmq.Poller()
   poller = zmq.Poller()
-  arne182Status = messaging.sub_sock(service_list['arne182Status'].port, poller, conflate=True)  # todo: can we use messaging_arne here?
+  arne182Status = messaging_arne.sub_sock(service_list['arne182Status'].port, poller, conflate=True)  # todo: can we use messaging_arne here?
   if can_sock is None:
     can_timeout = None if os.environ.get('NO_CAN_TIMEOUT', False) else 100
     can_sock = messaging.sub_sock('can', timeout=can_timeout)

@@ -8,7 +8,7 @@ import numpy as np
 from cereal import arne182
 from common.params import Params
 from common.numpy_fast import interp
-
+import selfdrive.messaging_arne as messaging_arne
 import selfdrive.messaging as messaging
 from cereal import car
 from common.realtime import sec_since_boot, DT_PLAN
@@ -33,7 +33,7 @@ AWARENESS_DECEL = -0.2     # car smoothly decel at .2m/s^2 when user is distract
 
 # lookup tables VS speed to determine min and max accels in cruise
 # make sure these accelerations are smaller than mpc limits
-_A_CRUISE_MIN_V_FOLLOWING = [-3.0, -1.7, -1.6, -1.5, -1.3]
+_A_CRUISE_MIN_V_FOLLOWING = [-4.0, -3.5, -3.0, -2.5, -2.0]
 _A_CRUISE_MIN_V = [-1.6, -0.7, -0.6, -0.5, -0.3]
 _A_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 
@@ -42,7 +42,7 @@ _A_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 
 _A_CRUISE_MAX_V = [3.0, 3.0, 1.5, .5, .3]
 _A_CRUISE_MAX_V_ECO = [1.0, 1.5, 1.0, 0.3, 0.1]
-_A_CRUISE_MAX_V_SPORT = [3.0, 3.0, 3.0, 3.0, 3.0]
+_A_CRUISE_MAX_V_SPORT = [3.0, 3.5, 4.0, 4.0, 4.0]
 _A_CRUISE_MAX_V_FOLLOWING = [1.3, 1.6, 1.2, .7, .3]
 _A_CRUISE_MAX_BP = [0., 5., 10., 20., 55.]
 
@@ -99,8 +99,8 @@ class Planner():
   def __init__(self, CP):
     self.CP = CP
     self.poller = zmq.Poller()
-    self.arne182Status = messaging.sub_sock(service_list['arne182Status'].port, poller=self.poller, conflate=True)
-    self.latcontolStatus = messaging.sub_sock(service_list['latControl'].port, poller=self.poller, conflate=True)
+    self.arne182Status = messaging_arne.sub_sock(service_list['arne182Status'].port, poller=self.poller, conflate=True)
+    self.latcontolStatus = messaging_arne.sub_sock(service_list['latControl'].port, poller=self.poller, conflate=True)
     self.mpc1 = LongitudinalMpc(1)
     self.mpc2 = LongitudinalMpc(2)
 
