@@ -486,12 +486,18 @@ class Way:
               speed_ahead_dist = max(0. , way_pts[count, 0] - 10.0)
               loop_must_break = True
               break
-          if 'traffic_calming' in n.tags and n.tags['traffic_calming']=='bump':
+          if 'traffic_calming' in n.tags:
             if way_pts[count, 0] > 0:
-              speed_ahead = 2.24
-              speed_ahead_dist = way_pts[count, 0]
-              loop_must_break = True
-              break
+              if n.tags['traffic_calming']=='bump' or n.tags['traffic_calming']=='hump':
+                speed_ahead = 2.24
+                speed_ahead_dist = way_pts[count, 0]
+                loop_must_break = True
+                break
+              elif n.tags['traffic_calming']=='chicane' or n.tags['traffic_calming']=='choker':
+                speed_ahead = 20/3.6
+                speed_ahead_dist = way_pts[count, 0]
+                loop_must_break = True
+                break
           count += 1
         if loop_must_break: break
       except (KeyError, IndexError, ValueError):
