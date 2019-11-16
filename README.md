@@ -39,9 +39,13 @@ List of changes and tweaks (latest changes at the top):
 - <b> New! Dynamic Steer Ratio: </b>Some Hondas and other makes / models have been suffering from excessive ping-ponging on straights since 0.6.x.  The fix was to lower steerRatio.  However lowering steerRatio makes the car turn less aggressively on curves so you lose "turnability".  Raising the steerRatio makes you take turns with maximum force, but then you have ping ponging on straights.  Dynamic steer ratio adjusts based on the steering wheel angle to give you a low steerRatio on straights and a high steerRatio on turns.  This gives the best of both worlds.  Dynamic Steer Ratio is inactive by default, to activate, please adjust the following values using the Live Tuner or edit the kegman.json file:
 
 "sR_BP0": "4.0", - is the steering wheel angle (degrees) when the steerRatio should begin to increase
+
 "sR_BP1": "7.0", - is the steering wheel angle (degrees) when the steerRatio has full boost
+
 "sR_boost": "4.5" - is the maximum boost for the steerRatio at the sR_BP1 wheel angle
+
 "sR_time": "1", - is the amount of time (seconds) before the steerRatio is permitted to lower, after increasing
+
 
 so on my Pilot which has a steerRatio setting of 12.5, with these settings I get a minimum steerRatio of 12.5 between 0 and 4 degrees on the wheel (straights) and I get an increasing steerRatio which has a 1 second "hang" time between 4+ degrees on the wheel, reaching a maximum of 17 when the wheel gets to 7 degrees (everything in between is interpolated)
 
