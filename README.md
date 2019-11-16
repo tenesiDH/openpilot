@@ -36,6 +36,15 @@ I will attempt to detail the changes in each of the branches here:
 
 
 List of changes and tweaks (latest changes at the top):
+- <b> New! Dynamic Steer Ratio: </b>Some Hondas and other makes / models have been suffering from excessive ping-ponging on straights since 0.6.x.  The fix was to lower steerRatio.  However lowering steerRatio makes the car turn less aggressively on curves so you lose "turnability".  Raising the steerRatio makes you take turns with maximum force, but then you have ping ponging on straights.  Dynamic steer ratio adjusts based on the steering wheel angle to give you a low steerRatio on straights and a high steerRatio on turns.  This gives the best of both worlds.  Dynamic Steer Ratio is inactive by default, to activate, please adjust the following values using the Live Tuner or edit the kegman.json file:
+
+"sR_BP0": "4.0", - is the steering wheel angle (degrees) when the steerRatio should begin to increase
+"sR_BP1": "7.0", - is the steering wheel angle (degrees) when the steerRatio has full boost
+"sR_boost": "4.5" - is the maximum boost for the steerRatio at the sR_BP1 wheel angle
+"sR_time": "1", - is the amount of time (seconds) before the steerRatio is permitted to lower, after increasing
+
+so on my Pilot which has a steerRatio setting of 12.5, with these settings I get a minimum steerRatio of 12.5 between 0 and 4 degrees on the wheel (straights) and I get an increasing steerRatio which has a 1 second "hang" time between 4+ degrees on the wheel, reaching a maximum of 17 when the wheel gets to 7 degrees (everything in between is interpolated)
+
 - <b> New! @runchman's brake pump chatter fix for pedal users </b> - fixes brake oscillations during engagement at a stop and various other times.
 
 - <b> New! Adjustable stopping distance, one, two, and three bar distance intervals</b>:  BE CAREFUL WITH THESE OPTIONAL SETTINGS IN kegman.json!  Add ONE_BAR_DISTANCE, TWO_BAR_DISTANCE, THREE_BAR_DISTANCE, FOUR_BAR_DISTANCE values in kegman.json to change the following distance interval.  Add STOPPING_DISTANCE to change the distance between you and the lead car at a stop.  If these values do not exist in kegman.json, they just assume default values of 0.9, 1.3, 1.8, 2.3, and 2 respectively.  Thanks to @joeljacobs for adding the optional distance intervals.
