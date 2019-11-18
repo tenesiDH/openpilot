@@ -243,12 +243,13 @@ class CarController():
     # - there is something to stop displaying
     alert_out = process_hud_alert(hud_alert)
     steer, fcw = alert_out
+    
     if fcw:
       self.fcw_countdown = 200
-    else:
-      self.fcw_countdown = self.fcw_countdown - 1
     if self.fcw_countdown > 0:
       apply_accel = -8.0
+      self.fcw_countdown = self.fcw_countdown - 1
+      
     if (any(alert_out) and not self.alert_active) or \
        (not any(alert_out) and self.alert_active):
       send_ui = True
