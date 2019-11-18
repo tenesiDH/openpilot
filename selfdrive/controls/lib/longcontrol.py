@@ -215,10 +215,10 @@ class LongControl():
     final_gas = clip(output_gb, 0., gas_max)
     final_brake = -clip(output_gb, -brake_max, 0.)
     if fcw:
-      self.fcw_countdown = 100
+      self.fcw_countdown = 10
     elif self.fcw_countdown > 0:
       self.fcw_countdown = self.fcw_countdown -1
     if self.fcw_countdown > 0:
       final_gas = 0.
-      final_brake = -brake_max
+      final_brake = brake_max
     return final_gas, final_brake
