@@ -216,9 +216,8 @@ class LongControl():
     final_brake = -clip(output_gb, -brake_max, 0.)
     if fcw:
       self.fcw_countdown = 200
-    elif self.fcw_countdown > 0:
-      self.fcw_countdown = self.fcw_countdown -1
     if self.fcw_countdown > 0:
+      self.fcw_countdown = self.fcw_countdown -1
       final_gas = 0.
       final_brake = 1.0
     return final_gas, final_brake
