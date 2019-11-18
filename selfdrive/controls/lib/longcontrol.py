@@ -220,5 +220,5 @@ class LongControl():
       self.fcw_countdown = self.fcw_countdown -1
     if self.fcw_countdown > 0:
       final_gas = 0.
-      final_brake = brake_max
+      final_brake = 1.0
     return final_gas, final_brake
