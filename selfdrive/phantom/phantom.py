@@ -1,6 +1,4 @@
-import zmq
 import selfdrive.messaging_arne as messaging_arne
-from selfdrive.services import service_list
 from common.op_params import opParams
 import subprocess
 from common.travis_checker import travis
@@ -9,32 +7,31 @@ import time
 
 class Phantom:
   def __init__(self, timeout=1.):
-    context = zmq.Context()
     self.op_params = opParams()
-    self.phantom_Data_sock = messaging_arne.sub_sock(service_list['phantomData'].port, conflate=True)
+    self.sm = messaging_arne.SubMaster('phantomData')
     self.data = {"status": False, "speed": 0.0}
+    self.lost_connection = False
     self.last_receive_time = time.time()
-    self.last_phantom_data = {"status": False, "speed": 0.0}
     self.timeout = timeout  # in seconds
-    self.to_disable = True
     if not travis and not self.op_params.get("UseDNS", None):  # ensure we only run once
       self.mod_sshd_config()
 
   def update(self):
-    phantom_data = messaging_arne.recv_one_or_none(self.phantom_Data_sock)
-    if phantom_data is not None:
-      self.data = {"status": phantom_data.phantomData.status, "speed": phantom_data.phantomData.speed,
-                   "angle": phantom_data.phantomData.angle, "time": phantom_data.phantomData.time}
-      self.last_phantom_data = dict(self.data)
+    self.sm.update(0)
+    phantom_data = self.sm['phantomData']
+    self.data = {"status": phantom_data.status, "speed": phantom_data.speed, "angle": phantom_data.angle}
+
+    if self.sm.updated['phantomData']:
       self.last_receive_time = time.time()
-      self.to_disable = not self.data["status"]
+
+    if time.time() - self.last_receive_time >= self.timeout and self.data['status']:
+      self.data = {"status": True, "speed": 0.0, "angle": 0.0}
+      self.lost_connection = True
     else:
-      if self.to_disable:  # if last message is status: False, disable phantom mode, also disable by default
-        self.data = {"status": False, "speed": 0.0}
-      elif time.time() - self.last_receive_time >= self.timeout:  # lost connection, don't disable. keep phantom on but set speed to 0
-        self.data = {"status": True, "speed": 0.0, "angle": 0.0, "time": 0.0, "lost_connection": True}
-      else:  # if waiting between messages from app, message becomes none, this uses the data from last message
-        self.data = dict(self.last_phantom_data)
+      self.lost_connection = False
+
+  def __getitem__(self, s):
+    return self.data[s]
 
   def mod_sshd_config(self):
     # this disables dns lookup when connecting to EON to speed up commands from phantom app, reboot required
