@@ -277,7 +277,7 @@ def mapsd_thread():
             curvature = np.nan_to_num(curvature)
 
             
-            
+            curvature = abs(curvature)
             upcoming_curvature = np.amax(curvature)
             dist_to_turn =np.amin(dists[np.logical_and(curvature >= np.amax(curvature), curvature <= np.amax(curvature))])
 
