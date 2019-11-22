@@ -1,5 +1,5 @@
 import os
-from common.numpy_fast import interp
+from common.numpy_fast import interp, clip
 import math
 
 import selfdrive.messaging as messaging
@@ -143,8 +143,8 @@ class LongitudinalMpc():
       if abs(real_TR - TR) >= .25:  # use real TR if diff is greater than x safety threshold
         TR = real_TR
     if self.lead_data['v_lead'] is not None and self.v_ego > 5:
-      factor = max(1,min(2,(self.lead_data['v_lead'] - self.v_ego)/2 + 1.5))
-      return max(round(float(interp(TR, x, y)), 3)/factor, 1.1)
+      factor = clip((self.lead_data['v_lead'] - self.v_ego) / 2 + 1.5, 1, 2)
+      return clip(interp(TR, x, y) / factor, 1.1, 4.5)
     else:
       return round(float(interp(TR, x, y)), 3)
 
