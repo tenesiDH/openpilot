@@ -117,7 +117,7 @@ class Planner():
 
     self.params = Params()
 
-  def choose_solution(self, v_cruise_setpoint, enabled, dRel):
+  def choose_solution(self, v_cruise_setpoint, enabled):
     if enabled:
       solutions = {'model': self.v_model, 'cruise': self.v_cruise}
       if self.mpc1.prev_lead_status:
@@ -129,7 +129,7 @@ class Planner():
 
       self.longitudinalPlanSource = slowest
       # Choose lowest of MPC and cruise
-      if slowest == 'mpc1' or dRel < 15:
+      if slowest == 'mpc1':
         self.v_acc = self.mpc1.v_mpc
         self.a_acc = self.mpc1.a_mpc
       elif slowest == 'mpc2':
@@ -302,7 +302,7 @@ class Planner():
     self.mpc1.update(pm, sm['carState'], lead_1, v_cruise_setpoint)
     self.mpc2.update(pm, sm['carState'], lead_2, v_cruise_setpoint)
 
-    self.choose_solution(v_cruise_setpoint, enabled, lead_1.dRel)
+    self.choose_solution(v_cruise_setpoint, enabled)
 
     # determine fcw
     if self.mpc1.new_lead:
