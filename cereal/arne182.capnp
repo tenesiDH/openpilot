@@ -23,7 +23,7 @@ struct LiveTrafficData {
   speedLimit @1 :Float32;
   speedAdvisoryValid @2 :Bool;
   speedAdvisory @3 :Float32;
-}  
+}
 
 struct LatControl {
   anglelater @0 :Float32;
@@ -45,10 +45,10 @@ struct EventArne182 {
   valid @6 :Bool = true;
 
   union {
-  arne182Status @1:Arne182Status;
-  liveTrafficData @2:LiveTrafficData;
-  latControl @3:LatControl;
-  phantomData @4:PhantomData;
-  managerData @5:ManagerData;
+    arne182Status @1:Arne182Status;
+    liveTrafficData @2:LiveTrafficData;
+    latControl @3:LatControl;
+    phantomData @4:PhantomData;
+    managerData @5:ManagerData;
   }
 }
