@@ -144,7 +144,7 @@ class LongitudinalMpc():
 
   def get_cost(self, TR):
     x = [.9, 1.8, 2.7]
-    y = [4.5, 2.8, 1.3]
+    y = [1.0, .1, .05]
     if self.lead_data['x_lead'] is not None and self.v_ego is not None and self.v_ego != 0:
       real_TR = self.lead_data['x_lead'] / float(self.v_ego)  # switched to cost generation using actual distance from lead car; should be safer
       if abs(real_TR - TR) >= .25:  # use real TR if diff is greater than x safety threshold
