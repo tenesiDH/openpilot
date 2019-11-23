@@ -10,11 +10,13 @@ from common.params import Params
 from common.realtime import sec_since_boot, DT_TRML
 from common.numpy_fast import clip, interp
 from common.filter_simple import FirstOrderFilter
-from selfdrive.version import terms_version, training_version
+from selfdrive.version import terms_version, training_version, version, dirty
 from selfdrive.swaglog import cloudlog
 import selfdrive.messaging as messaging
 from selfdrive.loggerd.config import get_available_percent
 from selfdrive.pandad import get_expected_version
+
+import selfdrive.crash as crash
 
 FW_VERSION = get_expected_version()
 
@@ -343,6 +345,12 @@ def thermald_thread():
 
 
 def main(gctx=None):
+  params = Params()
+  dongle_id = params.get("DongleId")
+  crash.bind_user(id=dongle_id)
+  crash.bind_extra(version=version, dirty=dirty, is_eon=True)
+  crash.install()
+  
   thermald_thread()
 
 if __name__ == "__main__":
