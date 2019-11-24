@@ -23,7 +23,7 @@
   "Offroad_InvalidTime": {
     "text": "Invalid date and time settings, system won't start. Connect to internet to set time.",
     "severity": 1
-  }
+  },
   "Offroad_VoltageLow": {
     "text": "Your Car Battery Voltage is LOW! Please charge, Voltage = ",
     "severity": 0,
