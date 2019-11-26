@@ -71,6 +71,8 @@ class LongControl():
     self.lastdecelForTurn = False
     self.lead_data = {'vRel': None, 'a_lead': None, 'x_lead': None, 'status': False}
     self.freeze = False
+    self.last_lead_time = time.time()
+    self.actuatorpress = False
     
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -145,7 +147,9 @@ class LongControl():
                                                        brake_pressed, cruise_standstill)
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
-
+    if not (gas_pressed or brake_pressed) and self.actuatorpress:
+      self.pid.reset()
+      
     if self.long_control_state == LongCtrlState.off:
       self.v_pid = v_ego_pid
       self.pid.reset()
@@ -218,4 +222,5 @@ class LongControl():
       self.fcw_countdown = self.fcw_countdown -1
       final_gas = 0.
       final_brake = 1.0
+    self.actuatorpress = gas_pressed or brake_pressed
     return final_gas, final_brake
