@@ -117,10 +117,10 @@ class Planner():
 
     self.params = Params()
 
-  def choose_solution(self, v_cruise_setpoint, enabled):
+  def choose_solution(self, v_cruise_setpoint, enabled, yRel, dRel, steeringAngle):
     if enabled:
       solutions = {'model': self.v_model, 'cruise': self.v_cruise}
-      if self.mpc1.prev_lead_status:
+      if self.mpc1.prev_lead_status and (abs(math.atan(yRel,dRel)*180/math.pi - steeringAngle/10) < max(math.atan2(1,dRel)*180/math.pi, 5.0)):
         solutions['mpc1'] = self.mpc1.v_mpc
       if self.mpc2.prev_lead_status:
         solutions['mpc2'] = self.mpc2.v_mpc
@@ -302,7 +302,7 @@ class Planner():
     self.mpc1.update(pm, sm['carState'], lead_1, v_cruise_setpoint)
     self.mpc2.update(pm, sm['carState'], lead_2, v_cruise_setpoint)
 
-    self.choose_solution(v_cruise_setpoint, enabled)
+    self.choose_solution(v_cruise_setpoint, enabled, lead_1.yRel, lead_1.dRel, sm['carState'].steeringAngle)
 
     # determine fcw
     if self.mpc1.new_lead:
