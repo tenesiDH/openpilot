@@ -340,7 +340,10 @@ class Planner():
     plan_send.plan.aStart = float(self.a_acc_start)
     plan_send.plan.vTarget = float(self.v_acc)
     plan_send.plan.aTarget = float(self.a_acc)
-    plan_send.plan.vTargetFuture = float(self.v_acc_future)
+    if (lead_1.status and lead_1.dRel < 4.0) or (lead_2.status and lead_2.dRel) < 4.0:
+      plan_send.plan.vTargetFuture = float(0.0)
+    else:
+      plan_send.plan.vTargetFuture = float(self.v_acc_future)
     plan_send.plan.hasLead = self.mpc1.prev_lead_status
     plan_send.plan.longitudinalPlanSource = self.longitudinalPlanSource
     
