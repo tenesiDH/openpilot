@@ -129,10 +129,10 @@ class Planner():
       
       self.longitudinalPlanSource = slowest
       # Choose lowest of MPC and cruise
-      if (lead_1.status and lead_1.dRel < 4.0) or (lead_2.status and lead_2.dRel) < 4.0:
-        self.v_acc = 0.0
-        self.a_acc = -4.0
-      elif slowest == 'mpc1':
+      #if (lead_1.status and lead_1.dRel < 4.0) or (lead_2.status and lead_2.dRel) < 4.0:
+      #  self.v_acc = 0.0
+      #  self.a_acc = -4.0
+      if slowest == 'mpc1':
         self.v_acc = self.mpc1.v_mpc
         self.a_acc = self.mpc1.a_mpc
       elif slowest == 'mpc2':
@@ -180,7 +180,7 @@ class Planner():
     lead_2 = sm['radarState'].leadTwo
 
     enabled = (long_control_state == LongCtrlState.pid) or (long_control_state == LongCtrlState.stopping)
-    following = lead_1.status and lead_1.dRel < 45.0 and lead_1.vLeadK > v_ego and lead_1.aLeadK > 0.0
+    following = self.mpc1.prev_lead_status and lead_1.dRel < 45.0 and lead_1.vLeadK > v_ego and lead_1.aLeadK > 0.0
     
     v_speedlimit = NO_CURVATURE_SPEED
     v_curvature_map = NO_CURVATURE_SPEED
