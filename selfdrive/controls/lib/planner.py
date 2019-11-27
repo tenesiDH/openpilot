@@ -122,7 +122,7 @@ class Planner():
       solutions = {'model': self.v_model, 'cruise': self.v_cruise}
       if self.mpc1.prev_lead_status and (abs(math.atan2(lead_1.yRel, lead_1.dRel)*180./math.pi - steeringAngle/10.) < max(math.atan2(1, lead_1.dRel)*180./math.pi, 5.0)):
         solutions['mpc1'] = self.mpc1.v_mpc
-      if self.mpc2.prev_lead_status:
+      if self.mpc2.prev_lead_status and (abs(math.atan2(lead_2.yRel, lead_2.dRel)*180./math.pi - steeringAngle/10.) < max(math.atan2(1, lead_2.dRel)*180./math.pi, 5.0)):
         solutions['mpc2'] = self.mpc2.v_mpc
 
       slowest = min(solutions, key=solutions.get)
