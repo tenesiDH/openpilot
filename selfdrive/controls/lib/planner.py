@@ -120,7 +120,7 @@ class Planner():
   def choose_solution(self, v_cruise_setpoint, enabled, lead_1, lead_2, steeringAngle):
     if enabled:
       solutions = {'model': self.v_model, 'cruise': self.v_cruise}
-      if self.mpc1.prev_lead_status and (abs(math.atan2(lead_1.yRel, lead_1.dRel)*180/math.pi - steeringAngle/10) < lead_1.yRel + max(math.atan2(1, lead_1.dRel)*180/math.pi, 5.0)):
+      if self.mpc1.prev_lead_status and (abs(math.atan2(lead_1.yRel, lead_1.dRel)*180./math.pi - steeringAngle/10.) < max(math.atan2(1, lead_1.dRel)*180./math.pi, 5.0)):
         solutions['mpc1'] = self.mpc1.v_mpc
       if self.mpc2.prev_lead_status:
         solutions['mpc2'] = self.mpc2.v_mpc
