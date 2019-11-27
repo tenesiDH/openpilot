@@ -129,7 +129,7 @@ class Planner():
           solutions['mpc1'] = self.mpc1.v_mpc
         if self.mpc2.prev_lead_status and (math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))):
           solutions['mpc2'] = self.mpc2.v_mpc
-      elif steeringAngle < 100: # only at high angles
+      elif steeringAngle < -100: # only at high angles
         center_y = +1-2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Right side considered in right hand turn
         if self.mpc1.prev_lead_status and (math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))):
           solutions['mpc1'] = self.mpc1.v_mpc
