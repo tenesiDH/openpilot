@@ -118,36 +118,27 @@ class Planner():
     self.params = Params()
 
   def choose_solution(self, v_cruise_setpoint, enabled, lead_1, lead_2, steeringAngle):
+    center_x = -2.5 # Wheel base 2.5m
+    lead1_check = True
+    lead2_check = True
+    if steeringAngle > 100: # only at high angles
+      center_y = -1+2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Left side considered in left hand turn
+      lead1_check = math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))
+      lead2_check = math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))
+    elif steeringAngle < -100: # only at high angles
+      center_y = +1-2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Right side considered in right hand turn
+      lead1_check = math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))
+      lead2_check = math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))
     if enabled:
-      
       solutions = {'model': self.v_model, 'cruise': self.v_cruise}
-      
-      center_x = -2.5 # Wheel base 2.5m
-      if steeringAngle > 100: # only at high angles
-        center_y = -1+2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Left side considered in left hand turn
-        if self.mpc1.prev_lead_status and (math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))):
-          solutions['mpc1'] = self.mpc1.v_mpc
-        if self.mpc2.prev_lead_status and (math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))):
-          solutions['mpc2'] = self.mpc2.v_mpc
-      elif steeringAngle < -100: # only at high angles
-        center_y = +1-2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Right side considered in right hand turn
-        if self.mpc1.prev_lead_status and (math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))):
-          solutions['mpc1'] = self.mpc1.v_mpc
-        if self.mpc2.prev_lead_status and (math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))):
-          solutions['mpc2'] = self.mpc2.v_mpc
-      else:
-        if self.mpc1.prev_lead_status:
-          solutions['mpc1'] = self.mpc1.v_mpc
-        if self.mpc2.prev_lead_status:
-          solutions['mpc2'] = self.mpc2.v_mpc
-          
+      if self.mpc1.prev_lead_status and lead1_check:
+        solutions['mpc1'] = self.mpc1.v_mpc
+      if self.mpc2.prev_lead_status and lead2_check:
+        solutions['mpc2'] = self.mpc2.v_mpc
+        
       slowest = min(solutions, key=solutions.get)
       
       self.longitudinalPlanSource = slowest
-      # Choose lowest of MPC and cruise
-      #if (lead_1.status and lead_1.dRel < 4.0) or (lead_2.status and lead_2.dRel) < 4.0:
-      #  self.v_acc = 0.0
-      #  self.a_acc = -4.0
       if slowest == 'mpc1':
         self.v_acc = self.mpc1.v_mpc
         self.a_acc = self.mpc1.a_mpc
@@ -161,7 +152,11 @@ class Planner():
         self.v_acc = self.v_model
         self.a_acc = self.a_model
 
-    self.v_acc_future = min([self.mpc1.v_mpc_future, self.mpc2.v_mpc_future, v_cruise_setpoint])
+    self.v_acc_future = v_cruise_setpoint
+    if lead1_check:
+      self.v_acc_future = min([self.mpc1.v_mpc_future, self.v_acc_future])
+    if lead2_check:
+      self.v_acc_future = min([self.mpc2.v_mpc_future, self.v_acc_future])
 
   def update(self, sm, pm, CP, VM, PP):
     self.arne_sm.update(0)
