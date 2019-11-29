@@ -1,6 +1,8 @@
 bool HKG_forwarding_enabled = 1;
-bool HKG_LKAS_forwarded = 0;
+int HKG_LKAS_forwarded = 0;
+int HKG_ClU11_forwarded = 0;
 int HKG_OP_LKAS_live = 0;
+int HKG_OP_ClU11_live = 0;
 
 void default_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   UNUSED(to_push);
@@ -20,12 +22,20 @@ static void nooutput_init(int16_t param) {
 
 static int nooutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
-  if (addr == 832)) {
-    if (!HKG_LKAS_forwarded) {
+  if (addr == 832) {
+    if (HKG_LKAS_forwarded < 1) {
       HKG_OP_LKAS_live = 20;
     }
-    if ((HKG_LKAS_forwarded) && (!HKG_OP_LKAS_live)) {
-      HKG_LKAS_forwarded = 0;
+    else {
+      HKG_LKAS_forwarded -= 1;
+    }
+  }
+  if (addr == 1265) {
+    if (HKG_ClU11_forwarded < 1) {
+      HKG_OP_ClU11_live = 20;
+    }
+    else {
+      HKG_ClU11_forwarded -= 1;
     }
   }
   return 1;
@@ -47,7 +57,7 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
       HKG_forwarding_enabled = 0;
     }
     else if (HKG_OP_LKAS_live < 1) {
-      HKG_LKAS_forwarded = 1;
+      HKG_LKAS_forwarded = 2;
       return 10;
     }
     else if (HKG_OP_LKAS_live > 0) {
@@ -58,9 +68,12 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
 
   if (HKG_forwarding_enabled) {
     if (bus_num == 0) {
-      if ((!HKG_OP_LKAS_live) || (addr != 1265)) {
+      if ((!addr == 1265) || (HKG_OP_ClU11_live < 1)) {
+        if (addr == 1265) {HKG_ClU11_forwarded = 2;}
         bus_fwd = 12;
       } else {
+        HKG_OP_ClU11_live -= 1;
+        HKG_ClU11_forwarded = 1;
         bus_fwd = 2;
       }
     }
@@ -68,12 +81,11 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
       bus_fwd = 20;
     }
     if (bus_num == 2) {
-      if (addr != 832) {
-        bus_fwd = 10;
-      }
+      bus_fwd = 10;
     } 
   } else {
     if (bus_num == 0) {
+      if (addr == 1265) {HKG_ClU11_forwarded = 1;}
       bus_fwd = 1;
     }
     if (bus_num == 1) {
@@ -101,7 +113,7 @@ static void alloutput_init(int16_t param) {
 
 static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int addr = GET_ADDR(to_send);
-  if (addr == 832)) {
+  if (addr == 832) {
     if (!HKG_LKAS_forwarded) {
       HKG_OP_LKAS_live = 20;
     }
