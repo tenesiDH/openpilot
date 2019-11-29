@@ -3,8 +3,6 @@ import importlib
 import math
 from collections import defaultdict, deque
 
-import zmq
-
 import selfdrive.messaging as messaging
 from cereal import car
 from common.params import Params
@@ -13,7 +11,6 @@ from selfdrive.config import RADAR_TO_CAMERA
 from selfdrive.controls.lib.cluster.fastcluster_py import \
   cluster_points_centroid
 from selfdrive.controls.lib.radar_helpers import Cluster, Track
-from selfdrive.services import service_list
 from selfdrive.swaglog import cloudlog
 
 DEBUG = False
@@ -84,7 +81,12 @@ def get_lead(v_ego, ready, clusters, lead_msg, low_speed_override=True):
 class RadarD():
   def __init__(self, mocked, delay=0):
     self.current_time = 0
-    self.mocked = mocked
+    CP = car.CarParams.from_bytes(Params().get("CarParams", block=True))
+
+    if CP.radarOffCan:
+      self.mocked = True
+    else:
+      self.mocked = mocked
 
     self.tracks = defaultdict(dict)
 
@@ -182,18 +184,18 @@ def radard_thread(sm=None, pm=None, can_sock=None):
   # wait for stats about the car to come in from controls
   cloudlog.info("radard is waiting for CarParams")
   CP = car.CarParams.from_bytes(Params().get("CarParams", block=True))
-  mocked = CP.carName == "mock"
+  if CP.radarOffCan:
+    mocked = True
+  else:
+    mocked = CP.carName == "mock"
   cloudlog.info("radard got CarParams")
 
   # import the radar from the fingerprint
   cloudlog.info("radard is importing %s", CP.carName)
   RadarInterface = importlib.import_module('selfdrive.car.%s.radar_interface' % CP.carName).RadarInterface
 
-  can_poller = zmq.Poller()
-
   if can_sock is None:
-    can_sock = messaging.sub_sock(service_list['can'].port)
-    can_poller.register(can_sock)
+    can_sock = messaging.sub_sock('can')
 
   if sm is None:
     sm = messaging.SubMaster(['model', 'controlsState', 'liveParameters'])
@@ -207,10 +209,10 @@ def radard_thread(sm=None, pm=None, can_sock=None):
   rk = Ratekeeper(1.0 / DT_RDR, print_delay_threshold=None)
   RD = RadarD(mocked, RI.delay)
 
-  has_radar = not CP.radarOffCan
+  has_radar = True
 
   while 1:
-    can_strings = messaging.drain_sock_raw_poller(can_poller, can_sock, wait_for_one=True)
+    can_strings = messaging.drain_sock_raw(can_sock, wait_for_one=True)
     rr = RI.update(can_strings)
 
     if rr is None:

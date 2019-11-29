@@ -152,7 +152,7 @@ def get_can_signals(CP):
     signals += [("MAIN_ON", "SCM_FEEDBACK", 0),
                 ("EPB_STATE", "EPB_STATUS", 0)]
     checks += [("EPB_STATUS", 50)]
-  elif CP.carFingerprint == CAR.PILOT:
+  elif CP.carFingerprint in (CAR.PILOT, CAR.PILOT_2018):
     signals += [("MAIN_ON", "SCM_BUTTONS", 0),
                 ("CAR_GAS", "GAS_PEDAL_2", 0)]
   elif CP.carFingerprint == CAR.ODYSSEY_CHN:
@@ -370,7 +370,7 @@ class CarState():
     self.pcm_acc_status = cp.vl["POWERTRAIN_DATA"]['ACC_STATUS']
 
     # Gets rid of Pedal Grinding noise when brake is pressed at slow speeds for some models
-    if self.CP.carFingerprint in (CAR.PILOT, CAR.PILOT_2019, CAR.RIDGELINE):
+    if self.CP.carFingerprint in (CAR.PILOT, CAR.PILOT_2018, CAR.PILOT_2019, CAR.RIDGELINE):
       if self.user_brake > 0.05:
         self.brake_pressed = 1
         
@@ -399,19 +399,3 @@ class CarState():
 
     # TODO: discover the CAN msg that has the imperial unit bit for all other cars
     self.is_metric = not cp.vl["HUD_SETTING"]['IMPERIAL_UNIT'] if self.CP.carFingerprint in (CAR.CIVIC) else False
-
-# carstate standalone tester
-if __name__ == '__main__':
-  import zmq
-  context = zmq.Context()
-
-  class CarParams():
-    def __init__(self):
-      self.carFingerprint = "HONDA CIVIC 2016 TOURING"
-      self.enableGasInterceptor = 0
-  CP = CarParams()
-  CS = CarState(CP)
-
-  # while 1:
-  #   CS.update()
-  #   time.sleep(0.01)

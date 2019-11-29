@@ -166,12 +166,14 @@ class CarInterface(CarInterfaceBase):
     ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
     ret.lateralTuning.pid.kf = 0.00000 # conservative feed-forward
 
+    ret.steerRateCost = 0.35
+
     if candidate in [CAR.CIVIC, CAR.CIVIC_BOSCH]:
       stop_and_go = True
       ret.mass = CivicParams.MASS
       ret.wheelbase = CivicParams.WHEELBASE
       ret.centerToFront = CivicParams.CENTER_TO_FRONT
-      ret.steerRatio = 11.6  # 10.93 is end-to-end spec
+      ret.steerRatio = 10.9  # 10.93 is end-to-end spec
       tire_stiffness_factor = 1.
 
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.8], [0.13]]
@@ -179,6 +181,8 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kpV = [3.6, 2.4, 1.5]
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.54, 0.36]
+      ret.lateralTuning.pid.kf = 0.00006 # conservative feed-forward
+      ret.steerRateCost = 0.1
 
     elif candidate in (CAR.ACCORD, CAR.ACCORD_15, CAR.ACCORDH):
       stop_and_go = True
@@ -314,33 +318,35 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
 
-    elif candidate in (CAR.PILOT, CAR.PILOT_2019):
+    elif candidate in (CAR.PILOT, CAR.PILOT_2018, CAR.PILOT_2019):
       stop_and_go = False
       ret.mass = 4204. * CV.LB_TO_KG + STD_CARGO_KG # average weight
       ret.wheelbase = 2.82
       ret.centerToFront = ret.wheelbase * 0.428 # average weight distribution
-      ret.steerRatio = 14.35         # Tuned value for 0.6.4 to eliminate wobble
+      ret.steerRatio = 14.0         # Tuned value for 0.6.4 to eliminate wobble
       tire_stiffness_factor = 0.62 # LiveParameters Value
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.45], [0.21]]
       ret.longitudinalTuning.kpBP = [0., 5., 35.]
       ret.longitudinalTuning.kpV = [1.2, 0.8, 0.5]
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
-      ret.lateralTuning.pid.kf = 0.00001   #Turn Feed forward off to eliminate wobble
-
+      ret.lateralTuning.pid.kf = 0.00006   #Turn Feed forward off to eliminate wobble
+      ret.steerRateCost = 0.1
+    
     elif candidate == CAR.RIDGELINE:
       stop_and_go = False
       ret.mass = 4515. * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 3.18
       ret.centerToFront = ret.wheelbase * 0.41
-      ret.steerRatio = 14.35        # as spec
+      ret.steerRatio = 14.0        # as spec
       tire_stiffness_factor = 0.62 # not optimized yet
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.45], [0.21]]
       ret.longitudinalTuning.kpBP = [0., 5., 35.]
       ret.longitudinalTuning.kpV = [1.2, 0.8, 0.5]
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
-      ret.lateralTuning.pid.kf = 0.00001 
+      ret.lateralTuning.pid.kf = 0.00006
+      ret.steerRateCost = 0.1
 
     else:
       raise ValueError("unsupported car %s" % candidate)
@@ -389,7 +395,6 @@ class CarInterface(CarInterfaceBase):
     ret.startAccel = 0.5
 
     ret.steerActuatorDelay = 0.1
-    ret.steerRateCost = 0.35
 
     return ret
 
