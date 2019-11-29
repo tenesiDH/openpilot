@@ -2,7 +2,7 @@ from cereal import car
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11
+                                             create_clu11, create_mdps12
 from selfdrive.car.hyundai.values import CAR, Buttons, SteerLimitParams
 from selfdrive.can.packer import CANPacker
 
@@ -14,7 +14,7 @@ def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
 
   hud_alert = 0
   if visual_alert == VisualAlert.steerRequired:
-    hud_alert = 3
+    hud_alert = 3 if fingerprint in [CAR.GENESIS , CAR.GENESIS_G90, CAR.GENESIS_G80] else 5
 
   # initialize to no line visible
   lane_visible = 1
@@ -49,11 +49,17 @@ class CarController():
     # True when giraffe switch 2 is low and we need to replace all the camera messages
     # otherwise we forward the camera msgs and we just replace the lkas cmd signals
     self.camera_disconnected = False
+    self.turning_signal_timer = 0
 
     self.packer = CANPacker(dbc_name)
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, visual_alert,
               left_line, right_line, left_lane_depart, right_lane_depart):
+
+    if CS.left_blinker_on or CS.right_blinker_on:
+      self.turning_signal_timer = 100  # Disable for 1.0 Seconds after blinker turned off
+    if self.turning_signal_timer:
+      enabled = 0
 
     ### Steering Torque
     apply_steer = actuators.steer * SteerLimitParams.STEER_MAX
@@ -74,6 +80,8 @@ class CarController():
     can_sends = []
 
     self.lkas11_cnt = frame % 0x10
+    self.mdps12_cnt = frame % 0x100
+
 
     if self.camera_disconnected:
       if (frame % 10) == 0:
@@ -82,17 +90,19 @@ class CarController():
         can_sends.append(create_1191())
       if (frame % 7) == 0:
         can_sends.append(create_1156())
+    elif not pcm_cancel_cmd:
+      can_sends.append(create_mdps12(self.packer, self.car_fingerprint, self.mdps12_cnt, CS.mdps12))
 
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    enabled, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
 
-    if pcm_cancel_cmd:
-      self.clu11_cnt = frame % 0x10
-      can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, self.clu11_cnt))
+    #if pcm_cancel_cmd:
+      #self.clu11_cnt = frame % 0x10
+      #can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, self.clu11_cnt))
 
     if CS.stopped:
-      # run only first time when the car stopped
+      # run only first time when the car stops
       if self.last_lead_distance == 0:
         # get the lead distance from the Radar
         self.last_lead_distance = CS.lead_distance
@@ -107,7 +117,9 @@ class CarController():
           self.clu11_cnt = 0
     # reset lead distnce after the car starts moving
     elif self.last_lead_distance != 0:
-      self.last_lead_distance = 0  
+      self.last_lead_distance = 0
 
+    if self.turning_signal_timer > 0:
+      self.turning_signal_timer -= 1 
 
     return can_sends

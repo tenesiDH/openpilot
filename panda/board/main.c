@@ -125,7 +125,7 @@ void set_safety_mode(uint16_t mode, int16_t param) {
           if(board_has_obd()){
             current_board->set_can_mode(CAN_MODE_NORMAL);
           }
-          can_silent = ALL_CAN_SILENT;
+          can_silent = ALL_CAN_LIVE;
           break;
         case SAFETY_ELM327:
           set_intercept_relay(false);
@@ -769,7 +769,7 @@ int main(void) {
       // if SAFETY_NOOUTPUT isn't succesfully set, we can't continue
     }
   }
-  can_silent = ALL_CAN_SILENT;
+  can_silent = ALL_CAN_LIVE;
   can_init_all();
 
 #ifndef EON
