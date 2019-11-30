@@ -111,6 +111,7 @@ if __name__ == '__main__':
         socket = context.socket(zmq.REP)
         socket.bind("tcp://*:9000")
         message = socket.recv()
+        print("Message is of type {}".format(type(message)))
         print(message)
         detectimg =detect(message)
         sleep(0.05)
