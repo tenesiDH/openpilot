@@ -1,5 +1,10 @@
+bool HKG_forwarding_enabled = 1;
+int HKG_LKAS_forwarded = 0;
+int HKG_OP_LKAS_live = 0;
+
 void default_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   UNUSED(to_push);
+  
 }
 
 int default_ign_hook(void) {
@@ -14,8 +19,16 @@ static void nooutput_init(int16_t param) {
 }
 
 static int nooutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
-  UNUSED(to_send);
-  return false;
+  int addr = GET_ADDR(to_send);
+  if (addr == 832) {
+    if (HKG_LKAS_forwarded < 1) {
+      HKG_OP_LKAS_live = 20;
+    }
+    else {
+      HKG_LKAS_forwarded -= 1;
+    }
+  }
+  return 1;
 }
 
 static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
@@ -25,10 +38,32 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
   return false;
 }
 
-static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
-  UNUSED(bus_num);
-  UNUSED(to_fwd);
-  return -1;
+ static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
+  int addr = GET_ADDR(to_fwd);
+  int bus_fwd = -1;
+
+  if ((addr == 832) && (bus_num == 0)) {
+    HKG_forwarding_enabled = 0;
+  }
+
+  if (HKG_forwarding_enabled) {
+    if (bus_num == 0) {
+      bus_fwd = 2;
+    }
+    if (bus_num == 2) {
+      if (addr != 832) {
+        bus_fwd = 0;
+      }
+      else if (HKG_OP_LKAS_live < 1) {
+        HKG_LKAS_forwarded = 1;
+        bus_fwd = 0;
+      }
+      else {
+        HKG_OP_LKAS_live -= 1;
+      }
+    }
+  }
+  return bus_fwd;
 }
 
 const safety_hooks nooutput_hooks = {
@@ -48,15 +83,23 @@ static void alloutput_init(int16_t param) {
 }
 
 static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
-  UNUSED(to_send);
-  return true;
+  int addr = GET_ADDR(to_send);
+  if (addr == 832) {
+    if (HKG_LKAS_forwarded < 1) {
+      HKG_OP_LKAS_live = 20;
+    }
+    else {
+      HKG_LKAS_forwarded -= 1;
+    }
+  }
+  return 1;
 }
 
 static int alloutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
   UNUSED(lin_num);
   UNUSED(data);
   UNUSED(len);
-  return true;
+  return 1;
 }
 
 const safety_hooks alloutput_hooks = {
