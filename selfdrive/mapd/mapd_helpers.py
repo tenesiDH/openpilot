@@ -604,11 +604,11 @@ class Way:
         except (KeyError, IndexError):
           pass
         try:
-          if ways[0].tags['oneway'] == 'yes':
-            if ways[0].nodes[0].id == node.id and ways[1].nodes[0].id != node.id:
+          if (ways[0].tags['oneway'] == 'yes') and (ways[1].tags['oneway'] == 'yes'):
+            if (ways[0].nodes[0].id == node.id and ways[1].nodes[0].id != node.id) and not (ways[0].nodes[0].id != node.id and ways[1].nodes[0].id == node.id):
               way = Way(ways[0], self.query_results)
               return way
-            elif ways[0].nodes[0].id != node.id and ways[1].nodes[0].id == node.id:
+            elif (ways[0].nodes[0].id != node.id and ways[1].nodes[0].id == node.id) and not (ways[0].nodes[0].id == node.id and ways[1].nodes[0].id != node.id):
               way = Way(ways[1], self.query_results)
               return way
         except (KeyError, IndexError):
@@ -640,11 +640,11 @@ class Way:
         except (KeyError, IndexError):
           pass
         try:
-          if ways[0].tags['oneway'] == 'yes':
-            if ways[0].nodes[0].id == node.id and ways[1].nodes[0].id != node.id:
+          if (ways[0].tags['oneway'] == 'yes') and (ways[1].tags['oneway'] == 'yes'):
+            if (ways[0].nodes[0].id == node.id and ways[1].nodes[0].id != node.id) and not (ways[0].nodes[0].id != node.id and ways[1].nodes[0].id == node.id):
               way = Way(ways[0], self.query_results)
               return way
-            elif ways[0].nodes[0].id != node.id and ways[1].nodes[0].id == node.id:
+            elif (ways[0].nodes[0].id != node.id and ways[1].nodes[0].id == node.id) and not (ways[0].nodes[0].id == node.id and ways[1].nodes[0].id != node.id):
               way = Way(ways[1], self.query_results)
               return way
         except (KeyError, IndexError):
