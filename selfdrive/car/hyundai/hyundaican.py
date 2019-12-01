@@ -136,5 +136,6 @@ def create_spas12(packer):
   return packer.make_can_msg("SPAS12", 1, values)
 
 def create_ems11(packer, enabled, ems11):
-  ems11["VS"] = 0 if enabled
+  if enabled:
+    ems11["VS"] = 0
   return packer.make_can_msg("EMS11", 1, ems11)
