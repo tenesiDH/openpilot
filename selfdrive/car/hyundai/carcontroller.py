@@ -88,7 +88,7 @@ class CarController():
       self.apply_steer_ang = apply_steer_ang_req
 
     # Use LKAS or SPAS
-    if CS.mdps11_stat == 7 or CS.v_ego > 15:
+    if CS.mdps11_stat == 7:
       self.lkas = True
     else:
       self.lkas = False
@@ -96,7 +96,7 @@ class CarController():
 
     # Fix for Genesis hard fault when steer request sent while the speed is low 
 
-    if not enabled or CS.v_ego < 15:
+    if not enabled:
       apply_steer = 0
 
     steer_req = 1 if apply_steer else 0
@@ -124,8 +124,8 @@ class CarController():
                                    enabled, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
     
-    can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.NONE, self.clu11_cnt))
-    can_sends.append(create_ems11(self.packer, CS.ems11))
+    can_sends.append(create_clu11(self.packer, CS.clu11, enabled, Buttons.NONE, self.clu11_cnt))
+    can_sends.append(create_ems11(self.packer, CS.ems11, enabled))
 
     # SPAS11 50hz
     if (frame % 2) == 0:
