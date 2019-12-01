@@ -245,7 +245,7 @@ def mapsd_thread():
             circles = [circle_through_points(*p, direction=True) for p in zip(pnts, pnts[1:], pnts[2:])]
             circles = np.asarray(circles)
             radii = np.nan_to_num(circles[:, 2])
-            radii[radii < 15.] = 10000
+            radii[abs(radii) < 15.] = 10000
             
             if cur_way.way.tags['highway'] == 'trunk':
               radii = radii*1.6 # https://media.springernature.com/lw785/springer-static/image/chp%3A10.1007%2F978-3-658-01689-0_21/MediaObjects/298553_35_De_21_Fig65_HTML.gif
