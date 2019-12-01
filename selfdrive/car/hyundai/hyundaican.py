@@ -66,14 +66,14 @@ def create_1191():
 def create_1156():
   return make_can_msg(1156, b"\x08\x20\xfe\x3f\x00\xe0\xfd\x3f", 0)
 
-def create_clu11(packer, clu11, button, cnt):
+def create_clu11(packer, clu11, enabled, button, cnt):
   values = {
     "CF_Clu_CruiseSwState": button,
     "CF_Clu_CruiseSwMain": clu11["CF_Clu_CruiseSwMain"],
     "CF_Clu_SldMainSW": clu11["CF_Clu_SldMainSW"],
     "CF_Clu_ParityBit1": clu11["CF_Clu_ParityBit1"],
     "CF_Clu_VanzDecimal": clu11["CF_Clu_VanzDecimal"],
-    "CF_Clu_Vanz": clu11["CF_Clu_Vanz"],
+    "CF_Clu_Vanz": 0 if enabled else clu11["CF_Clu_Vanz"],
     "CF_Clu_SPEED_UNIT": clu11["CF_Clu_SPEED_UNIT"],
     "CF_Clu_DetentOut": clu11["CF_Clu_DetentOut"],
     "CF_Clu_RheostatLevel": clu11["CF_Clu_RheostatLevel"],
@@ -82,7 +82,7 @@ def create_clu11(packer, clu11, button, cnt):
     "CF_Clu_AliveCnt1": cnt,
   }
 
-  return packer.make_can_msg("CLU11", 0, values)
+  return packer.make_can_msg("CLU11", 2 if button else 1, values)
 
 
 def create_spas11(packer, car_fingerprint, cnt, en_spas, apply_steer):
@@ -135,3 +135,6 @@ def create_spas12(packer):
 
   return packer.make_can_msg("SPAS12", 1, values)
 
+def create_ems11(packer, enabled, ems11):
+  ems11["VS"] = 0 if enabled
+  return packer.make_can_msg("EMS11", 1, ems11)
