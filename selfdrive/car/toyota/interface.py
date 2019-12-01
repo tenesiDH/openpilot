@@ -343,9 +343,10 @@ class CarInterface(CarInterfaceBase):
     if not self.cruise_enabled_prev:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     else:
-      ret.cruiseState.enabled = bool(self.CS.main_on)
+      if self.keep_openpilot_engaged:
+        ret.cruiseState.enabled = bool(self.CS.main_on)
       if not self.CS.pcm_acc_active:
-        events.append(create_event('longControlDisabled', [ET.WARNING]))
+        # events.append(create_event('longControlDisabled', [ET.WARNING], is_arne=True))  # todo: find some way to get this alert without touching car.capnp
         ret.brakePressed = True
     if self.CS.v_ego < 1 or not self.keep_openpilot_engaged:
       ret.cruiseState.enabled = self.CS.pcm_acc_active

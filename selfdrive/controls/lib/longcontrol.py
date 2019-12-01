@@ -69,10 +69,9 @@ class LongControl():
     self.fcw_countdown = 0
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
-    self.last_lead_data = {'vRel': None, 'a_lead': None, 'x_lead': None, 'status': False}
+    self.lead_data = {'vRel': None, 'a_lead': None, 'x_lead': None, 'status': False}
     self.freeze = False
-    self.last_lead_time = time.time()
-    self.actuatorpress = False
+    self.actuator_pressed = False
     
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -105,32 +104,26 @@ class LongControl():
 
     accel = interp(v_ego, x, y)
 
-    if dynamic and self.last_lead_data['vRel'] is not None and self.last_lead_data['status']:  # dynamic gas profile specific operations, and if lead
+    if dynamic and self.lead_data['status']:  # dynamic gas profile specific operations, and if lead
       if v_ego < 6.7056:  # if under 15 mph
         x = [1.61479, 1.99067, 2.28537, 2.49888, 2.6312, 2.68224]
         y = [-accel, -(accel / 1.06), -(accel / 1.2), -(accel / 1.8), -(accel / 4.4), 0]  # array that matches current chosen accel value
-        accel += interp(self.last_lead_data['vRel'], x, y)
+        accel += interp(self.lead_data['vRel'], x, y)
       else:
         x = [-0.89408, 0, 0.89408, 4.4704]
         y = [-.15, -.05, .005, .05]
-        accel += interp(self.last_lead_data['vRel'], x, y)
+        accel += interp(self.lead_data['vRel'], x, y)
 
     min_return = 0.0
     max_return = 1.0
     return round(max(min(accel, max_return), min_return), 5)  # ensure we return a value between range
 
   def process_lead(self, lead_one):
-    if lead_one is not None:
-      self.last_lead_data['vRel'] = lead_one.vRel
-      self.last_lead_data['a_lead'] = lead_one.aLeadK
-      self.last_lead_data['x_lead'] = lead_one.dRel
-      self.last_lead_data['status'] = lead_one.status
-      self.last_lead_time = time.time()
-    elif time.time() - self.last_lead_time > 0.5:  # if missing lead for n seconds
-      self.last_lead_data['vRel'] = None
-      self.last_lead_data['a_lead'] = None
-      self.last_lead_data['x_lead'] = None
-      self.last_lead_data['status'] = False
+    self.lead_data['vRel'] = lead_one.vRel
+    self.lead_data['a_lead'] = lead_one.aLeadK
+    self.lead_data['x_lead'] = lead_one.dRel
+    self.lead_data['status'] = lead_one.status
+
 
   def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP,
              gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed, fcw):
@@ -142,8 +135,8 @@ class LongControl():
     except AttributeError:
       gas_interceptor = False
 
-    # gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)
-    gas_max = self.dynamic_gas(v_ego, gas_interceptor, gas_button_status)
+    gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)
+    # gas_max = self.dynamic_gas(v_ego, gas_interceptor, gas_button_status)  #todo: fix this
     brake_max = interp(v_ego, CP.brakeMaxBP, CP.brakeMaxV)
 
     # Update state machine
@@ -153,7 +146,7 @@ class LongControl():
                                                        brake_pressed, cruise_standstill)
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
-    if not (gas_pressed or brake_pressed) and self.actuatorpress:
+    if not (gas_pressed or brake_pressed) and self.actuator_pressed:
       self.pid.reset()
       
     if self.long_control_state == LongCtrlState.off:
@@ -228,5 +221,5 @@ class LongControl():
       self.fcw_countdown = self.fcw_countdown -1
       final_gas = 0.
       final_brake = 1.0
-    self.actuatorpress = gas_pressed or brake_pressed
+    self.actuator_pressed = gas_pressed or brake_pressed
     return final_gas, final_brake
