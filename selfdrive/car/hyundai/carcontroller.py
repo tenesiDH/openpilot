@@ -94,9 +94,7 @@ class CarController():
       self.lkas = False
 
 
-    # Fix for Genesis hard fault when steer request sent while the speed is low 
-
-    if not enabled or CS.v_ego < 15:
+    if not enabled:
       apply_steer = 0
 
     steer_req = 1 if apply_steer else 0
