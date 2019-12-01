@@ -104,7 +104,7 @@ def create_spas11(packer, car_fingerprint, cnt, en_spas, apply_steer):
   else:
     values["CF_Spas_Chksum"] = sum(dat[:6]) % 256
 
-  return packer.make_can_msg("SPAS11", 1, values)
+  return packer.make_can_msg("SPAS11", 0, values)
 
 def create_spas12(packer):
   values = {
@@ -133,5 +133,5 @@ def create_spas12(packer):
     "CF_Spas_RRS_Alarm": 0,
   }
 
-  return packer.make_can_msg("SPAS12", 1, values)
+  return packer.make_can_msg("SPAS12", 0, values)
 
