@@ -16,7 +16,7 @@ class SteerLimitParams:
   STEER_DRIVER_ALLOWANCE = 50
   STEER_DRIVER_MULTIPLIER = 2
   STEER_DRIVER_FACTOR = 1
-  STEER_ANG_MAX = 20          # SPAS Max Angle
+  STEER_ANG_MAX = 360          # SPAS Max Angle
   STEER_ANG_MAX_RATE = 0.4    # SPAS Degrees per ms
   
 VisualAlert = car.CarControl.HUDControl.VisualAlert
