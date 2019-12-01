@@ -2,8 +2,8 @@ from cereal import car
 import numpy as np
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
-                                             create_1191, create_1156, \
-                                             create_clu11, create_spas11, create_spas12
+                                             create_1191, create_1156, create_clu11, \
+                                             create_spas11, create_spas12, create_ems11
 from selfdrive.car.hyundai.values import CAR, Buttons
 from selfdrive.can.packer import CANPacker
 
@@ -123,6 +123,10 @@ class CarController():
     can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    enabled, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
+    
+    can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.NONE, self.clu11_cnt))
+    can_sends.append(create_ems11(self.packer, CS.ems11))
+
     # SPAS11 50hz
     if (frame % 2) == 0:
       if CS.mdps11_stat == 7 and not self.mdps11_stat_last == 7:
