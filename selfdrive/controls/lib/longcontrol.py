@@ -70,8 +70,6 @@ class LongControl():
     self.last_output_gb = 0.0
     self.lastdecelForTurn = False
     self.lead_data = {'vRel': None, 'a_lead': None, 'x_lead': None, 'status': False}
-    self.freeze = False
-    self.actuator_pressed = False
     
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -147,22 +145,13 @@ class LongControl():
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
       
-    if self.long_control_state == LongCtrlState.off:
+    if self.long_control_state == LongCtrlState.off or gas_pressed or brake_pressed:
       self.v_pid = v_ego_pid
       self.pid.reset()
       output_gb = 0.
 
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
-      if gas_pressed or brake_pressed:
-        if not self.freeze:
-          self.pid.i = 0.0
-          self.freeze = True
-      else:
-        if self.freeze:
-          self.pid.i = 0.0
-          self.reset(v_target_future)
-          self.freeze = False
       self.v_pid = v_target
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = -brake_max
@@ -191,7 +180,7 @@ class LongControl():
         self.pid.k_f=1.0
 
         
-      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=(prevent_overshoot or gas_pressed or brake_pressed))
+      output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=prevent_overshoot)
 
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
@@ -222,5 +211,4 @@ class LongControl():
       self.fcw_countdown = self.fcw_countdown -1
       final_gas = 0.
       final_brake = 1.0
-    self.actuator_pressed = gas_pressed or brake_pressed
     return final_gas, final_brake
