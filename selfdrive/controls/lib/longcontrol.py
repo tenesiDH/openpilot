@@ -184,10 +184,10 @@ class LongControl():
         self.pid.k_f=1.0
       if gas_pressed or brake_pressed:
         if not self.freeze:
-          self.pid.i = 0.0
           self.freeze = True
       else:
         if self.freeze:
+          self.pid.i = 0.0
           self.freeze = False
         
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=(prevent_overshoot or gas_pressed or brake_pressed))

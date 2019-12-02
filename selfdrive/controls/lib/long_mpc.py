@@ -120,6 +120,7 @@ class LongitudinalMpc():
       x = [4.4704, 6.7056]  # smoothly ramp TR between 10 and 15 mph from 1.8s to defined TR above at 15mph
       y = [1.8, interp(x[1], x_vel, y_mod)]
       TR = interp(self.v_ego, x, y)
+      return round(TR, 3)
 
     if self.lead_data['v_lead'] is not None:  # if lead
       x = [-15.6464, -9.8422, -6.0, -4.0, -2.68, -2.3, -1.8, -1.26, -0.61, 0, 0.61, 1.26, 2.1, 2.68]  # relative velocity values
