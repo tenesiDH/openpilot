@@ -9,6 +9,7 @@ from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness,
 from selfdrive.swaglog import cloudlog
 from selfdrive.car.interfaces import CarInterfaceBase
 from common.op_params import opParams
+from selfdrive.controls.lane_hugging import LaneHugging
 
 ButtonType = car.CarState.ButtonEvent.Type
 GearShifter = car.CarState.GearShifter
@@ -33,6 +34,7 @@ class CarInterface(CarInterfaceBase):
     if CarController is not None:
       self.CC = CarController(self.cp.dbc_name, CP.carFingerprint, CP.enableCamera, CP.enableDsu, CP.enableApgs)
     self.op_params = opParams()
+    self.lane_hugging = LaneHugging()
     self.keep_openpilot_engaged = self.op_params.get('keep_openpilot_engaged', True)
 
   @staticmethod
@@ -126,7 +128,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 2860. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.05]]
-      ret.lateralTuning.pid.kf = 0.0000275  # full torque for 20 deg at 80mph means 0.00007818594
+      ret.lateralTuning.pid.kf = 0.000022  # full torque for 20 deg at 80mph means 0.00007818594
       if ret.enableGasInterceptor:
         ret.longitudinalTuning.kpV = [1.0, 0.66, 0.42]
         ret.longitudinalTuning.kiV = [0.135, 0.09]
@@ -329,7 +331,7 @@ class CarInterface(CarInterfaceBase):
     ret.brakeLights = self.CS.brake_lights
 
     # steering wheel
-    ret.steeringAngle = self.CS.angle_steers
+    ret.steeringAngle = self.lane_hugging.lane_hug_angle_steers(self.CS.angle_steers)
     ret.steeringRate = self.CS.angle_steers_rate
 
     ret.steeringTorque = self.CS.steer_torque_driver

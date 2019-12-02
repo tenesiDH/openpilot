@@ -29,7 +29,7 @@ class opParams:
     self.default_params = {'camera_offset': {'default': 0.06, 'allowed_types': [float, int], 'description': 'Your camera offset to use in lane_planner.py'},
                            'awareness_factor': {'default': 2.0, 'allowed_types': [float, int], 'description': 'Multiplier for the awareness times'},
                            'lane_hug_direction': {'default': None, 'allowed_types': [type(None), str], 'description': "(NoneType, 'left', 'right'): Direction of your lane hugging, if present, else, None"},
-                           'lane_hug_multiplier': {'default': 0.83, 'allowed_types': [float, int], 'description': 'How much to reduce angle by'},
+                           'lane_hug_angle_offset': {'default': 0.0, 'allowed_types': [float, int], 'description': 'This is the angle your wheel reads when driving straight at highway speeds. Used to offset angle_steers to help fix lane hugging'},
                            'use_car_caching': {'default': True, 'allowed_types': [bool], 'description': 'Whether to use fingerprint caching'},
                            'osm': {'default': True, 'allowed_types': [bool], 'description': 'Whether to use OSM for drives'},
                            'force_pedal': {'default': False, 'allowed_types': [bool], 'description': "If openpilot isn't recognizing your comma pedal, set this to True"},
