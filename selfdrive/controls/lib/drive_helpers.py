@@ -34,11 +34,16 @@ class EventTypes:
   PERMANENT = 'permanent'
 
 
-def create_event(name, types, isarne182 = False):
-  if isarne182
-    event = arne182.CarEventArne182.new_message()
-  else:
-    event = car.CarEvent.new_message()
+def create_event_arne(name, types):
+  event = arne182.CarEventArne182.new_message()
+  event.name = name
+  for t in types:
+    setattr(event, t, True)
+  return event
+
+
+def create_event(name, types):
+  event = car.CarEvent.new_message()
   event.name = name
   for t in types:
     setattr(event, t, True)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from cereal import car, arne182
 from selfdrive.config import Conversions as CV
-from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
+from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event, create_event_arne
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.car.toyota.carstate import CarState, get_can_parser, get_cam_can_parser
 from selfdrive.car.toyota.values import ECU, ECU_FINGERPRINT, CAR, NO_STOP_TIMER_CAR, TSS2_CAR, FINGERPRINTS
@@ -350,7 +350,7 @@ class CarInterface(CarInterfaceBase):
       if self.keep_openpilot_engaged:
         ret.cruiseState.enabled = bool(self.CS.main_on)
       if not self.CS.pcm_acc_active:
-        eventsArne182.append(create_event('longControlDisabled', [ET.WARNING], isarne182=True))
+        eventsArne182.append(create_event_arne('longControlDisabled', [ET.WARNING]))
         ret.brakePressed = True
     if self.CS.v_ego < 1 or not self.keep_openpilot_engaged:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
