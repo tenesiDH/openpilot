@@ -21,7 +21,7 @@ ret_arne182.events = eventsArne182
 AM = AlertManager()
 
 CS, CS_Arne = ret.as_reader(), ret_arne182.as_reader()
-events = list(CS_Arne.events)
+events = list(CS_Arne.events).extend(list(CS_Arne.events))
 
 frame = 0
 enabled = True
