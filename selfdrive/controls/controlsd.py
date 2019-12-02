@@ -60,11 +60,12 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
 
   # Update carstate from CAN and create events
   can_strs = messaging.drain_sock_raw(can_sock, wait_for_one=True)
-  CS = CI.update(CC, can_strs)
+  CS, CS_arne182 = CI.update(CC, can_strs)
 
   sm.update(0)
 
-  events = list(CS.events)
+  events = list(CS.events.extend(CS_arne182.events))
+  
   enabled = isEnabled(state)
 
   # Check for CAN timeout
