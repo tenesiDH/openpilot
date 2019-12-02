@@ -3,6 +3,7 @@ import os
 import cv2
 import numpy as np
 import zmq
+import time
 
 def detect(source):
 
@@ -115,7 +116,7 @@ if __name__ == '__main__':
         print("Message is of type {}".format(type(message)))
         print(message)
         detectimg =detect(message)
-        sleep(0.05)
+        time.sleep(0.05)
     # This function either gives out "RED" "YELLOW" or "GREEN"
     
 
