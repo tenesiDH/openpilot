@@ -18,7 +18,7 @@ struct CarEventArne182 @0x9b1657f34caf3ad4 {
   preEnable @7 :Bool;
   permanent @8 :Bool;
 
-  enum EventNameArne182 @0xbaa8c5d505f727dg {
+  enum EventNameArne182 @0xbaa8c5d505f727ea {
     # TODO: copy from error list
     longControlDisabled @0;
     longControlBrakeDisabled @1;
