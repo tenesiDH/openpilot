@@ -5,15 +5,23 @@ from selfdrive.controls.lib.alertmanager import AlertManager
 from selfdrive.controls.lib.drive_helpers import get_events
 
 
-events = []
 ret = car.CarState.new_message()
+ret_arne182 = arne182.CarStateArne182.new_message()
+
+events = []
+eventsArne182 = []
+
+
 events.append(create_event('steerTempUnavailable', [ET.WARNING]))
+eventsArne182.append(create_event_arne('longControlDisabled', [ET.WARNING]))
+
 ret.events = events
+ret_arne182.events = eventsArne182
 
 AM = AlertManager()
 
-CS = ret.as_reader()
-events = list(CS.events)
+CS, CS_Arne = ret.as_reader(), ret_arne182.as_reader()
+events = list(CS_Arne.events)
 
 frame = 0
 enabled = True
