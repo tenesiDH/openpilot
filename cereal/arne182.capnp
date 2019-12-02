@@ -8,7 +8,7 @@ $Java.outerClassname("arne182");
 @0xca61a35dedbd6328;
 
 struct CarEventArne182 @0x9b1657f34caf3ad4 {
-  name @0 :EventName;
+  name @0 :EventNameArne182;
   enable @1 :Bool;
   noEntry @2 :Bool;
   warning @3 :Bool;
