@@ -62,9 +62,7 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
   can_strs = messaging.drain_sock_raw(can_sock, wait_for_one=True)
   CS, CS_arne182 = CI.update(CC, can_strs)
 
-  sm.update(0)
-
-  events = list(CS.events.extend(CS_arne182.events))
+  events = list(CS.events).extend(list(CS_arne182.events))
   
   enabled = isEnabled(state)
 
@@ -266,7 +264,6 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
 
     
   # Gas/Brake PID loop
-  arne_sm.update(0)
   gas_button_status = arne_sm['arne182Status'].gasbuttonstatus
   actuators.gas, actuators.brake = LoC.update(active, CS.vEgo, CS.brakePressed, CS.standstill,
                                               CS.cruiseState.standstill,
@@ -521,6 +518,8 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
   prof = Profiler(False)  # off by default
 
   while True:
+    sm.update(0)
+    arne_sm.update(0)
     start_time = sec_since_boot()
     prof.checkpoint("Ratekeeper", ignore=True)
 
