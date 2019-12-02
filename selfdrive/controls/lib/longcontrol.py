@@ -146,8 +146,6 @@ class LongControl():
                                                        brake_pressed, cruise_standstill)
 
     v_ego_pid = max(v_ego, MIN_CAN_SPEED)  # Without this we get jumps, CAN bus reports 0 when speed < 0.3
-    if not (gas_pressed or brake_pressed) and self.actuator_pressed:
-      self.pid.reset()
       
     if self.long_control_state == LongCtrlState.off:
       self.v_pid = v_ego_pid
@@ -156,6 +154,15 @@ class LongControl():
 
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
+      if gas_pressed or brake_pressed:
+        if not self.freeze:
+          self.pid.i = 0.0
+          self.freeze = True
+      else:
+        if self.freeze:
+          self.pid.i = 0.0
+          self.reset(v_target_future)
+          self.freeze = False
       self.v_pid = v_target
       self.pid.pos_limit = gas_max
       self.pid.neg_limit = -brake_max
@@ -182,13 +189,7 @@ class LongControl():
         self.pid._k_p = (CP.longitudinalTuning.kpBP, [x * 1 for x in CP.longitudinalTuning.kpV])
         self.pid._k_i = (CP.longitudinalTuning.kiBP, [x * 1 for x in CP.longitudinalTuning.kiV])
         self.pid.k_f=1.0
-      if gas_pressed or brake_pressed:
-        if not self.freeze:
-          self.freeze = True
-      else:
-        if self.freeze:
-          self.pid.i = 0.0
-          self.freeze = False
+
         
       output_gb = self.pid.update(self.v_pid, v_ego_pid, speed=v_ego_pid, deadzone=deadzone, feedforward=a_target, freeze_integrator=(prevent_overshoot or gas_pressed or brake_pressed))
 
