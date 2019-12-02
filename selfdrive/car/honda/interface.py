@@ -176,7 +176,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 10.9  # 10.93 is end-to-end spec
       tire_stiffness_factor = 1.
 
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.8], [0.13]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.8], [0.24]]
       ret.longitudinalTuning.kpBP = [0., 5., 35.]
       ret.longitudinalTuning.kpV = [3.6, 2.4, 1.5]
       ret.longitudinalTuning.kiBP = [0., 35.]
@@ -331,7 +331,6 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
       ret.lateralTuning.pid.kf = 0.00006   #Turn Feed forward off to eliminate wobble
-      ret.steerRateCost = 0.1
     
     elif candidate == CAR.RIDGELINE:
       stop_and_go = False
@@ -346,7 +345,6 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kiBP = [0., 35.]
       ret.longitudinalTuning.kiV = [0.18, 0.12]
       ret.lateralTuning.pid.kf = 0.00006
-      ret.steerRateCost = 0.1
 
     else:
       raise ValueError("unsupported car %s" % candidate)
