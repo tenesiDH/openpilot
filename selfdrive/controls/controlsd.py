@@ -60,9 +60,12 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
 
   # Update carstate from CAN and create events
   can_strs = messaging.drain_sock_raw(can_sock, wait_for_one=True)
-  CS, CS_arne182 = CI.update(CC, can_strs)
-
-  events = list(CS.events).extend(list(CS_arne182.events))
+  CS = CI.update(CC, can_strs)
+  if isinstance(CS, list):  # todo: remove all this and make all interfaces return arne182 events
+    CS, CS_arne182 = CS[0], CS[1]
+    events = list(CS.events) + list(CS_arne182.events)
+  else:
+    events = list(CS.events)
   
   enabled = isEnabled(state)
 
