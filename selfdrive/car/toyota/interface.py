@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from cereal import car
+from cereal import car, arne182
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
 from selfdrive.controls.lib.vehicle_model import VehicleModel
@@ -300,6 +300,7 @@ class CarInterface(CarInterfaceBase):
 
     # create message
     ret = car.CarState.new_message()
+    ret_arne182 = arne182.CarStateArne182.new_message()
 
     ret.canValid = self.cp.can_valid
 
@@ -340,6 +341,7 @@ class CarInterface(CarInterfaceBase):
 
     # events
     events = []
+    eventsArne182 = []
 
     # cruise state
     if not self.cruise_enabled_prev:
@@ -348,7 +350,7 @@ class CarInterface(CarInterfaceBase):
       if self.keep_openpilot_engaged:
         ret.cruiseState.enabled = bool(self.CS.main_on)
       if not self.CS.pcm_acc_active:
-        # events.append(create_event('longControlDisabled', [ET.WARNING], is_arne=True))  # todo: find some way to get this alert without touching car.capnp
+        eventsArne182.append(create_event('longControlDisabled', [ET.WARNING], isarne182=True))
         ret.brakePressed = True
     if self.CS.v_ego < 1 or not self.keep_openpilot_engaged:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
@@ -435,12 +437,12 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
 
     ret.events = events
-
+    ret_arne182.events = eventsArne182
     self.gas_pressed_prev = ret.gasPressed
     self.brake_pressed_prev = ret.brakePressed
     self.cruise_enabled_prev = ret.cruiseState.enabled
 
-    return ret.as_reader()
+    return ret.as_reader(), ret_arne182.as_reader()
 
   # pass in a car.CarControl
   # to be called @ 100hz
