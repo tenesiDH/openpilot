@@ -561,8 +561,12 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
 
     if not read_only:
       # update control state
+      if CS_arne182 is not None:
+        sendevents = events + list(CS_arne182.events)
+      else:
+        sendevents = events
       state, soft_disable_timer, v_cruise_kph, v_cruise_kph_last = \
-        state_transition(sm.frame, CS, CP, state, events + list(CS_arne182.events), soft_disable_timer, v_cruise_kph, AM)
+        state_transition(sm.frame, CS, CP, state, sendevents, soft_disable_timer, v_cruise_kph, AM)
       prof.checkpoint("State transition")
 
     # Compute actuators (runs PID loops and lateral MPC)
