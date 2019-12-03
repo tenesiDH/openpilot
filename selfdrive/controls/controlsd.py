@@ -63,9 +63,10 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
   CS = CI.update(CC, can_strs)
   if isinstance(CS, list):  # todo: remove all this and make all interfaces return arne182 events
     CS, CS_arne182 = CS[0], CS[1]
-    events = list(CS.events) + list(CS_arne182.events)
+    events = list(CS.events)# + list(CS_arne182.events) gets added later
   else:
     events = list(CS.events)
+    CS_arne182 = None
   
   enabled = isEnabled(state)
 
@@ -130,7 +131,7 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
   if driver_status.terminal_alert_cnt >= MAX_TERMINAL_ALERTS:
     events.append(create_event("tooDistracted", [ET.NO_ENTRY]))
 
-  return CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter
+  return CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter, CS_arne182
 
 
 def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_kph, AM):
@@ -527,7 +528,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     prof.checkpoint("Ratekeeper", ignore=True)
 
     # Sample data and compute car events
-    CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter =\
+    CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter, CS_arne182 =\
       data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space, low_battery,
                   driver_status, state, mismatch_counter, params)
     prof.checkpoint("Sample")
@@ -561,7 +562,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     if not read_only:
       # update control state
       state, soft_disable_timer, v_cruise_kph, v_cruise_kph_last = \
-        state_transition(sm.frame, CS, CP, state, events, soft_disable_timer, v_cruise_kph, AM)
+        state_transition(sm.frame, CS, CP, state, events + list(CS_arne182.events), soft_disable_timer, v_cruise_kph, AM)
       prof.checkpoint("State transition")
 
     # Compute actuators (runs PID loops and lateral MPC)
