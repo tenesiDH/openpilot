@@ -562,7 +562,7 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     if not read_only:
       # update control state
       if CS_arne182 is not None:
-        sendevents = list(CS_arne182.events) + líst(events)
+        sendevents = list(CS_arne182.events) + list(events)
       else:
         sendevents = events
       state, soft_disable_timer, v_cruise_kph, v_cruise_kph_last = \
