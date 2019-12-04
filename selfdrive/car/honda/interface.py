@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 import numpy as np
-from cereal import car
+from cereal import car, arne182
 from common.numpy_fast import clip, interp
 from common.realtime import DT_CTRL
 from selfdrive.swaglog import cloudlog
 from selfdrive.config import Conversions as CV
-from selfdrive.controls.lib.drive_helpers import create_event, EventTypes as ET, get_events
+from selfdrive.controls.lib.drive_helpers import create_event, EventTypes as ET, get_events, create_event_arne
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.car.honda.carstate import CarState, get_can_parser, get_cam_can_parser
 from selfdrive.car.honda.values import CruiseButtons, CAR, HONDA_BOSCH, VISUAL_HUD, ECU, ECU_FINGERPRINT, FINGERPRINTS
 from selfdrive.car import STD_CARGO_KG, CivicParams, scale_rot_inertia, scale_tire_stiffness, is_ecu_disconnected, gen_empty_fingerprint
 from selfdrive.controls.lib.planner import _A_CRUISE_MAX_V
 from selfdrive.car.interfaces import CarInterfaceBase
+from selfdrive.controls.lane_hugging import LaneHugging
 
 A_ACC_MAX = max(_A_CRUISE_MAX_V)
 
@@ -387,6 +388,7 @@ class CarInterface(CarInterfaceBase):
 
     # create message
     ret = car.CarState.new_message()
+    ret_arne182 = arne182.CarStateArne182.new_message()
 
     ret.canValid = self.cp.can_valid
 
@@ -495,6 +497,7 @@ class CarInterface(CarInterfaceBase):
 
     # events
     events = []
+    eventsArne182 = []
     # wait 1.0s before throwing the alert to avoid it popping when you turn off the car
     if self.cp_cam.can_invalid_cnt >= 100 and self.CS.CP.carFingerprint not in HONDA_BOSCH and self.CP.enableCamera:
       events.append(create_event('invalidGiraffeHonda', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
@@ -572,6 +575,7 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('buttonEnable', [ET.ENABLE]))
 
     ret.events = events
+    ret_arne182.events = eventsArne182
 
     # update previous brake/gas pressed
     self.gas_pressed_prev = ret.gasPressed
@@ -580,7 +584,7 @@ class CarInterface(CarInterfaceBase):
     self.cruise_enabled_prev = ret.cruiseState.enabled
     
     # cast to reader so it can't be modified
-    return ret.as_reader()
+    return ret.as_reader(), ret_arne182.as_reader()
 
   # pass in a car.CarControl
   # to be called @ 100hz

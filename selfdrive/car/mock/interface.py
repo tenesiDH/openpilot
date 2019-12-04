@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from cereal import car
+from cereal import car, arne182
 from selfdrive.config import Conversions as CV
 from selfdrive.swaglog import cloudlog
 import selfdrive.messaging as messaging
@@ -88,6 +88,7 @@ class CarInterface(CarInterfaceBase):
 
     # create message
     ret = car.CarState.new_message()
+    ret_arne182 = arne182.CarStateArne182.new_message()
 
     # speeds
     ret.vEgo = self.speed
@@ -108,9 +109,11 @@ class CarInterface(CarInterfaceBase):
     ret.steeringAngle = curvature * self.CP.steerRatio * self.CP.wheelbase * CV.RAD_TO_DEG
 
     events = []
+    eventsArne182 = []
     ret.events = events
+    ret.eventsArne182 = eventsArne182
 
-    return ret.as_reader()
+    return ret.as_reader(), ret_arne182.as_reader()
 
   def apply(self, c):
     # in mock no carcontrols

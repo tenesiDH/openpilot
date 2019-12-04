@@ -442,7 +442,7 @@ class CarInterface(CarInterfaceBase):
     self.brake_pressed_prev = ret.brakePressed
     self.cruise_enabled_prev = ret.cruiseState.enabled
 
-    return [ret.as_reader(), ret_arne182.as_reader()]
+    return ret.as_reader(), ret_arne182.as_reader()
 
   # pass in a car.CarControl
   # to be called @ 100hz
