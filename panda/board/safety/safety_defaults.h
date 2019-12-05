@@ -1,6 +1,8 @@
 bool HKG_forwarding_enabled = 1;
 int HKG_LKAS_forwarded = 0;
+int HKG_ClU11_forwarded = 0;
 int HKG_OP_LKAS_live = 0;
+int HKG_OP_ClU11_live = 0;
 
 void default_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   UNUSED(to_push);
@@ -28,6 +30,14 @@ static int nooutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       HKG_LKAS_forwarded -= 1;
     }
   }
+  if (addr == 1265) {
+    if (HKG_ClU11_forwarded < 1) {
+      HKG_OP_ClU11_live = 20;
+    }
+    else {
+      HKG_ClU11_forwarded -= 1;
+    }
+  }
   return 1;
 }
 
@@ -48,21 +58,28 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
 
   if (HKG_forwarding_enabled) {
     if (bus_num == 0) {
-      bus_fwd = 2;
+      if ((addr != 1265) || (HKG_OP_ClU11_live < 1)) {
+        if (addr == 1265) {HKG_ClU11_forwarded = 2;}
+        bus_fwd = 2;
+      } else {
+        HKG_OP_ClU11_live -= 1;
+        HKG_ClU11_forwarded = 1;
+        bus_fwd = 2;
+      }
     }
     if (bus_num == 2) {
       if (addr != 832) {
         bus_fwd = 0;
       }
       else if (HKG_OP_LKAS_live < 1) {
-        HKG_LKAS_forwarded = 1;
+        HKG_LKAS_forwarded = 2;
         bus_fwd = 0;
       }
       else {
         HKG_OP_LKAS_live -= 1;
       }
     }
-  }
+  } 
   return bus_fwd;
 }
 
@@ -90,6 +107,14 @@ static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     }
     else {
       HKG_LKAS_forwarded -= 1;
+    }
+  }
+  if (addr == 1265) {
+    if (HKG_ClU11_forwarded < 1) {
+      HKG_OP_ClU11_live = 20;
+    }
+    else {
+      HKG_ClU11_forwarded -= 1;
     }
   }
   return 1;
