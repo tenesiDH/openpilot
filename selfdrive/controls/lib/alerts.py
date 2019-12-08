@@ -86,7 +86,14 @@ ALERTS = [
       "Turn Exceeds Steering Limit",
       AlertStatus.userPrompt, AlertSize.mid,
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.chimePrompt, 1., 2., 3.),
-
+  
+  Alert(
+    "WaitingMode",
+    "WAITING...",
+    "Press gas/resume to gain full control!",
+    AlertStatus.userPrompt, AlertSize.mid,
+    Priority.LOW, VisualAlert.steerRequired, AudibleAlert.chimeWarning1, .4, 2., 3.),
+  
   Alert(
     "longControlDisabled",
     "BRAKE PRESSED",
