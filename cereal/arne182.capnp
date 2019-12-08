@@ -23,6 +23,7 @@ struct CarEventArne182 @0x9b1657f34caf3ad4 {
     longControlDisabled @0;
     longControlBrakeDisabled @1;
     reverseGearArne @2;
+    WaitingMode @3;
   }
 }
 
