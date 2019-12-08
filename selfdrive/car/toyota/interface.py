@@ -435,7 +435,7 @@ class CarInterface(CarInterfaceBase):
       if ret.gasPressed:
         self.waiting = False
       else:
-        eventsArne182.append(create_event_arne('WaitingMode', [ET.WARNING]))
+        eventsArne182.append(create_event_arne('waitingMode', [ET.WARNING]))
     # disable on pedals rising edge or when brake is pressed and speed isn't zero
     if (((ret.gasPressed and not self.gas_pressed_prev) or \
        (ret.brakePressed and (not self.brake_pressed_prev or ret.vEgo > 0.001))) and disengage_event) or (ret.brakePressed and not self.brake_pressed_prev and ret.vEgo < 0.1):
