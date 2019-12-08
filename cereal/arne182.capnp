@@ -22,6 +22,7 @@ struct CarEventArne182 @0x9b1657f34caf3ad4 {
     # TODO: copy from error list
     longControlDisabled @0;
     longControlBrakeDisabled @1;
+    reverseGearArne @3;
   }
 }
 
