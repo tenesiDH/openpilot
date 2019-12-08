@@ -88,7 +88,7 @@ ALERTS = [
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.chimePrompt, 1., 2., 3.),
   
   Alert(
-    "WaitingMode",
+    "waitingMode",
     "WAITING...",
     "Press gas/resume to gain full control!",
     AlertStatus.userPrompt, AlertSize.mid,
