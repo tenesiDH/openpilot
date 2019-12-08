@@ -3,16 +3,15 @@ import os
 import cv2
 import numpy as np
 import zmq
+import time
 
 def detect(source):
-
     font = cv2.FONT_HERSHEY_SIMPLEX
     img = cv2.imread(source)
     
     cimg = img
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
- 
     lower_red1 = np.array([0,100,100])
     upper_red1 = np.array([10,255,255])
     lower_red2 = np.array([160,100,100])
@@ -45,33 +44,31 @@ def detect(source):
         r_circles = np.uint16(np.around(r_circles))
 
         for i in r_circles[0, :]:
-            if i[0] > size[1] or i[1] > size[0]or i[1] > size[0]*bound:
+            if i[0] > size[1] or i[1] > size[0] or i[1] > size[0] * bound:
                 continue
 
             h, s = 0.0, 0.0
             for m in range(-r, r):
                 for n in range(-r, r):
-
-                    if (i[1]+m) >= size[0] or (i[0]+n) >= size[1]:
+                    if i[1] + m >= size[0] or i[0] + n >= size[1]:
                         continue
                     h += maskr[i[1]+m, i[0]+n]
                     s += 1
             if h / s > 50:
                 cv2.circle(cimg, (i[0], i[1]), i[2]+10, (0, 255, 0), 2)
                 cv2.circle(maskr, (i[0], i[1]), i[2]+30, (255, 255, 255), 2)
-                #cv2.putText(cimg,'RED',(i[0], i[1]), font, 1,(255,0,0),2,cv2.LINE_AA)
+                # cv2.putText(cimg,'RED',(i[0], i[1]), font, 1,(255,0,0),2,cv2.LINE_AA)
                 print("RED")
     if g_circles is not None:
         g_circles = np.uint16(np.around(g_circles))
 
         for i in g_circles[0, :]:
-            if i[0] > size[1] or i[1] > size[0] or i[1] > size[0]*bound:
+            if i[0] > size[1] or i[1] > size[0] or i[1] > size[0] * bound:
                 continue
 
             h, s = 0.0, 0.0
             for m in range(-r, r):
                 for n in range(-r, r):
-
                     if (i[1]+m) >= size[0] or (i[0]+n) >= size[1]:
                         continue
                     h += maskg[i[1]+m, i[0]+n]
@@ -85,7 +82,7 @@ def detect(source):
         y_circles = np.uint16(np.around(y_circles))
 
         for i in y_circles[0, :]:
-            if i[0] > size[1] or i[1] > size[0] or i[1] > size[0]*bound:
+            if i[0] > size[1] or i[1] > size[0] or i[1] > size[0] * bound:
                 continue
 
             h, s = 0.0, 0.0
@@ -105,8 +102,6 @@ def detect(source):
     
     return cimg
 if __name__ == '__main__':
-    
-    
     while True:
         context = zmq.Context()
         socket = context.socket(zmq.REP)
@@ -114,8 +109,8 @@ if __name__ == '__main__':
         message = socket.recv()
         print("Message is of type {}".format(type(message)))
         print(message)
-        detectimg =detect(message)
-        sleep(0.05)
+        detectimg = detect(message)
+        time.sleep(0.05)
     # This function either gives out "RED" "YELLOW" or "GREEN"
     
 

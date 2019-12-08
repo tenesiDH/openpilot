@@ -1,19 +1,17 @@
-from common.numpy_fast import interp
 from common.op_params import opParams
 
 
 class LaneHugging:
   def __init__(self):
     self.op_params = opParams()
-    self.lane_hug_direction = self.op_params.get('lane_hug_direction', None)  # if lane hugging is present and which side. None, 'left', or 'right'
-    self.lane_hug_mod = self.op_params.get('lane_hug_mod', 1.2)  # how much to reduce angle by. float from 1.0 to 2.0
-    self.lane_hug_angle = self.op_params.get('lane_hug_angle', 10)  # where to end increasing angle modification. from 0 to this
+    self.direction = self.op_params.get('lane_hug_direction', None)  # if lane hugging is present and which side. None, 'left', or 'right'
+    self.angle_offset = abs(self.op_params.get('lane_hug_angle_offset', 0.0))
 
-  def lane_hug(self, angle_steers):
-    angle_steers_des = angle_steers
-    if self.lane_hug_direction == 'left' and angle_steers > 0:
-      angle_steers_des = angle_steers / interp(angle_steers, [0, self.lane_hug_angle], [1.0, self.lane_hug_mod])  # suggestion thanks to zorrobyte
-    elif self.lane_hug_direction == 'right' and angle_steers < 0:
-      angle_steers_des = angle_steers / interp(angle_steers, [0, self.lane_hug_angle], [1.0, self.lane_hug_mod])
-
-    return angle_steers_des
+  def lane_hug_angle_steers(self, angle_steers):  # only use this function for current steer angle, not desired
+    # negative angles: right
+    # positive angles: left
+    if self.direction == 'left':
+      angle_steers += self.angle_offset
+    elif self.direction == 'right':
+      angle_steers -= self.angle_offset
+    return angle_steers

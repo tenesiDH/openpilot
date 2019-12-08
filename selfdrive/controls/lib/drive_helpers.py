@@ -1,4 +1,4 @@
-from cereal import car
+from cereal import car, arne182
 from common.numpy_fast import clip, interp
 from selfdrive.config import Conversions as CV
 
@@ -32,6 +32,14 @@ class EventTypes:
   SOFT_DISABLE = 'softDisable'
   IMMEDIATE_DISABLE = 'immediateDisable'
   PERMANENT = 'permanent'
+
+
+def create_event_arne(name, types):
+  event = arne182.CarEventArne182.new_message()
+  event.name = name
+  for t in types:
+    setattr(event, t, True)
+  return event
 
 
 def create_event(name, types):

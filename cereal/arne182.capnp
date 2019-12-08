@@ -7,6 +7,31 @@ $Java.outerClassname("arne182");
 
 @0xca61a35dedbd6328;
 
+struct CarEventArne182 @0x9b1657f34caf3ad4 {
+  name @0 :EventNameArne182;
+  enable @1 :Bool;
+  noEntry @2 :Bool;
+  warning @3 :Bool;
+  userDisable @4 :Bool;
+  softDisable @5 :Bool;
+  immediateDisable @6 :Bool;
+  preEnable @7 :Bool;
+  permanent @8 :Bool;
+
+  enum EventNameArne182 @0xbaa8c5d505f727ea {
+    # TODO: copy from error list
+    longControlDisabled @0;
+    longControlBrakeDisabled @1;
+    reverseGearArne @2;
+  }
+}
+
+
+struct CarStateArne182 {
+  events @0 :List(CarEventArne182);
+}
+
+
 struct Arne182Status { 
   blindspot @0 :Bool;
   distanceToggle @1 :Float32;
@@ -23,7 +48,7 @@ struct LiveTrafficData {
   speedLimit @1 :Float32;
   speedAdvisoryValid @2 :Bool;
   speedAdvisory @3 :Float32;
-}  
+}
 
 struct LatControl {
   anglelater @0 :Float32;
@@ -45,10 +70,10 @@ struct EventArne182 {
   valid @6 :Bool = true;
 
   union {
-  arne182Status @1:Arne182Status;
-  liveTrafficData @2:LiveTrafficData;
-  latControl @3:LatControl;
-  phantomData @4:PhantomData;
-  managerData @5:ManagerData;
+    arne182Status @1:Arne182Status;
+    liveTrafficData @2:LiveTrafficData;
+    latControl @3:LatControl;
+    phantomData @4:PhantomData;
+    managerData @5:ManagerData;
   }
 }

@@ -126,7 +126,7 @@ class Planner():
       lead1_check = math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))+1.
       lead2_check = math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))+1.
     elif steeringAngle < -100: # only at high angles
-      center_y = +1-2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Right side considered in right hand turn
+      center_y = +1+2.5/math.tan(steeringAngle/1800.*math.pi) # Car Width 2m. Right side considered in right hand turn
       lead1_check = math.sqrt((lead_1.dRel-center_x)**2+(lead_1.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))+1.
       lead2_check = math.sqrt((lead_2.dRel-center_x)**2+(lead_2.yRel-center_y)**2) < abs(2.5/math.sin(steeringAngle/1800.*math.pi))+1.
     if enabled:
@@ -262,7 +262,7 @@ class Planner():
     
     
     # Calculate speed for normal cruise control
-    if enabled:
+    if enabled and not sm['carState'].brakePressed and not sm['carState'].gasPressed:
       accel_limits = [float(x) for x in calc_cruise_accel_limits(v_ego, following, gas_button_status)]
       jerk_limits = [min(-0.1, accel_limits[0]), max(0.1, accel_limits[1])]  # TODO: make a separate lookup for jerk tuning
       accel_limits_turns = limit_accel_in_turns(v_ego, steering_angle, accel_limits, self.CP, angle_later)

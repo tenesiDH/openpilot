@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from cereal import car
+from cereal import car, arne182
 from selfdrive.config import Conversions as CV
-from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
+from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event, create_event_arne
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.car.toyota.carstate import CarState, get_can_parser, get_cam_can_parser
 from selfdrive.car.toyota.values import ECU, ECU_FINGERPRINT, CAR, NO_STOP_TIMER_CAR, TSS2_CAR, FINGERPRINTS
@@ -9,6 +9,7 @@ from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness,
 from selfdrive.swaglog import cloudlog
 from selfdrive.car.interfaces import CarInterfaceBase
 from common.op_params import opParams
+from selfdrive.controls.lane_hugging import LaneHugging
 
 ButtonType = car.CarState.ButtonEvent.Type
 GearShifter = car.CarState.GearShifter
@@ -33,6 +34,7 @@ class CarInterface(CarInterfaceBase):
     if CarController is not None:
       self.CC = CarController(self.cp.dbc_name, CP.carFingerprint, CP.enableCamera, CP.enableDsu, CP.enableApgs)
     self.op_params = opParams()
+    self.lane_hugging = LaneHugging()
     self.keep_openpilot_engaged = self.op_params.get('keep_openpilot_engaged', True)
 
   @staticmethod
@@ -126,7 +128,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 2860. * CV.LB_TO_KG + STD_CARGO_KG  # mean between normal and hybrid
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.05]]
-      ret.lateralTuning.pid.kf = 0.0000275  # full torque for 20 deg at 80mph means 0.00007818594
+      ret.lateralTuning.pid.kf = 0.000022  # full torque for 20 deg at 80mph means 0.00007818594
       if ret.enableGasInterceptor:
         ret.longitudinalTuning.kpV = [1.0, 0.66, 0.42]
         ret.longitudinalTuning.kiV = [0.135, 0.09]
@@ -298,6 +300,7 @@ class CarInterface(CarInterfaceBase):
 
     # create message
     ret = car.CarState.new_message()
+    ret_arne182 = arne182.CarStateArne182.new_message()
 
     ret.canValid = self.cp.can_valid
 
@@ -329,7 +332,7 @@ class CarInterface(CarInterfaceBase):
     ret.brakeLights = self.CS.brake_lights
 
     # steering wheel
-    ret.steeringAngle = self.CS.angle_steers
+    ret.steeringAngle = self.lane_hugging.lane_hug_angle_steers(self.CS.angle_steers)
     ret.steeringRate = self.CS.angle_steers_rate
 
     ret.steeringTorque = self.CS.steer_torque_driver
@@ -338,14 +341,16 @@ class CarInterface(CarInterfaceBase):
 
     # events
     events = []
+    eventsArne182 = []
 
     # cruise state
     if not self.cruise_enabled_prev:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     else:
-      ret.cruiseState.enabled = bool(self.CS.main_on)
+      if self.keep_openpilot_engaged:
+        ret.cruiseState.enabled = bool(self.CS.main_on)
       if not self.CS.pcm_acc_active:
-        events.append(create_event('longControlDisabled', [ET.WARNING]))
+        eventsArne182.append(create_event_arne('longControlDisabled', [ET.WARNING]))
         ret.brakePressed = True
     if self.CS.v_ego < 1 or not self.keep_openpilot_engaged:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
@@ -402,7 +407,10 @@ class CarInterface(CarInterfaceBase):
     if not self.CS.main_on and self.CP.enableDsu:
       events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
     if ret.gearShifter == GearShifter.reverse and self.CP.enableDsu:
-      events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
+      if ret.vEgo < 2:
+        eventsArne182.append(create_event_arne('reverseGearArne', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
+      else:
+        events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     if self.CS.steer_error:
       events.append(create_event('steerTempUnavailable', [ET.WARNING]))
     if self.CS.low_speed_lockout and self.CP.enableDsu:
@@ -432,12 +440,12 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('pedalPressed', [ET.PRE_ENABLE]))
 
     ret.events = events
-
+    ret_arne182.events = eventsArne182
     self.gas_pressed_prev = ret.gasPressed
     self.brake_pressed_prev = ret.brakePressed
     self.cruise_enabled_prev = ret.cruiseState.enabled
 
-    return ret.as_reader()
+    return ret.as_reader(), ret_arne182.as_reader()
 
   # pass in a car.CarControl
   # to be called @ 100hz

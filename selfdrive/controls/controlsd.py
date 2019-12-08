@@ -60,11 +60,10 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
 
   # Update carstate from CAN and create events
   can_strs = messaging.drain_sock_raw(can_sock, wait_for_one=True)
-  CS = CI.update(CC, can_strs)
-
-  sm.update(0)
-
+  CS, CS_arne182 = CI.update(CC, can_strs)
   events = list(CS.events)
+  events_arne182 = list(CS_arne182.events)
+  
   enabled = isEnabled(state)
 
   # Check for CAN timeout
@@ -128,10 +127,10 @@ def data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space
   if driver_status.terminal_alert_cnt >= MAX_TERMINAL_ALERTS:
     events.append(create_event("tooDistracted", [ET.NO_ENTRY]))
 
-  return CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter
+  return CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter, events_arne182
 
 
-def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_kph, AM):
+def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_kph, AM, events_arne182):
   """Compute conditional state transitions and execute actions on state transitions"""
   enabled = isEnabled(state)
 
@@ -215,11 +214,79 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
     elif not get_events(events, [ET.PRE_ENABLE]):
       state = State.enabled
 
+  # DISABLED
+  if state == State.disabled:
+    if get_events(events_arne182, [ET.ENABLE]):
+      if get_events(events_arne182, [ET.NO_ENTRY]):
+        for e in get_events(events_arne182, [ET.NO_ENTRY]):
+          AM.add(frame, str(e) + "NoEntry", enabled)
+
+      else:
+        if get_events(events_arne182, [ET.PRE_ENABLE]):
+          state = State.preEnabled
+        else:
+          state = State.enabled
+        AM.add(frame, "enable", enabled)
+        v_cruise_kph = initialize_v_cruise(CS.vEgo, CS.buttonevents_arne182, v_cruise_kph_last)
+
+  # ENABLED
+  elif state == State.enabled:
+    if get_events(events_arne182, [ET.USER_DISABLE]):
+      state = State.disabled
+      AM.add(frame, "disable", enabled)
+
+    elif get_events(events_arne182, [ET.IMMEDIATE_DISABLE]):
+      state = State.disabled
+      for e in get_events(events_arne182, [ET.IMMEDIATE_DISABLE]):
+        AM.add(frame, e, enabled)
+
+    elif get_events(events_arne182, [ET.SOFT_DISABLE]):
+      state = State.softDisabling
+      soft_disable_timer = 300   # 3s
+      for e in get_events(events_arne182, [ET.SOFT_DISABLE]):
+        AM.add(frame, e, enabled)
+
+  # SOFT DISABLING
+  elif state == State.softDisabling:
+    if get_events(events_arne182, [ET.USER_DISABLE]):
+      state = State.disabled
+      AM.add(frame, "disable", enabled)
+
+    elif get_events(events_arne182, [ET.IMMEDIATE_DISABLE]):
+      state = State.disabled
+      for e in get_events(events_arne182, [ET.IMMEDIATE_DISABLE]):
+        AM.add(frame, e, enabled)
+
+    elif not get_events(events_arne182, [ET.SOFT_DISABLE]):
+      # no more soft disabling condition, so go back to ENABLED
+      state = State.enabled
+
+    elif get_events(events_arne182, [ET.SOFT_DISABLE]) and soft_disable_timer > 0:
+      for e in get_events(events_arne182, [ET.SOFT_DISABLE]):
+        AM.add(frame, e, enabled)
+
+    elif soft_disable_timer <= 0:
+      state = State.disabled
+
+  # PRE ENABLING
+  elif state == State.preEnabled:
+    if get_events(events_arne182, [ET.USER_DISABLE]):
+      state = State.disabled
+      AM.add(frame, "disable", enabled)
+
+    elif get_events(events_arne182, [ET.IMMEDIATE_DISABLE, ET.SOFT_DISABLE]):
+      state = State.disabled
+      for e in get_events(events_arne182, [ET.IMMEDIATE_DISABLE, ET.SOFT_DISABLE]):
+        AM.add(frame, e, enabled)
+
+    elif not get_events(events_arne182, [ET.PRE_ENABLE]):
+      state = State.enabled
+      
   return state, soft_disable_timer, v_cruise_kph, v_cruise_kph_last
 
 
 def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cruise_kph, v_cruise_kph_last,
-                  AM, rk, driver_status, LaC, LoC, read_only, is_metric, cal_perc, radar_state, arne_sm):
+                  AM, rk, driver_status, LaC, LoC, read_only, is_metric, cal_perc, radar_state, arne_sm, events_arne182):
   """Given the state, this function returns an actuators packet"""
 
   actuators = car.CarControl.Actuators.new_message()
@@ -255,6 +322,16 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
         else:
           extra_text = str(int(round(CP.minSteerSpeed * CV.MS_TO_MPH))) + " mph"
       AM.add(frame, e, enabled, extra_text_2=extra_text)
+      
+    # parse warnings from car specific interface
+    for e in get_events(events_arne182, [ET.WARNING]):
+      extra_text = ""
+      if e == "belowSteerSpeed":
+        if is_metric:
+          extra_text = str(int(round(CP.minSteerSpeed * CV.MS_TO_KPH))) + " kph"
+        else:
+          extra_text = str(int(round(CP.minSteerSpeed * CV.MS_TO_MPH))) + " mph"
+      AM.add(frame, e, enabled, extra_text_2=extra_text)
 
   plan_age = DT_CTRL * (frame - rcv_frame['plan'])
   dt = min(plan_age, LON_MPC_STEP + DT_CTRL) + DT_CTRL  # no greater than dt mpc + dt, to prevent too high extraps
@@ -265,7 +342,6 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
 
     
   # Gas/Brake PID loop
-  arne_sm.update(0)
   gas_button_status = arne_sm['arne182Status'].gasbuttonstatus
   actuators.gas, actuators.brake = LoC.update(active, CS.vEgo, CS.brakePressed, CS.standstill,
                                               CS.cruiseState.standstill,
@@ -281,6 +357,17 @@ def state_control(frame, rcv_frame, plan, path_plan, CS, CP, state, events, v_cr
 
   # Parse permanent warnings to display constantly
   for e in get_events(events, [ET.PERMANENT]):
+    extra_text_1, extra_text_2 = "", ""
+    if e == "calibrationIncomplete":
+      extra_text_1 = str(cal_perc) + "%"
+      if is_metric:
+        extra_text_2 = str(int(round(Filter.MIN_SPEED * CV.MS_TO_KPH))) + " kph"
+      else:
+        extra_text_2 = str(int(round(Filter.MIN_SPEED * CV.MS_TO_MPH))) + " mph"
+    AM.add(frame, str(e) + "Permanent", enabled, extra_text_1=extra_text_1, extra_text_2=extra_text_2)
+    
+  # Parse permanent warnings to display constantly
+  for e in get_events(events_arne182, [ET.PERMANENT]):
     extra_text_1, extra_text_2 = "", ""
     if e == "calibrationIncomplete":
       extra_text_1 = str(cal_perc) + "%"
@@ -520,11 +607,13 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
   prof = Profiler(False)  # off by default
 
   while True:
+    sm.update(0)
+    arne_sm.update(0)
     start_time = sec_since_boot()
     prof.checkpoint("Ratekeeper", ignore=True)
 
     # Sample data and compute car events
-    CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter =\
+    CS, events, cal_status, cal_perc, overtemp, free_space, low_battery, mismatch_counter, events_arne182 =\
       data_sample(CI, CC, sm, can_sock, cal_status, cal_perc, overtemp, free_space, low_battery,
                   driver_status, state, mismatch_counter, params)
     prof.checkpoint("Sample")
@@ -558,13 +647,13 @@ def controlsd_thread(sm=None, pm=None, can_sock=None):
     if not read_only:
       # update control state
       state, soft_disable_timer, v_cruise_kph, v_cruise_kph_last = \
-        state_transition(sm.frame, CS, CP, state, events, soft_disable_timer, v_cruise_kph, AM)
+        state_transition(sm.frame, CS, CP, state, events, soft_disable_timer, v_cruise_kph, AM, events_arne182)
       prof.checkpoint("State transition")
 
     # Compute actuators (runs PID loops and lateral MPC)
     actuators, v_cruise_kph, driver_status, v_acc, a_acc, lac_log = \
       state_control(sm.frame, sm.rcv_frame, sm['plan'], sm['pathPlan'], CS, CP, state, events, v_cruise_kph, v_cruise_kph_last, AM, rk,
-                    driver_status, LaC, LoC, read_only, is_metric, cal_perc, sm['radarState'], arne_sm)
+                    driver_status, LaC, LoC, read_only, is_metric, cal_perc, sm['radarState'], arne_sm, events_arne182)
 
     prof.checkpoint("State Control")
 
