@@ -453,7 +453,14 @@ ALERTS = [
       "Reverse Gear",
       AlertStatus.critical, AlertSize.full,
       Priority.HIGHEST, VisualAlert.steerRequired, AudibleAlert.chimeWarningRepeat, 2.2, 3., 4.),
-
+  
+  Alert(
+      "reverseGearArne",
+      "REVERSING",
+      "Reverse Gear",
+      AlertStatus.critical, AlertSize.full,
+      Priority.HIGHEST, VisualAlert.steerRequired, AudibleAlert.none, 2.2, 3., 4.),
+  
   Alert(
       "cruiseDisabled",
       "TAKE CONTROL IMMEDIATELY",
@@ -609,7 +616,14 @@ ALERTS = [
       "Reverse Gear",
       AlertStatus.normal, AlertSize.mid,
       Priority.LOW, VisualAlert.none, AudibleAlert.chimeError, .4, 2., 3.),
-
+  
+  Alert(
+      "reverseGearArneNoEntry",
+      "openpilot Unavailable",
+      "Reverse Gear",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeError, .4, 2., 3.),
+  
   Alert(
       "cruiseDisabledNoEntry",
       "openpilot Unavailable",
