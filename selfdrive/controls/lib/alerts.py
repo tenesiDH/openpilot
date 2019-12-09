@@ -335,6 +335,13 @@ ALERTS = [
       Priority.MID, VisualAlert.steerRequired, AudibleAlert.chimeWarningRepeat, .1, 2., 2.),
 
   Alert(
+      "wrongGearArne",
+      "TAKE CONTROL IMMEDIATELY",
+      "Gear not yet in D",
+      AlertStatus.critical, AlertSize.full,
+      Priority.MID, VisualAlert.steerRequired, AudibleAlert.none, .1, 2., 2.),
+
+  Alert(
       "wrongGear",
       "TAKE CONTROL IMMEDIATELY",
       "Gear not D",
