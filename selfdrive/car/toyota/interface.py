@@ -345,6 +345,7 @@ class CarInterface(CarInterfaceBase):
 
     # cruise state
     if not self.cruise_enabled_prev:
+      self.waiting = False
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     else:
       if self.keep_openpilot_engaged:
@@ -352,6 +353,7 @@ class CarInterface(CarInterfaceBase):
       if not self.CS.pcm_acc_active:
         eventsArne182.append(create_event_arne('longControlDisabled', [ET.WARNING]))
         ret.brakePressed = True
+        self.waiting = False
     if self.CS.v_ego < 1 or not self.keep_openpilot_engaged:
       ret.cruiseState.enabled = self.CS.pcm_acc_active
     ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
