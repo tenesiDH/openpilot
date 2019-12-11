@@ -133,6 +133,7 @@ class CarState():
     self.ALCA_error = False
     self.turn_signal_stalk_state = 0
     self.prev_turn_signal_stalk_state = 0
+    self.alcastate = 1
     #END OF ALCA PARAMS
 
     self.gasbuttonstatus = 0
