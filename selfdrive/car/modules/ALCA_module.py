@@ -62,7 +62,7 @@ ALCA_line_prob_high = 0.4
 ALCA_distance_jump = 1.1
 ALCA_lane_change_coefficient = 0.7
 ITERATIONS_AHEAD_TO_ESTIMATE = 2
-ALCA_duration_seconds = 5.
+ALCA_duration_seconds = 4.
 ALCA_right_lane_multiplier = 1.
 ALCA_distance_left_min = 0.7
 
@@ -116,6 +116,7 @@ class ALCAController():
     # something is not right; ALCAModelParser is not engaged; cancel
     self.debug_alca("ALCA canceled: stop_ALCA called")
     if not isDone:
+      CS.alcastate = 9
       #CS.UE.custom_alert_message(3,"Auto Lane Change Canceled! (d)",200,5)
       self.laneChange_cancelled = True
       self.laneChange_cancelled_counter = 200
@@ -126,6 +127,7 @@ class ALCAController():
     self.laneChange_counter = 0
     self.laneChange_direction = 0
     #CS.cstm_btns.set_button_status("alca",1)
+    CS.alcastate = 1
     self.send_status(CS)
 
 
@@ -163,19 +165,17 @@ class ALCAController():
       elif self.laneChange_direction == 1:
         turn_signal_needed = 2
 
-    #if self.alcaEnabled and (self.laneChange_enabled == 1): #(CS.cstm_btns.get_button_status("alca") > 0) and
-      #if ((CS.v_ego < cl_min_v) or (abs(actuators.steerAngle) >= cl_max_a) or \
-      #(abs(CS.angle_steers)>= cl_max_a)  or (not enabled)): 
-        #CS.cstm_btns.set_button_status("alca",9)
-      #else:
-        #CS.cstm_btns.set_button_status("alca",1)
+    if ((CS.v_ego < cl_min_v) or (abs(actuators.steerAngle) >= cl_max_a) or (abs(CS.angle_steers)>= cl_max_a)  or (not enabled)): 
+      CS.alcastate = 9
+    else:
+      CS.alcastate = 1
 
     if self.alcaEnabled and enabled and (self.laneChange_enabled > 1) and \
       ((CS.v_ego < cl_min_v) or (abs(actuators.steerAngle) >= cl_max_a) or (abs(CS.angle_steers) >=cl_max_a)):
       # something is not right, the speed or angle is limitting
       self.debug_alca("ALCA Unavailable (2)")
       #CS.UE.custom_alert_message(3,"Auto Lane Change Unavailable!",200,3)
-      #CS.cstm_btns.set_button_status("alca",9)
+      CS.alcastate = 9
       self.stop_ALCA(CS, False)
       return 0, False
 
@@ -190,7 +190,7 @@ class ALCAController():
       self.laneChange_enabled = 2
       self.laneChange_counter = 1
       self.laneChange_direction = laneChange_direction
-      #CS.cstm_btns.set_button_status("alca",2)
+      CS.alcastate = 2
 
     if (not self.alcaEnabled) and self.laneChange_enabled > 1:
       self.debug_alca("ALCA canceled: not enabled")
@@ -211,11 +211,12 @@ class ALCAController():
         self.laneChange_counter = 0
         self.laneChange_enabled = 1
         self.laneChange_direction = 0
-        #CS.cstm_btns.set_button_status("alca",1)
+        CS.alcastate = 9
         self.stop_ALCA(CS, False)
         return 0, False
       if self.laneChange_enabled == 2:
-        #if self.laneChange_counter == 1:
+        if self.laneChange_counter == 1:
+          CS.alcastate = 1
           #CS.UE.custom_alert_message(2,"Auto Lane Change Engaged! (1)",self.laneChange_wait * 100)
         self.laneChange_counter += 1
         self.debug_alca("ALCA phase 2: " + str(self.laneChange_counter))
@@ -223,17 +224,21 @@ class ALCAController():
           self.laneChange_enabled = 3
           self.laneChange_counter = 0
       if self.laneChange_enabled ==3:
-        #if self.laneChange_counter == 1:
+        if self.laneChange_counter == 1:
+          CS.alcastate = 2
           #CS.UE.custom_alert_message(2,"Auto Lane Change Engaged! (2)",int(ALCA_duration_seconds * 100))
         self.laneChange_counter += 1
         self.debug_alca("ALCA phase 3: " + str(self.laneChange_counter))
+        CS.alcastate = 3
         if self.laneChange_counter >= (ALCA_duration_seconds + 2) * 100.:
+          CS.alcastate = 6
           self.debug_alca("ALCA phase 3: Canceled due to time restriction")
           self.laneChange_enabled = 4
           self.laneChange_counter = 0
       if self.laneChange_enabled == 4:
         self.debug_alca("ALCA phase 4: " +str(self.laneChange_counter))
         if self.laneChange_counter == 1:
+          CS.alcastate = 4
           #CS.UE.custom_alert_message(2,"Auto Lane Change Complete!",100)
           self.laneChange_enabled = 1
           self.laneChange_counter = 0
