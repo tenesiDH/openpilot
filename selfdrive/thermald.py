@@ -300,7 +300,7 @@ def thermald_thread():
     should_start = should_start and accepted_terms and (passive or completed_training) and (not do_uninstall)
 
     # check for firmware mismatch
-    should_start = should_start and fw_version_match
+    #should_start = should_start and fw_version_match
 
     # check if system time is valid
     should_start = should_start and time_valid
