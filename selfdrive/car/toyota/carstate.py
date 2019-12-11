@@ -266,26 +266,29 @@ class CarState():
     else:
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
-
+    if self.CP.carFingerprint == CAR.RAV4H_TSS2:
+      minimum_set_speed = 28.0
+    else:
+      minimum_set_speed = 41.0
     if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
       if self.v_ego < 11.38:
-        self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
+        self.setspeedoffset = max(min(int(minimum_set_speed-self.v_ego*3.6),(minimum_set_speed-7.0)),0.0)
         self.v_cruise_pcmlast = self.v_cruise_pcm
       else:
         self.setspeedoffset = 0
         self.v_cruise_pcmlast = self.v_cruise_pcm
     if self.v_cruise_pcm < self.v_cruise_pcmlast:
-      if self.setspeedcounter > 0 and self.v_cruise_pcm > 41:
+      if self.setspeedcounter > 0 and self.v_cruise_pcm > minimum_set_speed:
         self.setspeedoffset = self.setspeedoffset + 4
       else:
-        if math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40)) > 0:
-          self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
+        if math.floor((int((-self.v_cruise_pcm)*(minimum_set_speed-7.0)/(169.0-minimum_set_speed)  + 169.0*(minimum_set_speed-7.0)/(169.0-minimum_set_speed))-self.setspeedoffset)/(self.v_cruise_pcm-(minimum_set_speed-1.0))) > 0:
+          self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*(minimum_set_speed-7.0)/(169.0-minimum_set_speed)  + 169*(minimum_set_speed-7.0)/(169.0-minimum_set_speed))-self.setspeedoffset)/(self.v_cruise_pcm-(minimum_set_speed-.10)))
       self.setspeedcounter = 50
     if self.v_cruise_pcmlast < self.v_cruise_pcm:
       if self.setspeedcounter > 0 and (self.setspeedoffset - 4) > 0:
         self.setspeedoffset = self.setspeedoffset - 4
       else:
-        self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
+        self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*(minimum_set_speed-7.0)/(169.0-minimum_set_speed)  + 169*(minimum_set_speed-7.0)/(169.0-minimum_set_speed))-self.setspeedoffset)/(170-self.v_cruise_pcm))
       self.setspeedcounter = 50
     if self.setspeedcounter > 0:
       self.setspeedcounter = self.setspeedcounter - 1
