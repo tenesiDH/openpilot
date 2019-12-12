@@ -189,7 +189,10 @@ class LongControl():
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
       if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
-        output_gb -= STOPPING_BRAKE_RATE / RATE
+        factor = 1
+        if self.lead_data['status']:
+          factor = interp(self.lead_data['x_lead'], [3.0,5.0], [100.0,1.0])
+        output_gb -= STOPPING_BRAKE_RATE / RATE * factor
       output_gb = clip(output_gb, -brake_max, gas_max)
 
       self.v_pid = v_ego
@@ -198,7 +201,10 @@ class LongControl():
     # Intention is to move again, release brake fast before handing control to PID
     elif self.long_control_state == LongCtrlState.starting:
       if output_gb < -0.2:
-        output_gb += STARTING_BRAKE_RATE / RATE
+        factor = 1
+        if self.lead_data['status']:
+          factor = interp(self.lead_data['x_lead'], [3.0,5.0], [0.0,1.0])
+        output_gb += STARTING_BRAKE_RATE / RATE * factor
       self.v_pid = v_ego
       self.pid.reset()
 
