@@ -169,7 +169,11 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
     if (bus_num == hyundai_camera_bus) {
       int addr = GET_ADDR(to_fwd);
       if (addr != 832) {
-        bus_fwd = 10;
+        if ((!OP_LKAS_live) || (addr != 1057)) {
+          bus_fwd = 10;
+        } else {
+          bus_fwd = 1;
+        }
       }
       else if (!OP_LKAS_live) {
         hyundai_LKAS_forwarded = 1;
