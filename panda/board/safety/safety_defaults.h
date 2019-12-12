@@ -72,7 +72,11 @@ static int nooutput_tx_lin_hook(int lin_num, uint8_t *data, int len) {
     }
     if (bus_num == 2) {
       if (addr != 832) {
-        bus_fwd = 10;
+        if ((!HKG_OP_LKAS_live) || (addr != 1057)) {
+          bus_fwd = 10;
+        } else {
+          bus_fwd = 1;
+        }
       }
       else if (HKG_OP_LKAS_live < 1) {
         HKG_LKAS_forwarded = 2;
