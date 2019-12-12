@@ -116,18 +116,18 @@ class LongControl():
     max_return = 1.0
     return round(max(min(accel, max_return), min_return), 5)  # ensure we return a value between range
 
-  def process_lead(self, lead_one):
+  def process_lead(self, lead_one,has_lead):
     self.lead_data['vRel'] = lead_one.vRel
     self.lead_data['a_lead'] = lead_one.aLeadK
     self.lead_data['x_lead'] = lead_one.dRel
-    self.lead_data['status'] = lead_one.status
+    self.lead_data['status'] = has_lead
 
 
   def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP,
-             gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed, fcw):
+             gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed, fcw, has_lead):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
-    self.process_lead(lead_one)
+    self.process_lead(lead_one,has_lead)
     try:
       gas_interceptor = CP.enableGasInterceptor
     except AttributeError:
