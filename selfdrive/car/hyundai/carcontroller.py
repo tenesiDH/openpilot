@@ -1,11 +1,29 @@
 from cereal import car
+from common.numpy_fast import clip
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11
+                                             create_clu11, create_scc12
 from selfdrive.car.hyundai.values import CAR, Buttons
 from selfdrive.can.packer import CANPacker
 
+
+# Accel limits
+ACCEL_HYST_GAP = 0.02  # don't change accel command for small oscilalitons within this value
+ACCEL_MAX = 1.5  # 1.5 m/s2
+ACCEL_MIN = -3.0 # 3   m/s2
+ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
+
+def accel_hysteresis(accel, accel_steady):
+
+  # for small accel oscillations within ACCEL_HYST_GAP, don't change the accel command
+  if accel > accel_steady + ACCEL_HYST_GAP:
+    accel_steady = accel - ACCEL_HYST_GAP
+  elif accel < accel_steady - ACCEL_HYST_GAP:
+    accel_steady = accel + ACCEL_HYST_GAP
+  accel = accel_steady
+
+  return accel, accel_steady
 
 # Steer torque limits
 
@@ -51,9 +69,11 @@ def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
 class CarController():
   def __init__(self, dbc_name, car_fingerprint):
     self.apply_steer_last = 0
+    self.accel_steady = 0.
     self.car_fingerprint = car_fingerprint
     self.lkas11_cnt = 0
     self.clu11_cnt = 0
+    self.scc12_cnt = 0
     self.last_resume_frame = 0
     self.last_lead_distance = 0
     # True when giraffe switch 2 is low and we need to replace all the camera messages
@@ -64,6 +84,14 @@ class CarController():
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, visual_alert,
               left_line, right_line, left_lane_depart, right_lane_depart):
+
+    # *** compute control surfaces ***
+
+    # gas and brake
+    apply_accel = actuators.gas - actuators.brake
+
+    apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady)
+    apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
 
     ### Steering Torque
     apply_steer = actuators.steer * SteerLimitParams.STEER_MAX
@@ -84,6 +112,7 @@ class CarController():
     can_sends = []
 
     self.lkas11_cnt = frame % 0x10
+    self.scc12_cnt %= 15
 
     if self.camera_disconnected:
       if (frame % 10) == 0:
@@ -101,6 +130,10 @@ class CarController():
                                    keep_stock=(not self.camera_disconnected)))
     low_speed = 61 #if CS.v_ego < 17 else 0
     can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.NONE, low_speed, self.clu11_cnt))
+
+    if frame % 2:
+      can_sends.append(create_scc12(self.packer, apply_accel, enabled, self.scc12_cnt, CS.scc12))
+      self.scc12_cnt += 1
 
     if pcm_cancel_cmd:
       self.clu11_cnt = frame % 0x10
