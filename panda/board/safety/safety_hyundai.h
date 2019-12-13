@@ -151,7 +151,7 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
     }
     if (bus_num == hyundai_camera_bus) {
       int addr = GET_ADDR(to_fwd);
-      if (addr != 832) {
+      if ((addr != 832)  && (addr != 1057)) {
         bus_fwd = 0;
       }
     }
