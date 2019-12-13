@@ -81,19 +81,7 @@ def get_can_parser(CP):
     ("WHL_SPD11", 50),
     ("SAS11", 100)
   ]
-  if CP.carFingerprint not in FEATURES["non_scc"]:
-    signals += [
-      ("MainMode_ACC", "SCC11", 0),
-      ("VSetDis", "SCC11", 0),
-      ("SCCInfoDisplay", "SCC11", 0),
-      ("ACC_ObjDist", "SCC11", 0),
-      ("ACCMode", "SCC12", 1),
-    ]
-    checks += [
-      ("SCC11", 50),
-      ("SCC12", 50),
-    ]
-  else:
+  if CP.carFingerprint in FEATURES["non_scc"]:
     signals += [
       ("CRUISE_LAMP_M", "EMS16", 0),
       ("CF_Lvr_CruiseSet", "LVR12", 0),
@@ -142,7 +130,40 @@ def get_camera_parser(CP):
   ]
 
   checks = []
+  if CP.carFingerprint not in FEATURES["non_scc"]:
+    signals += [
+    ("MainMode_ACC", "SCC11", 0),
+    ("VSetDis", "SCC11", 0),
+    ("SCCInfoDisplay", "SCC11", 0),
+    ("ACC_ObjDist", "SCC11", 0),
+    ("ACCMode", "SCC12", 1),
 
+    ("CF_VSM_Prefill", "SCC12", 0),
+    ("CF_VSM_DecCmdAct", "SCC12", 0),
+    ("CF_VSM_HBACmd", "SCC12", 0),
+    ("CF_VSM_Warn", "SCC12", 0),
+    ("CF_VSM_Stat", "SCC12", 0),
+    ("CF_VSM_BeltCmd", "SCC12", 0),
+    ("ACCFailInfo", "SCC12", 0),
+    ("ACCMode", "SCC12", 0),
+    ("StopReq", "SCC12", 0),
+    ("CR_VSM_DecCmd", "SCC12", 0),
+    ("aReqMax", "SCC12", 0),
+    ("TakeOverReq", "SCC12", 0),
+    ("PreFill", "SCC12", 0),
+    ("aReqMin", "SCC12", 0),
+    ("CF_VSM_ConfMode", "SCC12", 0),
+    ("AEB_Failinfo", "SCC12", 0),
+    ("AEB_Status", "SCC12", 0),
+    ("AEB_CmdAct", "SCC12", 0),
+    ("AEB_StopReq", "SCC12", 0),
+    ("CR_VSM_Alive", "SCC12", 0),
+    ("CR_VSM_ChkSum", "SCC12", 0),
+    ]
+    checks += [
+      ("SCC11", 50),
+      ("SCC12", 50),
+    ]
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 2)
 
 
@@ -181,9 +202,9 @@ class CarState():
     self.esp_disabled = cp.vl["TCS15"]['ESC_Off_Step']
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
 
-    self.main_on = (cp.vl["SCC11"]["MainMode_ACC"] != 0) if not self.no_radar else \
+    self.main_on = (cp_cam.vl["SCC11"]["MainMode_ACC"] != 0) if not self.no_radar else \
                                             cp.vl['EMS16']['CRUISE_LAMP_M']
-    self.acc_active = (cp.vl["SCC12"]['ACCMode'] != 0) if not self.no_radar else \
+    self.acc_active = (cp_cam.vl["SCC12"]['ACCMode'] != 0) if not self.no_radar else \
                                       (cp.vl["LVR12"]['CF_Lvr_CruiseSet'] != 0)
     self.pcm_acc_status = int(self.acc_active)
 
@@ -206,7 +227,7 @@ class CarState():
     self.a_ego = float(v_ego_x[1])
     is_set_speed_in_mph = int(cp.vl["CLU11"]["CF_Clu_SPEED_UNIT"])
     speed_conv = CV.MPH_TO_MS if is_set_speed_in_mph else CV.KPH_TO_MS
-    self.cruise_set_speed = cp.vl["SCC11"]['VSetDis'] * speed_conv if not self.no_radar else \
+    self.cruise_set_speed = cp_cam.vl["SCC11"]['VSetDis'] * speed_conv if not self.no_radar else \
                                          (cp.vl["LVR12"]["CF_Lvr_CruiseSet"] * speed_conv)
     self.standstill = not v_wheel > 0.1
 
@@ -223,8 +244,8 @@ class CarState():
     self.brake_error = 0
     self.steer_torque_driver = cp.vl["MDPS11"]['CR_Mdps_DrvTq']
     self.steer_torque_motor = cp.vl["MDPS12"]['CR_Mdps_OutTq']
-    self.stopped = cp.vl["SCC11"]['SCCInfoDisplay'] == 4. if not self.no_radar else False
-    self.lead_distance = cp.vl["SCC11"]['ACC_ObjDist'] if not self.no_radar else 0
+    self.stopped = cp_cam.vl["SCC11"]['SCCInfoDisplay'] == 4. if not self.no_radar else False
+    self.lead_distance = cp_cam.vl["SCC11"]['ACC_ObjDist'] if not self.no_radar else 0
 
     self.user_brake = 0
 
@@ -290,3 +311,5 @@ class CarState():
     # save the entire LKAS11 and CLU11
     self.lkas11 = cp_cam.vl["LKAS11"]
     self.clu11 = cp.vl["CLU11"]
+    self.scc12 = cp_cam.vl["SCC12"]
+    
