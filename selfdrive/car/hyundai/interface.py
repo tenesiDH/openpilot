@@ -144,12 +144,13 @@ class CarInterface(CarInterfaceBase):
 
 
     ret.minEnableSpeed = -1.   # enable is done by stock ACC, so ignore this
-    ret.longitudinalTuning.kpBP = [0.]
-    ret.longitudinalTuning.kpV = [0.]
-    ret.longitudinalTuning.kiBP = [0.]
-    ret.longitudinalTuning.kiV = [0.]
-    ret.longitudinalTuning.deadzoneBP = [0.]
-    ret.longitudinalTuning.deadzoneV = [0.]
+
+    ret.longitudinalTuning.kpBP = [0., 5., 35.]
+    ret.longitudinalTuning.kpV = [3.6, 2.4, 1.5]
+    ret.longitudinalTuning.kiBP = [0., 35.]
+    ret.longitudinalTuning.kiV = [0.54, 0.36]
+    ret.longitudinalTuning.deadzoneBP = [0., 9.]
+    ret.longitudinalTuning.deadzoneV = [0., .15]
 
     ret.centerToFront = ret.wheelbase * 0.4
 
@@ -171,12 +172,12 @@ class CarInterface(CarInterfaceBase):
     ret.steerMaxBP = [0.]
     ret.steerMaxV = [1.0]
     ret.gasMaxBP = [0.]
-    ret.gasMaxV = [1.]
+    ret.gasMaxV = [0.5]
     ret.brakeMaxBP = [0.]
     ret.brakeMaxV = [1.]
 
     ret.enableCamera = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, ECU.CAM) or has_relay
-    ret.openpilotLongitudinalControl = False
+    ret.openpilotLongitudinalControl = True
 
     ret.steerLimitAlert = False
     ret.stoppingControl = False
