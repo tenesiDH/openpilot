@@ -86,7 +86,7 @@ class CarController():
       if (frame % 7) == 0:
         can_sends.append(create_1156())
 
-    can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
+    can_sends.extend(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
                                    lkas_active, CS.lkas11, hud_alert, lane_visible, left_lane_depart, right_lane_depart,
                                    keep_stock=(not self.camera_disconnected)))
 
@@ -103,7 +103,7 @@ class CarController():
         self.clu11_cnt = 0
       # when lead car starts moving, create 6 RES msgs
       elif CS.lead_distance > self.last_lead_distance and (frame - self.last_resume_frame) > 5:
-        can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, speed, self.clu11_cnt))
+        can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.RES_ACCEL, speed, clu11_cnt))
         self.clu11_cnt += 1
         # interval after 6 msgs
         if self.clu11_cnt > 5:
