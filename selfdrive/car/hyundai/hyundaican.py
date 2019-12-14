@@ -53,7 +53,7 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
 
   values["CF_Lkas_Chksum"] = checksum
 
-  return packer.make_can_msg("LKAS11", 0, values)
+  return [packer.make_can_msg("LKAS11", 0, values), packer.make_can_msg("LKAS11", 1, values)]
 
 def create_lkas12():
   return make_can_msg(1342, b"\x00\x00\x00\x00\x60\x05", 0)
@@ -66,14 +66,14 @@ def create_1191():
 def create_1156():
   return make_can_msg(1156, b"\x08\x20\xfe\x3f\x00\xe0\xfd\x3f", 0)
 
-def create_clu11(packer, clu11, button, cnt):
+def create_clu11(packer, clu11, button, speed, cnt):
   values = {
     "CF_Clu_CruiseSwState": button,
     "CF_Clu_CruiseSwMain": clu11["CF_Clu_CruiseSwMain"],
     "CF_Clu_SldMainSW": clu11["CF_Clu_SldMainSW"],
     "CF_Clu_ParityBit1": clu11["CF_Clu_ParityBit1"],
     "CF_Clu_VanzDecimal": clu11["CF_Clu_VanzDecimal"],
-    "CF_Clu_Vanz": clu11["CF_Clu_Vanz"],
+    "CF_Clu_Vanz": speed if not button else clu11["CF_Clu_Vanz"],
     "CF_Clu_SPEED_UNIT": clu11["CF_Clu_SPEED_UNIT"],
     "CF_Clu_DetentOut": clu11["CF_Clu_DetentOut"],
     "CF_Clu_RheostatLevel": clu11["CF_Clu_RheostatLevel"],
@@ -82,4 +82,4 @@ def create_clu11(packer, clu11, button, cnt):
     "CF_Clu_AliveCnt1": cnt,
   }
 
-  return packer.make_can_msg("CLU11", 0, values)
+  return packer.make_can_msg("CLU11", 0 if button else 1, values)
