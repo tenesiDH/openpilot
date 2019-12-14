@@ -53,7 +53,7 @@ def create_lkas11(packer, car_fingerprint, apply_steer, steer_req, cnt, enabled,
 
   values["CF_Lkas_Chksum"] = checksum
 
-  return packer.make_can_msg("LKAS11", 0, values), packer.make_can_msg("LKAS11", 1, values)
+  return [packer.make_can_msg("LKAS11", 0, values), packer.make_can_msg("LKAS11", 1, values)]
 
 def create_lkas12():
   return make_can_msg(1342, b"\x00\x00\x00\x00\x60\x05", 0)
