@@ -60,7 +60,7 @@ class CarController():
 
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
-    lkas_active = enabled and abs(CS.angle_steers) > 100.
+    lkas_active = enabled and abs(CS.angle_steers) < 100.
 
     if not lkas_active:
       apply_steer = 0
