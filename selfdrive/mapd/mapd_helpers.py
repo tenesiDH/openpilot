@@ -428,7 +428,7 @@ class Way:
               if backwards and (n.tags['traffic_signals:direction']=='backward' or n.tags['traffic_signals:direction']=='both'):
                 print("backward")
                 if way_pts[count, 0] > 0:
-                  speed_ahead_dist = max(0. , way_pts[count, 0] - 2.0)
+                  speed_ahead_dist = max(0. , way_pts[count, 0] - 4.0)
                   print(speed_ahead_dist)
                   speed_ahead = 5/3.6
                   if n.tags['highway']=='traffic_signals':
@@ -438,7 +438,7 @@ class Way:
               elif not backwards and (n.tags['traffic_signals:direction']=='forward' or n.tags['traffic_signals:direction']=='both'):
                 print("forward")
                 if way_pts[count, 0] > 0:
-                  speed_ahead_dist = max(0. , way_pts[count, 0] - 2.0)
+                  speed_ahead_dist = max(0. , way_pts[count, 0] - 4.0)
                   print(speed_ahead_dist)
                   speed_ahead = 5/3.6
                   if n.tags['highway']=='traffic_signals':
@@ -454,7 +454,7 @@ class Way:
                   if direction > 180:
                     direction = direction - 360
                   if abs(direction) > 135:
-                    speed_ahead_dist = max(0. , way_pts[count, 0] - 2.0)
+                    speed_ahead_dist = max(0. , way_pts[count, 0] - 4.0)
                     print(speed_ahead_dist)
                     speed_ahead = 5/3.6
                     if n.tags['highway']=='traffic_signals':
