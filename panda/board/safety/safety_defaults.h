@@ -25,13 +25,13 @@ static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   UNUSED(to_fwd);
   int bus_fwd = -1;
   if (bus_num == 0) {
-    bus_fwd = 1;
+    bus_fwd = 12;
   }
   if (bus_num == 1) {
     bus_fwd = 20;
   }
   if (bus_num == 2) {
-    bus_fwd = 1;
+    bus_fwd = 10;
   }
   return bus_fwd;
 }
