@@ -1,13 +1,31 @@
 from cereal import car
+from common.numpy_fast import clip
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.hyundai.hyundaican import create_lkas11, create_lkas12, \
                                              create_1191, create_1156, \
-                                             create_clu11
+                                             create_clu11, create_scc12
 from selfdrive.car.hyundai.values import CAR, Buttons, SteerLimitParams
 from selfdrive.can.packer import CANPacker
 
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
+
+# Accel limits
+ACCEL_HYST_GAP = 0.02  # don't change accel command for small oscilalitons within this value
+ACCEL_MAX = 1.5  # 1.5 m/s2
+ACCEL_MIN = -3.0 # 3   m/s2
+ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
+
+def accel_hysteresis(accel, accel_steady):
+
+  # for small accel oscillations within ACCEL_HYST_GAP, don't change the accel command
+  if accel > accel_steady + ACCEL_HYST_GAP:
+    accel_steady = accel - ACCEL_HYST_GAP
+  elif accel < accel_steady - ACCEL_HYST_GAP:
+    accel_steady = accel + ACCEL_HYST_GAP
+  accel = accel_steady
+
+  return accel, accel_steady
 
 def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
                        right_line, left_lane_depart, right_lane_depart):
@@ -41,8 +59,10 @@ def process_hud_alert(enabled, fingerprint, visual_alert, left_line,
 class CarController():
   def __init__(self, dbc_name, car_fingerprint):
     self.apply_steer_last = 0
+    self.accel_steady = 0.
     self.car_fingerprint = car_fingerprint
     self.lkas11_cnt = 0
+    self.scc12_cnt = 0
     self.clu11_cnt = 0
     self.last_resume_frame = 0
     self.last_lead_distance = 0
@@ -54,6 +74,14 @@ class CarController():
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, visual_alert,
               left_line, right_line, left_lane_depart, right_lane_depart):
+
+    # *** compute control surfaces ***
+
+    # gas and brake
+    apply_accel = actuators.gas - actuators.brake
+
+    apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady)
+    apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
 
     ### Steering Torque
     apply_steer = actuators.steer * SteerLimitParams.STEER_MAX
@@ -67,6 +95,7 @@ class CarController():
 
     steer_req = 1 if apply_steer else 0
 
+    self.apply_accel_last = apply_accel
     self.apply_steer_last = apply_steer
 
     hud_alert, lane_visible, left_lane_warning, right_lane_warning =\
@@ -76,6 +105,7 @@ class CarController():
     can_sends = []
 
     self.lkas11_cnt = frame % 0x10
+    self.scc12_cnt %= 15
     clu11_cnt = frame % 0x10
 
     if self.camera_disconnected:
@@ -92,6 +122,11 @@ class CarController():
 
     speed = 60 if CS.v_ego < 17. else CS.clu11["CF_Clu_Vanz"]
     can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.NONE, speed, clu11_cnt))
+
+    if frame % 2:
+      can_sends.append(create_scc12(self.packer, apply_accel, enabled, self.scc12_cnt, CS.scc12))
+      self.scc12_cnt += 1
+
     if pcm_cancel_cmd:
       can_sends.append(create_clu11(self.packer, CS.clu11, Buttons.CANCEL, speed, clu11_cnt))
 
@@ -112,6 +147,5 @@ class CarController():
     # reset lead distnce after the car starts moving
     elif self.last_lead_distance != 0:
       self.last_lead_distance = 0  
-
 
     return can_sends
