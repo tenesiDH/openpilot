@@ -116,18 +116,19 @@ class LongControl():
     max_return = 1.0
     return round(max(min(accel, max_return), min_return), 5)  # ensure we return a value between range
 
-  def process_lead(self, lead_one):
+  def process_lead(self, lead_one,has_lead):
     self.lead_data['vRel'] = lead_one.vRel
     self.lead_data['a_lead'] = lead_one.aLeadK
     self.lead_data['x_lead'] = lead_one.dRel
-    self.lead_data['status'] = lead_one.status
+    self.lead_data['status'] = has_lead
+
 
 
   def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP,
-             gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed, fcw):
+             gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed, fcw, has_lead):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
-    self.process_lead(lead_one)
+    self.process_lead(lead_one,has_lead)
     try:
       gas_interceptor = CP.enableGasInterceptor
     except AttributeError:
@@ -189,7 +190,10 @@ class LongControl():
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
       if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
-        output_gb -= STOPPING_BRAKE_RATE / RATE
+        factor = 1
+        if self.lead_data['status']:
+          factor = interp(self.lead_data['x_lead'], [0.0,1.0,3.0,5.0], [1000.0,100.0,10.0,1.0])
+        output_gb -= STOPPING_BRAKE_RATE / RATE * factor
       output_gb = clip(output_gb, -brake_max, gas_max)
 
       self.v_pid = v_ego
@@ -198,7 +202,10 @@ class LongControl():
     # Intention is to move again, release brake fast before handing control to PID
     elif self.long_control_state == LongCtrlState.starting:
       if output_gb < -0.2:
-        output_gb += STARTING_BRAKE_RATE / RATE
+        factor = 1
+        if self.lead_data['status']:
+          factor = interp(self.lead_data['x_lead'], [0.0,2.0,4.0], [0.0,0.5,1.0])
+        output_gb += STARTING_BRAKE_RATE / RATE * factor
       self.v_pid = v_ego
       self.pid.reset()
 

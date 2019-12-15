@@ -12,7 +12,7 @@ from common.travis_checker import travis
 
 
 def calc_states_after_delay(states, v_ego, steer_angle, curvature_factor, steer_ratio, delay):
-  states[0].x = v_ego * delay
+  states[0].x = max(v_ego * delay, 0.0)
   states[0].psi = v_ego * curvature_factor * math.radians(steer_angle) / steer_ratio * delay
   return states
 

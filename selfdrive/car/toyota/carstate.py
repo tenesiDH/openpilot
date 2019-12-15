@@ -122,6 +122,20 @@ def get_cam_can_parser(CP):
 
 class CarState():
   def __init__(self, CP):
+    #ALCA params
+    self.CL_MIN_V = 8.9
+    self.CL_MAX_A = 20.
+    self.enableALCA = True
+    self.alcaEnabled = True
+    self.ALCA_enabled = False
+    self.ALCA_total_steps = 100
+    self.ALCA_direction = 0
+    self.ALCA_error = False
+    self.turn_signal_stalk_state = 0
+    self.prev_turn_signal_stalk_state = 0
+    self.alcastate = 1
+    #END OF ALCA PARAMS
+
     self.gasbuttonstatus = 0
     self.CP = CP
     self.can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
@@ -156,6 +170,7 @@ class CarState():
 
   def update(self, cp, cp_cam):
     # update prevs, update must run once per loop
+    self.prev_turn_signal_stalk_state = self.turn_signal_stalk_state
     self.prev_left_blinker_on = self.left_blinker_on
     self.prev_right_blinker_on = self.right_blinker_on
 
@@ -228,6 +243,12 @@ class CarState():
       self.main_on = cp.vl["PCM_CRUISE_2"]['MAIN_ON']
     self.left_blinker_on = cp.vl["STEERING_LEVERS"]['TURN_SIGNALS'] == 1
     self.right_blinker_on = cp.vl["STEERING_LEVERS"]['TURN_SIGNALS'] == 2
+    if self.left_blinker_on and not self.right_blinker_on:
+      self.turn_signal_stalk_state = 1
+    if self.right_blinker_on and not self.left_blinker_on:
+      self.turn_signal_stalk_state = 2
+    if not self.right_blinker_on and not self.left_blinker_on:
+      self.turn_signal_stalk_state = 0
 
     # 2 is standby, 10 is active. TODO: check that everything else is really a faulty state
     self.steer_state = cp.vl["EPS_STATUS"]['LKA_STATE']
@@ -246,26 +267,29 @@ class CarState():
     else:
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.low_speed_lockout = cp.vl["PCM_CRUISE_2"]['LOW_SPEED_LOCKOUT'] == 2
-
+    if self.CP.carFingerprint == CAR.RAV4H_TSS2:
+      minimum_set_speed = 28.0
+    else:
+      minimum_set_speed = 41.0
     if cp.vl["PCM_CRUISE"]['CRUISE_STATE'] and not self.pcm_acc_status:
       if self.v_ego < 11.38:
-        self.setspeedoffset = max(min(int(41.0-self.v_ego*3.6),34.0),0.0)
+        self.setspeedoffset = max(min(int(minimum_set_speed-self.v_ego*3.6),(minimum_set_speed-7.0)),0.0)
         self.v_cruise_pcmlast = self.v_cruise_pcm
       else:
         self.setspeedoffset = 0
         self.v_cruise_pcmlast = self.v_cruise_pcm
     if self.v_cruise_pcm < self.v_cruise_pcmlast:
-      if self.setspeedcounter > 0 and self.v_cruise_pcm > 41:
+      if self.setspeedcounter > 0 and self.v_cruise_pcm > minimum_set_speed:
         self.setspeedoffset = self.setspeedoffset + 4
       else:
-        if math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40)) > 0:
-          self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(self.v_cruise_pcm-40))
+        if math.floor((int((-self.v_cruise_pcm)*(minimum_set_speed-7.0)/(169.0-minimum_set_speed)  + 169.0*(minimum_set_speed-7.0)/(169.0-minimum_set_speed))-self.setspeedoffset)/(self.v_cruise_pcm-(minimum_set_speed-1.0))) > 0:
+          self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*(minimum_set_speed-7.0)/(169.0-minimum_set_speed)  + 169*(minimum_set_speed-7.0)/(169.0-minimum_set_speed))-self.setspeedoffset)/(self.v_cruise_pcm-(minimum_set_speed-1.0)))
       self.setspeedcounter = 50
     if self.v_cruise_pcmlast < self.v_cruise_pcm:
       if self.setspeedcounter > 0 and (self.setspeedoffset - 4) > 0:
         self.setspeedoffset = self.setspeedoffset - 4
       else:
-        self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*34/128  + 169*34/128)-self.setspeedoffset)/(170-self.v_cruise_pcm))
+        self.setspeedoffset = self.setspeedoffset + math.floor((int((-self.v_cruise_pcm)*(minimum_set_speed-7.0)/(169.0-minimum_set_speed)  + 169*(minimum_set_speed-7.0)/(169.0-minimum_set_speed))-self.setspeedoffset)/(170-self.v_cruise_pcm))
       self.setspeedcounter = 50
     if self.setspeedcounter > 0:
       self.setspeedcounter = self.setspeedcounter - 1
@@ -286,6 +310,7 @@ class CarState():
       self.Angles_later[self.Angle_counter] = 0
     self.Angle_counter = (self.Angle_counter + 1 ) % 250
     self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
+    self.alcaEnabled = self.main_on
     self.pcm_acc_active = bool(cp.vl["PCM_CRUISE"]['CRUISE_ACTIVE'])
     self.brake_lights = bool(cp.vl["ESP_CONTROL"]['BRAKE_LIGHTS_ACC'] or self.brake_pressed)
     if self.CP.carFingerprint == CAR.PRIUS:
