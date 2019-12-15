@@ -61,7 +61,7 @@ class CarController():
     apply_steer = apply_std_steer_torque_limits(apply_steer, self.apply_steer_last, CS.steer_torque_driver, SteerLimitParams)
 
     # Fix for sharp turns mdps fault and Genesis hard fault at low speed
-    lkas_active = enabled and abs(CS.angle_steers) < 100. and (not self.CS.v_ego < 16.7 or not self.carFingerprint == CAR.GENESIS)
+    lkas_active = enabled and abs(CS.angle_steers) < 100. and (not CS.v_ego < 16.7 or not self.car_fingerprint == CAR.GENESIS)
     if not lkas_active:
       apply_steer = 0
 
