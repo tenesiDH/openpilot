@@ -129,6 +129,7 @@ class LongitudinalMpc():
 
       x = [-2.235, -1.49, -1.1, -0.67, -0.224, 0.0, 0.67, 1.1, 1.49]  # lead acceleration values
       y = [0.26, 0.182, 0.104, 0.0, 0.0, 0.0, -0.016, -0.032, -0.056]  # modification values
+
       TR_mod += interp(self.lead_data['a_lead'], x, y)
       # TR_mod += interp(self.get_acceleration(), x, y)  # todo: when lead car has been braking over the past 3 seconds, slightly increase TR
 

@@ -8,7 +8,6 @@ For a demo of this version of openpilot check the video below:
 [![demo of openpilot with this branch](https://img.youtube.com/vi/WKwSq8TPdpo/0.jpg)](https://www.youtube.com/watch?v=WKwSq8TPdpo)
 
 # Installation
-
 ## Panda flashing
 
 To get this branch to work, it is required to flash your Panda because:

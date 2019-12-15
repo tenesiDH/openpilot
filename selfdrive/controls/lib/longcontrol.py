@@ -123,6 +123,7 @@ class LongControl():
     self.lead_data['status'] = has_lead
 
 
+
   def update(self, active, v_ego, brake_pressed, standstill, cruise_standstill, v_cruise, v_target, v_target_future, a_target, CP,
              gas_button_status, decelForTurn, longitudinalPlanSource, lead_one, gas_pressed, fcw, has_lead):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
