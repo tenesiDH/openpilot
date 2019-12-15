@@ -687,8 +687,8 @@ void TIM1_BRK_TIM9_IRQHandler(void) {
     #ifdef EON
     if (heartbeat_counter >= (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)) {
       puts("EON hasn't sent a heartbeat for 0x"); puth(heartbeat_counter); puts(" seconds. Safety is set to NOOUTPUT mode.\n");
-      if(current_safety_mode != SAFETY_NOOUTPUT){
-        set_safety_mode(SAFETY_NOOUTPUT, 0U);
+      if(current_safety_mode != SAFETY_ALLOUTPUT){
+        set_safety_mode(SAFETY_ALLOUTPUT, 0U);  // MDPS will hard if SAFETY_NOOUTPUT
       }
     }
     #endif
@@ -762,14 +762,14 @@ int main(void) {
 
   // default to silent mode to prevent issues with Ford
   // hardcode a specific safety mode if you want to force the panda to be in a specific mode
-  int err = safety_set_mode(SAFETY_NOOUTPUT, 0);
+  int err = safety_set_mode(SAFETY_ALLOUTPUT, 0);  // MDPS will hard if SAFETY_NOOUTPUT
   if (err == -1) {
     puts("Failed to set safety mode\n");
     while (true) {
       // if SAFETY_NOOUTPUT isn't succesfully set, we can't continue
     }
   }
-  can_silent = ALL_CAN_SILENT;
+  can_silent = ALL_CAN_LIVE;
   can_init_all();
 
 #ifndef EON
