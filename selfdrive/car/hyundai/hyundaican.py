@@ -82,8 +82,7 @@ def create_clu11(packer, clu11, button, speed, cnt):
     "CF_Clu_AliveCnt1": cnt,
   }
 
-
-  return packer.make_can_msg("CLU11", 0 if button else 1, values)
+  return packer.make_can_msg("CLU11", 2 if button else 1, values)
 
 def create_scc12(packer, apply_accel, enabled, cnt, scc12):
   values = {
