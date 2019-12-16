@@ -6,7 +6,7 @@ const int HYUNDAI_MAX_RATE_DOWN = 7;
 const int HYUNDAI_DRIVER_TORQUE_ALLOWANCE = 50;
 const int HYUNDAI_DRIVER_TORQUE_FACTOR = 2;
 
-const AddrBus HYUNDAI_TX_MSGS[] = {{832, 0}, {1265, 0}};
+const AddrBus HYUNDAI_TX_MSGS[] = {{832, 0}, {832, 1}, {1265, 1}, {1265, 2}, {1057, 0}};
 
 int hyundai_rt_torque_last = 0;
 int hyundai_desired_torque_last = 0;
@@ -14,7 +14,7 @@ int hyundai_cruise_engaged_last = 0;
 uint32_t hyundai_ts_last = 0;
 struct sample_t hyundai_torque_driver;         // last few driver torques measured
 bool hyundai_has_scc = 0;
-
+int OP_LKAS_live = 0;
 
 static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus = GET_BUS(to_push);
@@ -57,10 +57,6 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     hyundai_cruise_engaged_last = cruise_engaged;
   }
 
-  // 832 is lkas cmd. If it is on camera bus, then giraffe switch 2 is high
-  if ((addr == 832) && (bus == hyundai_camera_bus) && (hyundai_camera_bus != 0)) {
-    hyundai_giraffe_switch_2 = 1;
-  }
 }
 
 static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
@@ -82,6 +78,8 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     int desired_torque = ((GET_BYTES_04(to_send) >> 16) & 0x7ff) - 1024;
     uint32_t ts = TIM2->CNT;
     bool violation = 0;
+	
+	OP_LKAS_live = 20;
 
     if (controls_allowed) {
 
@@ -144,9 +142,34 @@ static int hyundai_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   // forward cam to ccan and viceversa, except lkas cmd
   if (!relay_malfunction) {
     if (bus_num == 0) {
-      bus_fwd = 2;
+      // EON create CLU12 for MDPS
+      if ((!OP_LKAS_live) || (addr != 1265)) {
+        bus_fwd = 12;
+      } else {
+        bus_fwd = 2;
+      }
     }
-    if ((bus_num == 2) && (addr != 832)) {
+    if (bus_num == 1) {
+      bus_fwd = 20;
+    }
+    if (bus_num == 2) {
+      if (addr != 832) {
+        if ((addr != 1057) || (!OP_LKAS_live)) {
+          bus_fwd = 10;
+        } else {
+          bus_fwd = 1;
+        }
+      } else if (!OP_LKAS_live) {
+        bus_fwd = 10;
+      } else {
+        OP_LKAS_live -= 1;
+      }
+    }
+  } else {
+    if (bus_num == 0) {
+      bus_fwd = 1;
+    }
+    if (bus_num == 1) {
       bus_fwd = 0;
     }
   }

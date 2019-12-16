@@ -711,6 +711,7 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
     // check heartbeat counter if we are running EON code.
     // if the heartbeat has been gone for a while, go to SILENT safety mode and enter power save
     if (heartbeat_counter >= (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)) {
+<<<<<<< HEAD
       puts("EON hasn't sent a heartbeat for 0x");
       puth(heartbeat_counter);
       puts(" seconds. Safety is set to SILENT mode.\n");
@@ -719,6 +720,11 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
       }
       if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
         set_power_save_state(POWER_SAVE_STATUS_ENABLED);
+=======
+      puts("EON hasn't sent a heartbeat for 0x"); puth(heartbeat_counter); puts(" seconds. Safety is set to NOOUTPUT mode.\n");
+      if(current_safety_mode != SAFETY_ALLOUTPUT){
+        set_safety_mode(SAFETY_ALLOUTPUT, 0U);  // MDPS will hard if SAFETY_NOOUTPUT
+>>>>>>> HKG_scc-mdps
       }
     }
 
@@ -812,7 +818,7 @@ int main(void) {
   // use TIM2->CNT to read
 
   // init to SILENT and can silent
-  set_safety_mode(SAFETY_SILENT, 0);
+  set_safety_mode(SAFETY_ALLOUTPUT, 0); // MDPS will hard if SAFETY_NOOUTPUT
 
   // enable CAN TXs
   current_board->enable_can_transcievers(true);
