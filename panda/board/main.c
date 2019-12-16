@@ -717,9 +717,9 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
       if (current_safety_mode != SAFETY_SILENT) {
         set_safety_mode(SAFETY_ALLOUTPUT, 0U); // MDPS will hard if SAFETY_NOOUTPUT
       }
-      if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
-        set_power_save_state(POWER_SAVE_STATUS_ENABLED);
-      }
+      //if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
+        //set_power_save_state(POWER_SAVE_STATUS_ENABLED);
+      //}
     }
 
     // enter CDP mode when car starts to ensure we are charging a turned off EON
