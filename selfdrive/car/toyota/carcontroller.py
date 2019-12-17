@@ -1,4 +1,5 @@
-from cereal import car
+from cereal import car, arne182
+import selfdrive.messaging as messaging
 from common.numpy_fast import clip, interp
 from selfdrive.car import apply_toyota_steer_torque_limits
 from selfdrive.car import create_gas_command
@@ -9,6 +10,7 @@ from selfdrive.car.toyota.toyotacan import make_can_msg, \
 from selfdrive.car.toyota.values import CAR, ECU, STATIC_MSGS, TSS2_CAR, SteerLimitParams
 from selfdrive.can.packer import CANPacker
 from selfdrive.phantom.phantom import Phantom
+from selfdrive.car.modules.ALCA_module import ALCAController
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -87,6 +89,8 @@ def ipas_state_transition(steer_angle_enabled, enabled, ipas_active, ipas_reset_
 class CarController():
   def __init__(self, dbc_name, car_fingerprint, enable_camera, enable_dsu, enable_apg):
     self.braking = False
+    self.alcaStateData = None
+    self.alcaState = messaging.sub_sock('alcaState', conflate=True)
     # redundant safety check with the board
     self.controls_allowed = True
     self.last_steer = 0
@@ -107,7 +111,8 @@ class CarController():
     if enable_camera: self.fake_ecus.add(ECU.CAM)
     if enable_dsu: self.fake_ecus.add(ECU.DSU)
     if enable_apg: self.fake_ecus.add(ECU.APGS)
-
+    self.ALCA = ALCAController(self,True,False)  # Enabled True and SteerByAngle only False
+      
     self.packer = CANPacker(dbc_name)
 
   def update(self, enabled, CS, frame, actuators, pcm_cancel_cmd, hud_alert,
@@ -128,6 +133,14 @@ class CarController():
 
     apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady, enabled)
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
+    # Get the angle from ALCA.
+    # Update ALCA status and custom button every 0.1 sec.
+    alcaStateMsg = self.alcaState.receive(non_blocking=True)
+    if alcaStateMsg is not None:
+      self.alcaStateData =  arne182.ALCAState.from_bytes(alcaStateMsg)
+    if (frame % 10 == 0):
+      self.ALCA.update_status(True)
+    turn_signal_needed, self.alca_enabled = self.ALCA.update(enabled, CS, actuators, self.alcaStateData, frame)
     
     if CS.CP.enableGasInterceptor:
       if CS.pedal_gas > 15.0:
@@ -142,6 +155,8 @@ class CarController():
         apply_accel = min(apply_accel, 0.0)
       
     # steer torque
+    
+    
     self.phantom.update()
     if self.phantom.data['status']:
       apply_steer = int(round(self.phantom.data["angle"])) if abs(CS.angle_steers) <= 400 else 0

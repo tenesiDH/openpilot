@@ -86,7 +86,14 @@ ALERTS = [
       "Turn Exceeds Steering Limit",
       AlertStatus.userPrompt, AlertSize.mid,
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.chimePrompt, 1., 2., 3.),
-
+  
+  Alert(
+    "waitingMode",
+    "WAITING...",
+    "Press gas/resume to gain full control!",
+    AlertStatus.userPrompt, AlertSize.mid,
+    Priority.LOW, VisualAlert.steerRequired, AudibleAlert.chimeWarning1, .4, 2., 3.),
+  
   Alert(
     "longControlDisabled",
     "BRAKE PRESSED",
@@ -326,6 +333,13 @@ ALERTS = [
       "System Overheated",
       AlertStatus.critical, AlertSize.full,
       Priority.MID, VisualAlert.steerRequired, AudibleAlert.chimeWarningRepeat, .1, 2., 2.),
+
+  Alert(
+      "wrongGearArne",
+      "TAKE CONTROL IMMEDIATELY",
+      "Gear not yet in D",
+      AlertStatus.critical, AlertSize.full,
+      Priority.MID, VisualAlert.steerRequired, AudibleAlert.none, .1, 2., 2.),
 
   Alert(
       "wrongGear",
