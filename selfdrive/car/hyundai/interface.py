@@ -49,6 +49,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.steerActuatorDelay = 0.1  # Default delay
     ret.steerRateCost = 0.5
+    ret.steerLimitTimer = 0.4
     tire_stiffness_factor = 1.
 
     if candidate in [CAR.SANTA_FE, CAR.SANTA_FE_1]:
@@ -124,6 +125,15 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.385
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.25], [0.05]]
+    elif candidate == CAR.IONIQ_EV_LTD:
+      ret.lateralTuning.pid.kf = 0.00006
+      ret.mass = 1490. + STD_CARGO_KG   #weight per hyundai site https://www.hyundaiusa.com/ioniq-electric/specifications.aspx
+      ret.wheelbase = 2.7
+      ret.steerRatio = 13.73   #Spec
+      tire_stiffness_factor = 0.385
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.25], [0.05]]
+      ret.minSteerSpeed = 32 * CV.MPH_TO_MS
     elif candidate == CAR.KIA_FORTE:
       ret.lateralTuning.pid.kf = 0.00005
       ret.mass = 3558. * CV.LB_TO_KG
@@ -169,7 +179,6 @@ class CarInterface(CarInterfaceBase):
     ret.enableCamera = is_ecu_disconnected(fingerprint[0], FINGERPRINTS, ECU_FINGERPRINT, candidate, ECU.CAM) or has_relay
     ret.openpilotLongitudinalControl = False
 
-    ret.steerLimitAlert = False
     ret.stoppingControl = False
     ret.startAccel = 0.0
 
@@ -185,7 +194,7 @@ class CarInterface(CarInterfaceBase):
     # create message
     ret = car.CarState.new_message()
 
-    ret.canValid = self.cp.can_valid  # TODO: check cp_cam validity
+    ret.canValid = self.cp.can_valid and self.cp_cam.can_valid
 
     # speeds
     ret.vEgo = self.CS.v_ego
@@ -249,9 +258,9 @@ class CarInterface(CarInterfaceBase):
     ret.seatbeltUnlatched = not self.CS.seatbelt
 
     # low speed steer alert hysteresis logic (only for cars with steer cut off above 10 m/s)
-    if ret.vEgo < (self.CP.minSteerSpeed + 1.) and self.CP.minSteerSpeed > 10.:
-      self.low_speed_alert = True
-    if ret.vEgo > (self.CP.minSteerSpeed + 1.):
+    if ret.vEgo < (self.CP.minSteerSpeed + 0.2) and self.CP.minSteerSpeed > 10.:	
+      self.low_speed_alert = True	
+    if ret.vEgo > (self.CP.minSteerSpeed + 0.7):	
       self.low_speed_alert = False
 
     events = []
@@ -296,10 +305,7 @@ class CarInterface(CarInterfaceBase):
 
   def apply(self, c):
     
-    # Fix for Genesis hard fault when steer request sent while the speed is low 
-    enable = 0 if self.CS.v_ego < self.CP.minSteerSpeed and self.CP.carFingerprint == CAR.GENESIS else c.enabled
-    
-    can_sends = self.CC.update(enable, self.CS, self.frame, c.actuators,
+    can_sends = self.CC.update(c.enabled, self.CS, self.frame, c.actuators,
                                c.cruiseControl.cancel, c.hudControl.visualAlert, c.hudControl.leftLaneVisible,
                                c.hudControl.rightLaneVisible, c.hudControl.leftLaneDepart, c.hudControl.rightLaneDepart)
 

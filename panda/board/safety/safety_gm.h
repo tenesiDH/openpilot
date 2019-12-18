@@ -18,20 +18,21 @@ const int GM_DRIVER_TORQUE_FACTOR = 4;
 const int GM_MAX_GAS = 3072;
 const int GM_MAX_REGEN = 1404;
 const int GM_MAX_BRAKE = 350;
+const AddrBus GM_TX_MSGS[] = {{384, 0}, {1033, 0}, {1034, 0}, {715, 0}, {880, 0},  // pt bus
+                              {161, 1}, {774, 1}, {776, 1}, {784, 1},   // obs bus
+                              {789, 2},  // ch bus
+                              {0x104c006c, 3}, {0x10400060, 3}};  // gmlan
 
 int gm_brake_prev = 0;
 int gm_gas_prev = 0;
 bool gm_moving = false;
-// silence everything if stock car control ECUs are still online
-bool gm_ascm_detected = 0;
-bool gm_ignition_started = 0;
 int gm_rt_torque_last = 0;
 int gm_desired_torque_last = 0;
 uint32_t gm_ts_last = 0;
 struct sample_t gm_torque_driver;         // last few driver torques measured
 
 static void gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
-  int bus_number = GET_BUS(to_push);
+  int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
 
   if (addr == 388) {
@@ -41,26 +42,10 @@ static void gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     update_sample(&gm_torque_driver, torque_driver_new);
   }
 
-  if ((addr == 0x1F1) && (bus_number == 0)) {
-    //Bit 5 should be ignition "on"
-    //Backup plan is Bit 2 (accessory power)
-    bool ign = (GET_BYTE(to_push, 0) & 0x20) != 0;
-    gm_ignition_started = ign;
-  }
-
   // sample speed, really only care if car is moving or not
   // rear left wheel speed
   if (addr == 842) {
     gm_moving = GET_BYTE(to_push, 0) | GET_BYTE(to_push, 1);
-  }
-
-  // Check if ASCM or LKA camera are online
-  // on powertrain bus.
-  // 384 = ASCMLKASteeringCmd
-  // 715 = ASCMGasRegenCmd
-  if ((bus_number == 0) && ((addr == 384) || (addr == 715))) {
-    gm_ascm_detected = 1;
-    controls_allowed = 0;
   }
 
   // ACC steering wheel buttons
@@ -110,6 +95,14 @@ static void gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       controls_allowed = 0;
     }
   }
+
+  // Check if ASCM or LKA camera are online
+  // on powertrain bus.
+  // 384 = ASCMLKASteeringCmd
+  // 715 = ASCMGasRegenCmd
+  if ((safety_mode_cnt > RELAY_TRNS_TIMEOUT) && (bus == 0) && ((addr == 384) || (addr == 715))) {
+    relay_malfunction = true;
+  }
 }
 
 // all commands: gas/regen, friction brake and steering
@@ -121,9 +114,14 @@ static void gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   int tx = 1;
+  int addr = GET_ADDR(to_send);
+  int bus = GET_BUS(to_send);
 
-  // There can be only one! (ASCM)
-  if (gm_ascm_detected) {
+  if (!addr_allowed(addr, bus, GM_TX_MSGS, sizeof(GM_TX_MSGS)/sizeof(GM_TX_MSGS[0]))) {
+    tx = 0;
+  }
+
+  if (relay_malfunction) {
     tx = 0;
   }
 
@@ -131,8 +129,6 @@ static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   // and the the latching controls_allowed flag is True
   int pedal_pressed = gm_gas_prev || (gm_brake_prev && gm_moving);
   bool current_controls_allowed = controls_allowed && !pedal_pressed;
-
-  int addr = GET_ADDR(to_send);
 
   // BRAKE: safety check
   if (addr == 789) {
@@ -196,11 +192,6 @@ static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     }
   }
 
-  // PARK ASSIST STEER: unlimited torque, no thanks
-  if (addr == 823) {
-    tx = 0;
-  }
-
   // GAS/REGEN: safety check
   if (addr == 715) {
     int gas_regen = ((GET_BYTE(to_send, 2) & 0x7FU) << 5) + ((GET_BYTE(to_send, 3) & 0xF8U) >> 3);
@@ -221,44 +212,11 @@ static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   return tx;
 }
 
-static void gm_init(int16_t param) {
-  UNUSED(param);
-  controls_allowed = 0;
-  gm_ignition_started = 0;
-}
-
-static int gm_ign_hook(void) {
-  return gm_ignition_started;
-}
-
-// All sending is disallowed.
-// The only difference from "no output" model
-// is using GM ignition hook.
-
-static void gm_passive_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
-  int bus_number = GET_BUS(to_push);
-  int addr = GET_ADDR(to_push);
-
-  if ((addr == 0x1F1) && (bus_number == 0)) {
-    bool ign = (GET_BYTE(to_push, 0) & 0x20) != 0;
-    gm_ignition_started = ign;
-  }
-}
 
 const safety_hooks gm_hooks = {
-  .init = gm_init,
+  .init = nooutput_init,
   .rx = gm_rx_hook,
   .tx = gm_tx_hook,
   .tx_lin = nooutput_tx_lin_hook,
-  .ignition = gm_ign_hook,
-  .fwd = default_fwd_hook,
-};
-
-const safety_hooks gm_passive_hooks = {
-  .init = gm_init,
-  .rx = gm_passive_rx_hook,
-  .tx = nooutput_tx_hook,
-  .tx_lin = nooutput_tx_lin_hook,
-  .ignition = gm_ign_hook,
   .fwd = default_fwd_hook,
 };

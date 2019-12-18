@@ -1,5 +1,6 @@
 #define CADILLAC_TORQUE_MSG_N 4      // 4 torque messages: 0x151, 0x152, 0x153, 0x154
 
+const AddrBus CADILLAC_TX_MSGS[] = {{0x151, 2}, {0x152, 0}, {0x153, 2}, {0x154, 0}};
 const int CADILLAC_MAX_STEER = 150; // 1s
 // real time torque limit to prevent controls spamming
 // the real time limit is 1500/sec
@@ -10,7 +11,6 @@ const int CADILLAC_MAX_RATE_DOWN = 5;
 const int CADILLAC_DRIVER_TORQUE_ALLOWANCE = 50;
 const int CADILLAC_DRIVER_TORQUE_FACTOR = 4;
 
-bool cadillac_ign = 0;
 int cadillac_cruise_engaged_last = 0;
 int cadillac_rt_torque_last = 0;
 const int cadillac_torque_msgs_n = 4;
@@ -35,11 +35,6 @@ static void cadillac_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     update_sample(&cadillac_torque_driver, torque_driver_new);
   }
 
-  // this message isn't all zeros when ignition is on
-  if ((addr == 0x160) && (bus == 0)) {
-    cadillac_ign = GET_BYTES_04(to_push) != 0;
-  }
-
   // enter controls on rising edge of ACC, exit controls on ACC off
   if ((addr == 0x370) && (bus == 0)) {
     int cruise_engaged = GET_BYTE(to_push, 2) & 0x80;  // bit 23
@@ -61,6 +56,11 @@ static void cadillac_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 static int cadillac_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   int tx = 1;
   int addr = GET_ADDR(to_send);
+  int bus = GET_BUS(to_send);
+
+  if (!addr_allowed(addr, bus, CADILLAC_TX_MSGS, sizeof(CADILLAC_TX_MSGS) / sizeof(CADILLAC_TX_MSGS[0]))) {
+    tx = 0;
+  }
 
   // steer cmd checks
   if ((addr == 0x151) || (addr == 0x152) || (addr == 0x153) || (addr == 0x154)) {
@@ -115,21 +115,10 @@ static int cadillac_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
   return tx;
 }
 
-static void cadillac_init(int16_t param) {
-  UNUSED(param);
-  controls_allowed = 0;
-  cadillac_ign = 0;
-}
-
-static int cadillac_ign_hook(void) {
-  return cadillac_ign;
-}
-
 const safety_hooks cadillac_hooks = {
-  .init = cadillac_init,
+  .init = nooutput_init,
   .rx = cadillac_rx_hook,
   .tx = cadillac_tx_hook,
   .tx_lin = nooutput_tx_lin_hook,
-  .ignition = cadillac_ign_hook,
   .fwd = default_fwd_hook,
 };

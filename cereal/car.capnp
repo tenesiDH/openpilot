@@ -84,8 +84,12 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     laneChange @59;
     invalidGiraffeToyota @60;
     internetConnectivityNeeded @61;
-    manualSteeringRequired @62;
-    manualSteeringRequiredBlinkersOn @63;
+    communityFeatureDisallowed @62;
+    lowMemory @63;
+    stockAeb @64;
+    ldw @65;
+    manualSteeringRequired @66;
+    manualSteeringRequiredBlinkersOn @67;
   }
 }
 
@@ -119,6 +123,9 @@ struct CarState {
   steeringTorque @8 :Float32;  # TODO: standardize units
   steeringTorqueEps @27 :Float32;  # TODO: standardize units
   steeringPressed @9 :Bool;    # if the user is using the steering wheel
+  steeringRateLimited @29 :Bool;    # if the torque is limited by the rate limiter
+  stockAeb @30 :Bool;
+  stockFcw @31 :Bool;
 
   # cruise state
   cruiseState @10 :CruiseState;
@@ -131,8 +138,8 @@ struct CarState {
   leftBlinker @20 :Bool;
   rightBlinker @21 :Bool;
   genericToggle @23 :Bool;
-  distanceToggle @30 :Float32;
-  laneDepartureToggle @31 :Bool;
+  distanceToggle @33 :Float32;
+  laneDepartureToggle @34 :Bool;
 
   # lock info
   doorOpen @24 :Bool;
@@ -144,7 +151,7 @@ struct CarState {
   clutchPressed @28 :Bool;
 
   readdistancelines @32 :Float32;
-  lkMode @29 :Bool;
+  lkMode @35 :Bool;
 
 
 
@@ -179,7 +186,6 @@ struct CarState {
     eco @8;
     manumatic @9;
   }
-
 
   # send on change
   struct ButtonEvent {
@@ -324,7 +330,7 @@ struct CarParams {
   minEnableSpeed @7 :Float32;
   minSteerSpeed @8 :Float32;
   safetyModel @9 :SafetyModel;
-  safetyModelPassive @42 :SafetyModel = noOutput;
+  safetyModelPassive @42 :SafetyModel = silent;
   safetyParam @10 :Int16;
 
   steerMaxBP @11 :List(Float32);
@@ -333,7 +339,6 @@ struct CarParams {
   gasMaxV @14 :List(Float32);
   brakeMaxBP @15 :List(Float32);
   brakeMaxV @16 :List(Float32);
-
 
   # things about the car in the manual
   mass @17 :Float32;             # [kg] running weight
@@ -355,6 +360,7 @@ struct CarParams {
   }
 
   steerLimitAlert @28 :Bool;
+  steerLimitTimer @47 :Float32;  # time before steerLimitAlert is issued
 
   vEgoStopping @29 :Float32; # Speed at which the car goes into stopping state
   directAccelControl @30 :Bool; # Does the car have direct accel control or just gas/brake
@@ -370,6 +376,9 @@ struct CarParams {
   isPandaBlack @39: Bool;
   dashcamOnly @41: Bool;
   transmissionType @43 :TransmissionType;
+  carFw @44 :List(CarFw);
+  radarTimeStep @45: Float32 = 0.05;  # time delta between radar updates, 20Hz is very standard
+  communityFeature @46: Bool;  # true if a community maintained feature is detected
 
   struct LateralPIDTuning {
     kpBP @0 :List(Float32);
@@ -387,7 +396,6 @@ struct CarParams {
     deadzoneBP @4 :List(Float32);
     deadzoneV @5 :List(Float32);
   }
-
 
   struct LateralINDITuning {
     outerLoopGain @0 :Float32;
@@ -411,7 +419,7 @@ struct CarParams {
   }
 
   enum SafetyModel {
-    noOutput @0;
+    silent @0;
     honda @1;
     toyota @2;
     elm327 @3;
@@ -430,6 +438,7 @@ struct CarParams {
     toyotaIpas @16;
     allOutput @17;
     gmAscm @18;
+    noOutput @19;  # like silent but with silent CAN TXs
   }
 
   enum SteerControlType {
@@ -441,5 +450,17 @@ struct CarParams {
     unknown @0;
     automatic @1;
     manual @2;
+  }
+
+  struct CarFw {
+    ecu @0 :Ecu;
+    fwVersion @1 :Text;
+  }
+
+  enum Ecu {
+    eps @0;
+    esp @1;
+    fwdRadar @2;
+    fwdCamera @3;
   }
 }

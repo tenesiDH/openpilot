@@ -5,20 +5,17 @@ from common.numpy_fast import clip
 from selfdrive.car import create_gas_command
 from selfdrive.car.honda import hondacan
 from selfdrive.car.honda.values import AH, CruiseButtons, CAR
-from selfdrive.can.packer import CANPacker
 from selfdrive.kegman_conf import kegman_conf
 
 kegman = kegman_conf()
-
-
-
+from opendbc.can.packer import CANPacker
 
 
 def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   # hyst params
   brake_hyst_on = 0.02     # to activate brakes exceed this value
-  brake_hyst_off = 0.005                     # to deactivate brakes below this value
-  brake_hyst_gap = 0.01                      # don't change brake command for small oscillations within this value
+  brake_hyst_off = 0.005   # to deactivate brakes below this value
+  brake_hyst_gap = 0.01    # don't change brake command for small oscillations within this value
 
   #*** hysteresis logic to avoid brake blinking. go above 0.1 to trigger
   if (brake < brake_hyst_on and not braking) or brake < brake_hyst_off:
@@ -40,21 +37,25 @@ def actuator_hystereses(brake, braking, brake_steady, v_ego, car_fingerprint):
   return brake, braking, brake_steady
 
 
-def brake_pump_hysteresis(apply_brake, apply_brake_last, last_pump_ts, ts):
-  pump_on = False
-
-  # reset pump timer if:
-  # - there is an increment in brake request
-  # - we are applying steady state brakes and we haven't been running the pump
-  #   for more than 20s (to prevent pressure bleeding)
-  if apply_brake > apply_brake_last or (ts - last_pump_ts > 20. and apply_brake > 0):
-    last_pump_ts = ts
-
-  # once the pump is on, run it for at least 0.2s
-  if ts - last_pump_ts < 0.2 and apply_brake > 0:
+def brake_pump_hysteresis(apply_brake, apply_brake_last, last_pump_on_state, ts):
+  # If calling for more brake, turn on the pump
+  if (apply_brake > apply_brake_last):
     pump_on = True
+  
+  # if calling for the same brake, leave the pump alone. It was either turned on 
+  # previously while braking, or it was turned off previously when apply_brake
+  # dropped below the last value. In either case, leave it as-is.
+  # Necessary because when OP is lifting its foot off the brake, we'll come in here
+  # twice with the same brake value due to the timing.
+  if (apply_brake == apply_brake_last):
+    pump_on = last_pump_on_state
 
-  return pump_on, last_pump_ts
+  if (apply_brake < apply_brake_last):
+    pump_on = False
+
+  last_pump_on_state = pump_on
+
+  return pump_on, last_pump_on_state
 
 
 def process_hud_alert(hud_alert):
@@ -85,7 +86,7 @@ class CarController():
     self.brake_steady = 0.
     self.brake_last = 0.
     self.apply_brake_last = 0
-    self.last_pump_ts = 0.
+    self.last_pump_on_state = False
     self.packer = CANPacker(dbc_name)
     self.new_radar_config = False
     self.prev_lead_distance = 0.0
@@ -140,10 +141,11 @@ class CarController():
 
     # steer torque is converted back to CAN reference (positive when steering right)
     apply_gas = clip(actuators.gas, 0., 1.)
+    # return minimum of brake_last*MAX, or MAX-1, but not less than zero
     apply_brake = int(clip(self.brake_last * BRAKE_MAX, 0, BRAKE_MAX - 1))
     apply_steer = int(clip(-actuators.steer * STEER_MAX, -STEER_MAX, STEER_MAX))
 
-    lkas_active = enabled and not CS.steer_not_allowed and CS.lkMode and not CS.left_blinker_on and not CS.right_blinker_on  # add LKAS button to toggle steering
+    lkas_active = enabled and not CS.steer_not_allowed # and CS.lkMode and not CS.left_blinker_on and not CS.right_blinker_on  # add LKAS button to toggle steering
 
     # Send CAN commands.
     can_sends = []
@@ -156,7 +158,7 @@ class CarController():
     # Send dashboard UI commands.
     if (frame % 10) == 0:
       idx = (frame//10) % 4
-      can_sends.extend(hondacan.create_ui_commands(self.packer, pcm_speed, hud, CS.CP.carFingerprint, CS.is_metric, idx, CS.CP.isPandaBlack))
+      can_sends.extend(hondacan.create_ui_commands(self.packer, pcm_speed, hud, CS.CP.carFingerprint, CS.is_metric, idx, CS.CP.isPandaBlack, CS.stock_hud))
 
     if CS.CP.radarOffCan:
       # If using stock ACC, spam cancel command to kill gas when OP disengages.
@@ -179,9 +181,13 @@ class CarController():
       if (frame % 2) == 0:
         idx = frame // 2
         ts = frame * DT_CTRL
-        pump_on, self.last_pump_ts = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_ts, ts)
+        pump_on, self.last_pump_on_state = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_on_state, ts)
+        # Do NOT send the cancel command if we are using the pedal. Sending cancel causes the car firmware to
+        # turn the brake pump off, and we don't want that. Stock ACC does not send the cancel cmd when it is braking.
+        if CS.CP.enableGasInterceptor:
+          pcm_cancel_cmd = False
         can_sends.append(hondacan.create_brake_command(self.packer, apply_brake, pump_on,
-          pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack))
+          pcm_override, pcm_cancel_cmd, hud.fcw, idx, CS.CP.carFingerprint, CS.CP.isPandaBlack, CS.stock_brake))
         self.apply_brake_last = apply_brake
 
         if CS.CP.enableGasInterceptor:

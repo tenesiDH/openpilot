@@ -1,6 +1,6 @@
 from cereal import car
 from selfdrive.car.hyundai.values import DBC, STEER_THRESHOLD, FEATURES
-from selfdrive.can.parser import CANParser
+from opendbc.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
 
@@ -47,6 +47,7 @@ def get_can_parser(CP):
 
     ("ACCEnable", "TCS13", 0),
     ("ACC_REQ", "TCS13", 0),
+    ("BrakeLight", "TCS13", 0),
     ("DriverBraking", "TCS13", 0),
     ("DriverOverride", "TCS13", 0),
 
@@ -228,7 +229,7 @@ class CarState():
     self.user_brake = 0
 
     self.brake_pressed = cp.vl["TCS13"]['DriverBraking']
-    self.brake_lights = bool(self.brake_pressed)
+    self.brake_lights = bool(cp.vl["TCS13"]['BrakeLight'] or self.brake_pressed)
     if (cp.vl["TCS13"]["DriverOverride"] == 0 and cp.vl["TCS13"]['ACC_REQ'] == 1):
       self.pedal_gas = 0
     else:

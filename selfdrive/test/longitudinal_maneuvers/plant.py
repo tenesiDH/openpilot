@@ -10,22 +10,34 @@ from opendbc import DBC_PATH
 
 from common.realtime import Ratekeeper
 from selfdrive.config import Conversions as CV
-import selfdrive.messaging as messaging
-from selfdrive.services import service_list
+import cereal.messaging as messaging
 from selfdrive.car import crc8_pedal
-from selfdrive.car.honda.hondacan import fix
 from selfdrive.car.honda.values import CAR
 from selfdrive.car.honda.carstate import get_can_signals
-from selfdrive.boardd.boardd import can_capnp_to_can_list, can_list_to_can_capnp
+from selfdrive.boardd.boardd import can_list_to_can_capnp
 
-from selfdrive.can.plant_can_parser import CANParser
+from opendbc.can.parser import CANParser
 from selfdrive.car.honda.interface import CarInterface
 
-from common.dbc import dbc
+from opendbc.can.dbc import dbc
 honda = dbc(os.path.join(DBC_PATH, "honda_civic_touring_2016_can_generated.dbc"))
 
 # Trick: set 0x201 (interceptor) in fingerprints for gas is controlled like if there was an interceptor
 CP = CarInterface.get_params(CAR.CIVIC, {0: {0x201: 6}, 1: {}, 2: {}, 3: {}})
+
+# Honda checksum
+def can_cksum(mm):
+  s = 0
+  for c in mm:
+    s += (c>>4)
+    s += c & 0xF
+  s = 8-s
+  s %= 0x10
+  return s
+
+def fix(msg, addr):
+  msg2 = msg[0:-1] + (msg[-1] | can_cksum(struct.pack("I", addr)+msg)).to_bytes(1, 'little')
+  return msg2
 
 
 def car_plant(pos, speed, grade, gas, brake):
@@ -66,7 +78,7 @@ def car_plant(pos, speed, grade, gas, brake):
   return speed, acceleration
 
 def get_car_can_parser():
-  dbc_f = 'honda_civic_touring_2016_can_generated.dbc'
+  dbc_f = 'honda_civic_touring_2016_can_generated'
   signals = [
     ("STEER_TORQUE", 0xe4, 0),
     ("STEER_TORQUE_REQUEST", 0xe4, 0),
@@ -79,7 +91,7 @@ def get_car_can_parser():
     (0x1fa, 50),
     (0x200, 50),
   ]
-  return CANParser(dbc_f, signals, checks)
+  return CANParser(dbc_f, signals, checks, 0)
 
 def to_3_byte(x):
   # Convert into 12 bit value
@@ -97,16 +109,16 @@ class Plant():
     self.rate = rate
 
     if not Plant.messaging_initialized:
-      Plant.logcan = messaging.pub_sock(service_list['can'].port)
-      Plant.sendcan = messaging.sub_sock(service_list['sendcan'].port)
-      Plant.model = messaging.pub_sock(service_list['model'].port)
-      Plant.live_params = messaging.pub_sock(service_list['liveParameters'].port)
-      Plant.health = messaging.pub_sock(service_list['health'].port)
-      Plant.thermal = messaging.pub_sock(service_list['thermal'].port)
-      Plant.driverMonitoring = messaging.pub_sock(service_list['driverMonitoring'].port)
-      Plant.cal = messaging.pub_sock(service_list['liveCalibration'].port)
-      Plant.controls_state = messaging.sub_sock(service_list['controlsState'].port)
-      Plant.plan = messaging.sub_sock(service_list['plan'].port)
+      Plant.logcan = messaging.pub_sock('can')
+      Plant.sendcan = messaging.sub_sock('sendcan')
+      Plant.model = messaging.pub_sock('model')
+      Plant.live_params = messaging.pub_sock('liveParameters')
+      Plant.health = messaging.pub_sock('health')
+      Plant.thermal = messaging.pub_sock('thermal')
+      Plant.driverMonitoring = messaging.pub_sock('driverMonitoring')
+      Plant.cal = messaging.pub_sock('liveCalibration')
+      Plant.controls_state = messaging.sub_sock('controlsState')
+      Plant.plan = messaging.sub_sock('plan')
       Plant.messaging_initialized = True
 
     self.frame = 0
@@ -168,15 +180,13 @@ class Plant():
     cks_msgs.add(0x30C)
 
     # ******** get messages sent to the car ********
-    can_msgs = []
-    for a in messaging.drain_sock(Plant.sendcan, wait_for_one=self.response_seen):
-      can_msgs.extend(can_capnp_to_can_list(a.sendcan, [0,2]))
+    can_strings = messaging.drain_sock_raw(Plant.sendcan, wait_for_one=self.response_seen)
 
     # After the first response the car is done fingerprinting, so we can run in lockstep with controlsd
-    if can_msgs:
+    if can_strings:
       self.response_seen = True
 
-    self.cp.update_can(can_msgs)
+    self.cp.update_strings(can_strings, sendcan=True)
 
     # ******** get controlsState messages for plotting ***
     controls_state_msgs = []

@@ -3,7 +3,6 @@ import os
 import threading
 import importlib
 import shutil
-import zmq
 
 if "CI" in os.environ:
   tqdm = lambda x: x
@@ -13,9 +12,9 @@ else:
 from cereal import car, log
 from selfdrive.car.car_helpers import get_car
 import selfdrive.manager as manager
-import selfdrive.messaging as messaging
+import cereal.messaging as messaging
 from common.params import Params
-from selfdrive.services import service_list
+from cereal.services import service_list
 from collections import namedtuple
 
 ProcessConfig = namedtuple('ProcessConfig', ['proc_name', 'pub_sub', 'ignore', 'init_callback', 'should_recv_callback'])
@@ -27,9 +26,9 @@ class FakeSocket:
     self.recv_called = threading.Event()
     self.recv_ready = threading.Event()
 
-  def recv(self, block=None):
-    if block == zmq.NOBLOCK:
-      raise zmq.error.Again
+  def receive(self, non_blocking=False):
+    if non_blocking:
+      return None
 
     if self.wait:
       self.recv_called.set()
@@ -57,7 +56,7 @@ class DumbSocket:
       dat.init(s)
       self.data = dat.to_bytes()
 
-  def recv(self, block=None):
+  def receive(self, non_blocking=False):
     return self.data
 
   def send(self, dat):
@@ -182,7 +181,8 @@ CONFIGS = [
     proc_name="controlsd",
     pub_sub={
       "can": ["controlsState", "carState", "carControl", "sendcan", "carEvents", "carParams"],
-      "thermal":  [], "health": [], "liveCalibration": [], "driverMonitoring": [], "plan": [], "pathPlan": [], "gpsLocation": [],
+      "thermal": [], "health": [], "liveCalibration": [], "driverMonitoring": [], "plan": [], "pathPlan": [], "gpsLocation": [],
+      "model": [],
     },
     ignore=[("logMonoTime", 0), ("valid", True), ("controlsState.startMonoTime", 0), ("controlsState.cumLagMs", 0)],
     init_callback=fingerprint,
@@ -238,6 +238,7 @@ def replay_process(cfg, lr):
   params.manager_start()
   params.put("OpenpilotEnabledToggle", "1")
   params.put("Passive", "0")
+  params.put("CommunityFeaturesToggle", "1")
 
   os.environ['NO_RADAR_SLEEP'] = "1"
   manager.prepare_managed_process(cfg.proc_name)

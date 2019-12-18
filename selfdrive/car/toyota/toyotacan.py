@@ -1,33 +1,3 @@
-import struct
-
-
-# *** Toyota specific ***
-
-def fix(msg, addr):
-  checksum = 0
-  idh = (addr & 0xff00) >> 8
-  idl = (addr & 0xff)
-
-  checksum = idh + idl + len(msg) + 1
-  for d_byte in msg:
-    checksum += d_byte
-
-  #return msg + chr(checksum & 0xFF)
-  return msg + struct.pack("B", checksum & 0xFF)
-
-
-def make_can_msg(addr, dat, alt, cks=False):
-  if cks:
-    dat = fix(dat, addr)
-  return [addr, 0, dat, alt]
-
-
-def create_video_target(frame, addr):
-  counter = frame & 0xff
-  msg = struct.pack("!BBBBBBB", counter, 0x03, 0xff, 0x00, 0x00, 0x00, 0x00)
-  return make_can_msg(addr, msg, 1, True)
-
-
 def create_ipas_steer_command(packer, steer, enabled, apgs_enabled):
   """Creates a CAN message for the Toyota Steer Command."""
   if steer < 0:

@@ -87,7 +87,7 @@ To print out the serial console from the ESP8266, run PORT=1 tests/debug_console
 Safety Model
 ------
 
-When a panda powers up, by default it's in `SAFETY_NOOUTPUT` mode. While in no output mode, the buses are also forced to be silent. In order to send messages, you have to select a safety mode. Currently, setting safety modes is only supported over USB.
+When a panda powers up, by default it's in `SAFETY_SILENT` mode. While in `SAFETY_SILENT` mode, the buses are also forced to be silent. In order to send messages, you have to select a safety mode. Currently, setting safety modes is only supported over USB.
 
 Safety modes optionally supports `controls_allowed`, which allows or blocks a subset of messages based on a customizable state in the board.
 
@@ -107,6 +107,8 @@ to ensure that the behavior remains unchanged.
 * An internal Hardware-in-the-loop test, which currently only runs on pull requests opened by comma.ai's organization members, verifies the following functionalities:
     * compiling the code in various configuration and flashing it both through USB and WiFi.
     * Receiving, sending and forwarding CAN messages on all buses, over USB and WiFi.
+
+In addition, we run [Pylint](https://www.pylint.org/) and [Flake8](https://github.com/PyCQA/flake8) linters on all python files within the panda repo.
 
 Hardware
 ------
