@@ -3,21 +3,24 @@ import os
 import json
 import copy
 import datetime
+import psutil
 from smbus2 import SMBus
 from cereal import log
 from common.basedir import BASEDIR
 from common.params import Params
 from common.realtime import sec_since_boot, DT_TRML
-from common.numpy_fast import clip
+from common.numpy_fast import clip, interp
 from common.filter_simple import FirstOrderFilter
 from selfdrive.version import terms_version, training_version
 from selfdrive.swaglog import cloudlog
-import selfdrive.messaging as messaging
-from selfdrive.services import service_list
+import cereal.messaging as messaging
 from selfdrive.loggerd.config import get_available_percent
 from selfdrive.kegman_conf import kegman_conf
 
 kegman = kegman_conf()
+from selfdrive.pandad import get_expected_version
+
+FW_VERSION = get_expected_version()
 
 ThermalStatus = log.ThermalData.ThermalStatus
 CURRENT_TAU = 15.   # 15s time constant
@@ -28,9 +31,12 @@ DAYS_NO_CONNECTIVITY_PROMPT = 4  # send an offroad prompt after 4 days with no i
 with open(BASEDIR + "/selfdrive/controls/lib/alerts_offroad.json") as json_file:
   OFFROAD_ALERTS = json.load(json_file)
 
-def read_tz(x):
+def read_tz(x, clip=True):
   with open("/sys/devices/virtual/thermal/thermal_zone%d/temp" % x) as f:
-    ret = max(0, int(f.read()))
+    ret = int(f.read())
+    if clip:
+      ret = max(0, ret)
+
   return ret
 
 def read_thermal():
@@ -43,6 +49,7 @@ def read_thermal():
   dat.thermal.mem = read_tz(2)
   dat.thermal.gpu = read_tz(16)
   dat.thermal.bat = read_tz(29)
+  dat.thermal.pa0 = read_tz(25)
   return dat
 
 LEON = False
@@ -77,7 +84,9 @@ def set_eon_fan(val):
         # tusb320
         if val == 0:
           bus.write_i2c_block_data(0x67, 0xa, [0])
+          #bus.write_i2c_block_data(0x67, 0x45, [1<<2])
         else:
+          #bus.write_i2c_block_data(0x67, 0x45, [0])
           bus.write_i2c_block_data(0x67, 0xa, [0x20])
           bus.write_i2c_block_data(0x67, 0x8, [(val-1)<<6])
     else:
@@ -97,7 +106,7 @@ _FAN_SPEEDS = [0, 16384, 32768, 65535]
 _BAT_TEMP_THERSHOLD = 45.
 
 
-def handle_fan(max_cpu_temp, bat_temp, fan_speed):
+def handle_fan_eon(max_cpu_temp, bat_temp, fan_speed):
   new_speed_h = next(speed for speed, temp_h in zip(_FAN_SPEEDS, _TEMP_THRS_H) if temp_h > max_cpu_temp)
   new_speed_l = next(speed for speed, temp_l in zip(_FAN_SPEEDS, _TEMP_THRS_L) if temp_l > max_cpu_temp)
 
@@ -116,6 +125,9 @@ def handle_fan(max_cpu_temp, bat_temp, fan_speed):
 
   return fan_speed
 
+def handle_fan_uno(max_cpu_temp, bat_temp, fan_speed):
+  # TODO: implement better fan control
+  return int(interp(max_cpu_temp, [40.0, 80.0], [0, 100]))
 
 def check_car_battery_voltage(should_start, health, charging_disabled, msg):
 
@@ -139,15 +151,16 @@ def check_car_battery_voltage(should_start, health, charging_disabled, msg):
 
 
 def thermald_thread():
-  setup_eon_fan()
-
   # prevent LEECO from undervoltage
-  BATT_PERC_OFF = BATT_PERC_OFF = int(kegman.conf['battPercOff'])
+  BATT_PERC_OFF = int(kegman.conf['battPercOff'])
   
+  health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
+
   # now loop
-  thermal_sock = messaging.pub_sock(service_list['thermal'].port)
-  health_sock = messaging.sub_sock(service_list['health'].port)
-  location_sock = messaging.sub_sock(service_list['gpsLocation'].port)
+  thermal_sock = messaging.pub_sock('thermal')
+  health_sock = messaging.sub_sock('health', timeout=health_timeout)
+  location_sock = messaging.sub_sock('gpsLocation')
+
   fan_speed = 0
   count = 0
 
@@ -158,11 +171,21 @@ def thermald_thread():
   thermal_status_prev = ThermalStatus.green
   usb_power = True
   usb_power_prev = True
-  health_sock.RCVTIMEO = int(1000 * 2 * DT_TRML)  # 2x the expected health frequency
+
   current_filter = FirstOrderFilter(0., CURRENT_TAU, DT_TRML)
   health_prev = None
+  fw_version_match_prev = True
   current_connectivity_alert = None
   charging_disabled = False
+  time_valid_prev = True
+  should_start_prev = False
+
+  is_uno = (read_tz(29, clip=False) < -1000)
+  if is_uno:
+    handle_fan = handle_fan_uno
+  else:
+    setup_eon_fan()
+    handle_fan = handle_fan_eon
 
   params = Params()
 
@@ -180,11 +203,10 @@ def thermald_thread():
     if health is not None:
       usb_power = health.health.usbPowerMode != log.HealthData.UsbPowerMode.client
 
-    # loggerd is gated based on free space
-    avail = get_available_percent() / 100.0
+    msg.thermal.freeSpace = get_available_percent() / 100.0  # disk space
+    msg.thermal.memUsedPercent = int(round(psutil.virtual_memory().percent))
+    msg.thermal.cpuPerc = int(round(psutil.cpu_percent()))
 
-    # thermal message now also includes free space
-    msg.thermal.freeSpace = avail
     with open("/sys/class/power_supply/battery/capacity") as f:
       msg.thermal.batteryPercent = int(f.read())
     with open("/sys/class/power_supply/battery/status") as f:
@@ -203,6 +225,7 @@ def thermald_thread():
                        msg.thermal.cpu2, msg.thermal.cpu3) / 10.0
     max_comp_temp = max(max_cpu_temp, msg.thermal.mem / 10., msg.thermal.gpu / 10.)
     bat_temp = msg.thermal.bat/1000.
+
     fan_speed = handle_fan(max_cpu_temp, bat_temp, fan_speed)
     msg.thermal.fanSpeed = fan_speed
 
@@ -230,6 +253,16 @@ def thermald_thread():
 
     # Check for last update time and display alerts if needed
     now = datetime.datetime.now()
+
+    # show invalid date/time alert
+    time_valid = now.year >= 2019
+    if time_valid and not time_valid_prev:
+      params.delete("Offroad_InvalidTime")
+    if not time_valid and time_valid_prev:
+      params.put("Offroad_InvalidTime", json.dumps(OFFROAD_ALERTS["Offroad_InvalidTime"]))
+    time_valid_prev = time_valid
+
+    # Show update prompt
     try:
       last_update = datetime.datetime.fromisoformat(params.get("LastUpdateTime", encoding='utf8'))
     except (TypeError, ValueError):
@@ -255,22 +288,37 @@ def thermald_thread():
       params.delete("Offroad_ConnectivityNeededPrompt")
 
     # start constellation of processes when the car starts
-    ignition = health is not None and health.health.started
+    ignition = health is not None and (health.health.ignitionLine or health.health.ignitionCan)
 
     do_uninstall = params.get("DoUninstall") == b"1"
     accepted_terms = params.get("HasAcceptedTerms") == terms_version
     completed_training = params.get("CompletedTrainingVersion") == training_version
+    fw_version = params.get("PandaFirmware", encoding="utf8")
+    fw_version_match = fw_version is None or fw_version.startswith(FW_VERSION)  # don't show alert is no panda is connected (None)
 
     should_start = ignition
-
-    # have we seen a panda?
-    passive = (params.get("Passive") == "1")
 
     # with 2% left, we killall, otherwise the phone will take a long time to boot
     should_start = should_start and msg.thermal.freeSpace > 0.02
 
     # confirm we have completed training and aren't uninstalling
-    should_start = should_start and accepted_terms and (passive or completed_training) and (not do_uninstall)
+    should_start = should_start and accepted_terms and completed_training and (not do_uninstall)
+
+    # check for firmware mismatch
+    #should_start = should_start and fw_version_match
+
+    # check if system time is valid
+    should_start = should_start and time_valid
+
+    # don't start while taking snapshot
+    if not should_start_prev:
+      is_taking_snapshot = params.get("IsTakingSnapshot") == b"1"
+      should_start = should_start and (not is_taking_snapshot)
+
+    if fw_version_match and not fw_version_match_prev:
+      params.delete("Offroad_PandaFirmwareMismatch")
+    if not fw_version_match and fw_version_match_prev:
+      params.put("Offroad_PandaFirmwareMismatch", json.dumps(OFFROAD_ALERTS["Offroad_PandaFirmwareMismatch"]))
 
     # if any CPU gets above 107 or the battery gets above 63, kill all processes
     # controls will warn with CPU above 95 or battery above 60
@@ -323,8 +371,10 @@ def thermald_thread():
 
     thermal_status_prev = thermal_status
     usb_power_prev = usb_power
+    fw_version_match_prev = fw_version_match
+    should_start_prev = should_start
 
-    print(msg)
+    #print(msg)
 
     # report to server once per minute
     if (count % int(60. / DT_TRML)) == 0:

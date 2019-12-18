@@ -14,10 +14,11 @@
 #include "safety/safety_chrysler.h"
 #include "safety/safety_subaru.h"
 #include "safety/safety_mazda.h"
+#include "safety/safety_volkswagen.h"
 #include "safety/safety_elm327.h"
 
 // from cereal.car.CarParams.SafetyModel
-#define SAFETY_NOOUTPUT 0U
+#define SAFETY_SILENT 0U
 #define SAFETY_HONDA 1U
 #define SAFETY_TOYOTA 2U
 #define SAFETY_ELM327 3U
@@ -29,13 +30,14 @@
 #define SAFETY_CHRYSLER 9U
 #define SAFETY_TESLA 10U
 #define SAFETY_SUBARU 11U
-#define SAFETY_GM_PASSIVE 12U
 #define SAFETY_MAZDA 13U
+#define SAFETY_VOLKSWAGEN 15U
 #define SAFETY_TOYOTA_IPAS 16U
 #define SAFETY_ALLOUTPUT 17U
 #define SAFETY_GM_ASCM 18U
+#define SAFETY_NOOUTPUT 19U
 
-uint16_t current_safety_mode = SAFETY_NOOUTPUT;
+uint16_t current_safety_mode = SAFETY_SILENT;
 const safety_hooks *current_hooks = &nooutput_hooks;
 
 void safety_rx_hook(CAN_FIFOMailBox_TypeDef *to_push){
@@ -50,14 +52,19 @@ int safety_tx_lin_hook(int lin_num, uint8_t *data, int len){
   return current_hooks->tx_lin(lin_num, data, len);
 }
 
-// -1 = Disabled (Use GPIO to determine ignition)
-// 0 = Off (not started)
-// 1 = On (started)
-int safety_ignition_hook() {
-  return current_hooks->ignition();
-}
 int safety_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   return current_hooks->fwd(bus_num, to_fwd);
+}
+
+bool addr_allowed(int addr, int bus, const AddrBus addr_list[], int len) {
+  bool allowed = false;
+  for (int i = 0; i < len; i++) {
+    if ((addr == addr_list[i].addr) && (bus == addr_list[i].bus)) {
+      allowed = true;
+      break;
+    }
+  }
+  return allowed;
 }
 
 typedef struct {
@@ -66,33 +73,37 @@ typedef struct {
 } safety_hook_config;
 
 const safety_hook_config safety_hook_registry[] = {
-  {SAFETY_NOOUTPUT, &nooutput_hooks},
+  {SAFETY_SILENT, &nooutput_hooks},
   {SAFETY_HONDA, &honda_hooks},
   {SAFETY_TOYOTA, &toyota_hooks},
   {SAFETY_ELM327, &elm327_hooks},
   {SAFETY_GM, &gm_hooks},
   {SAFETY_HONDA_BOSCH, &honda_bosch_hooks},
-  {SAFETY_FORD, &ford_hooks},
-  {SAFETY_CADILLAC, &cadillac_hooks},
   {SAFETY_HYUNDAI, &hyundai_hooks},
   {SAFETY_CHRYSLER, &chrysler_hooks},
-  {SAFETY_TESLA, &tesla_hooks},
   {SAFETY_SUBARU, &subaru_hooks},
-  {SAFETY_GM_PASSIVE, &gm_passive_hooks},
   {SAFETY_MAZDA, &mazda_hooks},
+  {SAFETY_VOLKSWAGEN, &volkswagen_hooks},
+  {SAFETY_NOOUTPUT, &nooutput_hooks},
+#ifdef ALLOW_DEBUG
+  {SAFETY_CADILLAC, &cadillac_hooks},
   {SAFETY_TOYOTA_IPAS, &toyota_ipas_hooks},
+  {SAFETY_TESLA, &tesla_hooks},
   {SAFETY_ALLOUTPUT, &alloutput_hooks},
   {SAFETY_GM_ASCM, &gm_ascm_hooks},
+  {SAFETY_FORD, &ford_hooks},
+#endif
 };
 
-int safety_set_mode(uint16_t mode, int16_t param) {
-  int set_status = -1;   // not set
+int set_safety_hooks(uint16_t mode, int16_t param) {
+  safety_mode_cnt = 0U;  // reset safety mode timer
+  int set_status = -1;  // not set
   int hook_config_count = sizeof(safety_hook_registry) / sizeof(safety_hook_config);
   for (int i = 0; i < hook_config_count; i++) {
     if (safety_hook_registry[i].id == mode) {
       current_hooks = safety_hook_registry[i].hooks;
       current_safety_mode = safety_hook_registry[i].id;
-      set_status = 0;    // set
+      set_status = 0;  // set
       break;
     }
   }
@@ -210,7 +221,7 @@ float interpolate(struct lookup_t xy, float x) {
         float y0 = xy.y[i];
         float dx = xy.x[i+1] - x0;
         float dy = xy.y[i+1] - y0;
-        // dx should not be zero as xy.x is supposed ot be monotonic
+        // dx should not be zero as xy.x is supposed to be monotonic
         if (dx <= 0.) {
           dx = 0.0001;
         }

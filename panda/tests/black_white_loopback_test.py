@@ -11,9 +11,6 @@ import time
 import random
 import argparse
 
-from hexdump import hexdump
-from itertools import permutations
-
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from panda import Panda
 
@@ -70,7 +67,7 @@ def run_test(sleep_duration):
     print("Number of cycles:", counter, "Non-zero bus errors:", nonzero_bus_errors, "Zero bus errors:", zero_bus_errors, "Content errors:", content_errors)
 
     # Toggle relay
-    black_panda.set_safety_mode(Panda.SAFETY_NOOUTPUT)
+    black_panda.set_safety_mode(Panda.SAFETY_SILENT)
     time.sleep(1)
     black_panda.set_safety_mode(Panda.SAFETY_ALLOUTPUT)
     time.sleep(1)
@@ -118,10 +115,10 @@ def test_buses(black_panda, other_panda, direction, test_array, sleep_duration):
 
     # check for receive
     if direction:
-      cans_echo = black_panda.can_recv()
+      _ = black_panda.can_recv()  # can echo
       cans_loop = other_panda.can_recv()
     else:
-      cans_echo = other_panda.can_recv()
+      _ = other_panda.can_recv()  # can echo
       cans_loop = black_panda.can_recv()
 
     loop_buses = []

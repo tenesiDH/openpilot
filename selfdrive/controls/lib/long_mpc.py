@@ -2,7 +2,7 @@ import os
 from common.numpy_fast import interp
 import math
 
-import selfdrive.messaging as messaging
+import cereal.messaging as messaging
 from selfdrive.swaglog import cloudlog
 from common.realtime import sec_since_boot
 from selfdrive.controls.lib.radar_helpers import _LEAD_ACCEL_TAU

@@ -2,8 +2,8 @@ from cereal import car
 from collections import defaultdict
 from common.numpy_fast import interp
 from common.kalman.simple_kalman import KF1D
-from selfdrive.can.can_define import CANDefine
-from selfdrive.can.parser import CANParser
+from opendbc.can.can_define import CANDefine
+from opendbc.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from selfdrive.car.honda.values import CAR, DBC, STEER_THRESHOLD, SPEED_FACTOR, HONDA_BOSCH
 from selfdrive.kegman_conf import kegman_conf
@@ -152,7 +152,7 @@ def get_can_signals(CP):
     signals += [("MAIN_ON", "SCM_FEEDBACK", 0),
                 ("EPB_STATE", "EPB_STATUS", 0)]
     checks += [("EPB_STATUS", 50)]
-  elif CP.carFingerprint == CAR.PILOT:
+  elif CP.carFingerprint in (CAR.PILOT, CAR.PILOT_2018):
     signals += [("MAIN_ON", "SCM_BUTTONS", 0),
                 ("CAR_GAS", "GAS_PEDAL_2", 0)]
   elif CP.carFingerprint == CAR.ODYSSEY_CHN:
@@ -177,6 +177,20 @@ def get_can_parser(CP):
 
 def get_cam_can_parser(CP):
   signals = []
+
+  if CP.carFingerprint in HONDA_BOSCH:
+    signals += [("ACCEL_COMMAND", "ACC_CONTROL", 0),
+                ("AEB_STATUS", "ACC_CONTROL", 0)]
+  else:
+    signals += [("COMPUTER_BRAKE", "BRAKE_COMMAND", 0),
+                ("AEB_REQ_1", "BRAKE_COMMAND", 0),
+                ("FCW", "BRAKE_COMMAND", 0),
+                ("CHIME", "BRAKE_COMMAND", 0),
+                ("FCM_OFF", "ACC_HUD", 0),
+                ("FCM_OFF_2", "ACC_HUD", 0),
+                ("FCM_PROBLEM", "ACC_HUD", 0),
+                ("ICONS", "ACC_HUD", 0)]
+
 
   # all hondas except CRV, RDX and 2019 Odyssey@China use 0xe4 for steering
   checks = [(0xe4, 100)]
@@ -370,7 +384,7 @@ class CarState():
     self.pcm_acc_status = cp.vl["POWERTRAIN_DATA"]['ACC_STATUS']
 
     # Gets rid of Pedal Grinding noise when brake is pressed at slow speeds for some models
-    if self.CP.carFingerprint in (CAR.PILOT, CAR.PILOT_2019, CAR.RIDGELINE):
+    if self.CP.carFingerprint in (CAR.PILOT, CAR.PILOT_2018, CAR.PILOT_2019, CAR.RIDGELINE):
       if self.user_brake > 0.05:
         self.brake_pressed = 1
         
@@ -400,18 +414,15 @@ class CarState():
     # TODO: discover the CAN msg that has the imperial unit bit for all other cars
     self.is_metric = not cp.vl["HUD_SETTING"]['IMPERIAL_UNIT'] if self.CP.carFingerprint in (CAR.CIVIC) else False
 
-# carstate standalone tester
-if __name__ == '__main__':
-  import zmq
-  context = zmq.Context()
+    if self.CP.carFingerprint in HONDA_BOSCH:
+      self.stock_aeb = bool(cp_cam.vl["ACC_CONTROL"]["AEB_STATUS"] and cp_cam.vl["ACC_CONTROL"]["ACCEL_COMMAND"] < -1e-5)
+    else:
+      self.stock_aeb = bool(cp_cam.vl["BRAKE_COMMAND"]["AEB_REQ_1"] and cp_cam.vl["BRAKE_COMMAND"]["COMPUTER_BRAKE"] > 1e-5)
 
-  class CarParams():
-    def __init__(self):
-      self.carFingerprint = "HONDA CIVIC 2016 TOURING"
-      self.enableGasInterceptor = 0
-  CP = CarParams()
-  CS = CarState(CP)
-
-  # while 1:
-  #   CS.update()
-  #   time.sleep(0.01)
+    if self.CP.carFingerprint in HONDA_BOSCH:
+      self.stock_hud = False
+      self.stock_fcw = False
+    else:
+      self.stock_fcw = bool(cp_cam.vl["BRAKE_COMMAND"]["FCW"] != 0)
+      self.stock_hud = cp_cam.vl["ACC_HUD"]
+      self.stock_brake = cp_cam.vl["BRAKE_COMMAND"]

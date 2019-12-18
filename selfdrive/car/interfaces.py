@@ -14,6 +14,10 @@ class CarInterfaceBase():
     return 1.
 
   @staticmethod
+  def compute_gb(accel, speed):
+    raise NotImplementedError
+
+  @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), vin="", has_relay=False):
     raise NotImplementedError
 
@@ -29,11 +33,12 @@ class RadarInterfaceBase():
   def __init__(self, CP):
     self.pts = {}
     self.delay = 0
+    self.radar_ts = CP.radarTimeStep
 
   def update(self, can_strings):
     ret = car.RadarData.new_message()
 
     if 'NO_RADAR_SLEEP' not in os.environ:
-      time.sleep(0.05)  # radard runs on RI updates
+      time.sleep(self.radar_ts)  # radard runs on RI updates
 
     return ret

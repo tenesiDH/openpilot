@@ -97,6 +97,9 @@ class CarInterface(CarInterfaceBase):
     ret.isPandaBlack = has_relay
 
     ret.enableCruise = False
+    # GM port is considered a community feature, since it disables AEB;
+    # TODO: make a port that uses a car harness and it only intercepts the camera
+    ret.communityFeature = True
 
     # Presence of a camera on the object bus is ok.
     # Have to go to read_only if ASCM is online (ACC-enabled cars),
@@ -106,7 +109,13 @@ class CarInterface(CarInterfaceBase):
                        candidate == CAR.CADILLAC_CT6
     ret.openpilotLongitudinalControl = ret.enableCamera
     tire_stiffness_factor = 0.444  # not optimized yet
-    ret.safetyModelPassive = car.CarParams.SafetyModel.gmPassive
+
+
+    # same tuning for Volt and CT6 for now
+    ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
+    ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
+    ret.steerRateCost = 1.0
 
     if candidate == CAR.VOLT:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -117,6 +126,9 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 15.7
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12], [0.05]]
+      ret.steerRateCost = 0.7
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -204,13 +216,12 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.deadzoneBP = [0.]
     ret.longitudinalTuning.deadzoneV = [0.]
 
-    ret.steerLimitAlert = True
-
     ret.stoppingControl = True
     ret.startAccel = 0.8
 
     ret.steerActuatorDelay = 0.1  # Default delay, not measured yet
-    ret.steerRateCost = 1.0
+    ret.steerLimitTimer = 0.4
+    ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
     ret.steerControlType = car.CarParams.SteerControlType.torque
 
     return ret
@@ -253,6 +264,7 @@ class CarInterface(CarInterfaceBase):
     # timer resets when the user uses the steering wheel.
     ret.steeringPressed = self.CS.steer_override
     ret.steeringTorque = self.CS.steer_torque_driver
+    ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
     # cruise state
     ret.cruiseState.available = bool(self.CS.main_on)
@@ -316,8 +328,8 @@ class CarInterface(CarInterfaceBase):
 
     events = []
     
-    if cruiseEnabled and (self.CS.left_blinker_on or self.CS.right_blinker_on):
-       events.append(create_event('manualSteeringRequiredBlinkersOn', [ET.WARNING]))
+    #if cruiseEnabled and (self.CS.left_blinker_on or self.CS.right_blinker_on):
+    #   events.append(create_event('manualSteeringRequiredBlinkersOn', [ET.WARNING]))
 
     if self.CS.steer_error:
       events.append(create_event('steerUnavailable', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))

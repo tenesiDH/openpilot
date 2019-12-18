@@ -41,7 +41,8 @@ button_delay = 0.2
 kegman = kegman_conf()
 kegman.conf['tuneGernby'] = "1"
 #kegman.write_config(kegman.conf)
-param = ["Kp", "Ki", "Kf", "steerRatio", "steerRateCost", "deadzone", "slowOnCurves", \
+param = ["Kp", "Ki", "Kf", "steerRatio", "sR_boost", "sR_BP0", \
+         "sR_BP1", "sR_time", "steerRateCost", "deadzone", "slowOnCurves", \
          "1barBP0", "1barBP1", "1barMax", "2barBP0", "2barBP1", \
          "2barMax", "3barBP0", "3barBP1", "3barMax", \
          "1barHwy", "2barHwy", "3barHwy"]
@@ -230,6 +231,18 @@ while True:
     
   if float(kegman.conf['Kf']) < 0:
     kegman.conf['Kf'] = "0"    
+    
+  if float(kegman.conf['sR_boost']) < 0:
+    kegman.conf['sR_boost'] = "0"
+    
+  if float(kegman.conf['sR_BP0']) < 0:
+    kegman.conf['sR_BP0'] = "0"
+    
+  if float(kegman.conf['sR_BP1']) < 0:
+    kegman.conf['sR_BP1'] = "0"
+    
+  if float(kegman.conf['sR_time']) < 1:
+    kegman.conf['sR_time'] = "1"
 
   #if float(kegman.conf['Kf']) < 0.00001:
   kegman.conf['Kf'] = str("{:.5f}".format(float(kegman.conf['Kf'])))

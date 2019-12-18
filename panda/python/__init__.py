@@ -1,5 +1,5 @@
 # python library to interface with panda
-
+import datetime
 import binascii
 import struct
 import hashlib
@@ -10,10 +10,10 @@ import time
 import traceback
 import subprocess
 from .dfu import PandaDFU
-from .esptool import ESPROM, CesantaFlasher
-from .flash_release import flash_release
-from .update import ensure_st_up_to_date
-from .serial import PandaSerial
+from .esptool import ESPROM, CesantaFlasher  # noqa: F401
+from .flash_release import flash_release  # noqa: F401
+from .update import ensure_st_up_to_date  # noqa: F401
+from .serial import PandaSerial  # noqa: F401
 from .isotp import isotp_send, isotp_recv
 
 __version__ = '0.0.9'
@@ -27,10 +27,10 @@ def build_st(target, mkfile="Makefile"):
   from panda import BASEDIR
   cmd = 'cd %s && make -f %s clean && make -f %s %s >/dev/null' % (os.path.join(BASEDIR, "board"), mkfile, mkfile, target)
   try:
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-  except subprocess.CalledProcessError as exception:
-    output = exception.output
-    returncode = exception.returncode
+    _ = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+  except subprocess.CalledProcessError:
+    #output = exception.output
+    #returncode = exception.returncode
     raise
 
 def parse_can_buffer(dat):
@@ -110,7 +110,7 @@ class WifiHandle(object):
 class Panda(object):
 
   # matches cereal.car.CarParams.SafetyModel
-  SAFETY_NOOUTPUT = 0
+  SAFETY_SILENT = 0
   SAFETY_HONDA = 1
   SAFETY_TOYOTA = 2
   SAFETY_ELM327 = 3
@@ -122,11 +122,12 @@ class Panda(object):
   SAFETY_CHRYSLER = 9
   SAFETY_TESLA = 10
   SAFETY_SUBARU = 11
-  SAFETY_GM_PASSIVE = 12
   SAFETY_MAZDA = 13
+  SAFETY_VOLKSWAGEN = 15
   SAFETY_TOYOTA_IPAS = 16
   SAFETY_ALLOUTPUT = 17
   SAFETY_GM_ASCM = 18
+  SAFETY_NOOUTPUT = 19
 
   SERIAL_DEBUG = 0
   SERIAL_ESP = 1
@@ -144,6 +145,7 @@ class Panda(object):
   HW_TYPE_GREY_PANDA = b'\x02'
   HW_TYPE_BLACK_PANDA = b'\x03'
   HW_TYPE_PEDAL = b'\x04'
+  HW_TYPE_UNO = b'\x05'
 
   def __init__(self, serial=None, claim=True):
     self._serial = serial
@@ -344,18 +346,25 @@ class Panda(object):
   # ******************* health *******************
 
   def health(self):
-    dat = self._handle.controlRead(Panda.REQUEST_IN, 0xd2, 0, 0, 24)
-    a = struct.unpack("IIIIIBBBB", dat)
+    dat = self._handle.controlRead(Panda.REQUEST_IN, 0xd2, 0, 0, 37)
+    a = struct.unpack("IIIIIIIBBBBBBBBB", dat)
     return {
-      "voltage": a[0],
-      "current": a[1],
-      "can_send_errs": a[2],
-      "can_fwd_errs": a[3],
-      "gmlan_send_errs": a[4],
-      "started": a[5],
-      "controls_allowed": a[6],
-      "gas_interceptor_detected": a[7],
-      "car_harness_status": a[8]
+      "uptime": a[0],
+      "voltage": a[1],
+      "current": a[2],
+      "can_send_errs": a[3],
+      "can_fwd_errs": a[4],
+      "gmlan_send_errs": a[5],
+      "faults": a[6],
+      "ignition_line": a[7],
+      "ignition_can": a[8],
+      "controls_allowed": a[9],
+      "gas_interceptor_detected": a[10],
+      "car_harness_status": a[11],
+      "usb_power_mode": a[12],
+      "safety_mode": a[13],
+      "fault_status": a[14],
+      "power_save_enabled": a[15]
     }
 
   # ******************* control *******************
@@ -370,6 +379,17 @@ class Panda(object):
   def get_version(self):
     return self._handle.controlRead(Panda.REQUEST_IN, 0xd6, 0, 0, 0x40).decode('utf8')
 
+  @staticmethod
+  def get_signature_from_firmware(fn):
+    f = open(fn, 'rb')
+    f.seek(-128, 2)  # Seek from end of file
+    return f.read(128)
+
+  def get_signature(self):
+    part_1 = self._handle.controlRead(Panda.REQUEST_IN, 0xd3, 0, 0, 0x40)
+    part_2 = self._handle.controlRead(Panda.REQUEST_IN, 0xd4, 0, 0, 0x40)
+    return part_1 + part_2
+
   def get_type(self):
     return self._handle.controlRead(Panda.REQUEST_IN, 0xc1, 0, 0, 0x40)
 
@@ -382,11 +402,17 @@ class Panda(object):
   def is_black(self):
     return self.get_type() == Panda.HW_TYPE_BLACK_PANDA
 
+  def is_uno(self):
+    return self.get_type() == Panda.HW_TYPE_UNO
+
+  def has_obd(self):
+    return (self.is_uno() or self.is_black())
+
   def get_serial(self):
     dat = self._handle.controlRead(Panda.REQUEST_IN, 0xd0, 0, 0, 0x20)
     hashsig, calc_hash = dat[0x1c:], hashlib.sha1(dat[0:0x1c]).digest()[0:4]
     assert(hashsig == calc_hash)
-    return [dat[0:0x10], dat[0x10:0x10+10]]
+    return [dat[0:0x10].decode("utf8"), dat[0x10:0x10+10].decode("utf8")]
 
   def get_secret(self):
     return self._handle.controlRead(Panda.REQUEST_IN, 0xd0, 1, 0, 0x10)
@@ -396,6 +422,9 @@ class Panda(object):
   def set_usb_power(self, on):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xe6, int(on), 0, b'')
 
+  def set_power_save(self, power_save_enabled=0):
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xe7, int(power_save_enabled), 0, b'')
+
   def set_esp_power(self, on):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xd9, int(on), 0, b'')
 
@@ -403,7 +432,7 @@ class Panda(object):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xda, int(bootmode), 0, b'')
     time.sleep(0.2)
 
-  def set_safety_mode(self, mode=SAFETY_NOOUTPUT):
+  def set_safety_mode(self, mode=SAFETY_SILENT):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xdc, mode, 0, b'')
 
   def set_can_forwarding(self, from_bus, to_bus):
@@ -557,7 +586,7 @@ class Panda(object):
   def kline_ll_recv(self, cnt, bus=2):
     echo = bytearray()
     while len(echo) != cnt:
-      ret = str(self._handle.controlRead(Panda.REQUEST_OUT, 0xe0, bus, 0, cnt-len(echo)))
+      ret = self._handle.controlRead(Panda.REQUEST_OUT, 0xe0, bus, 0, cnt-len(echo))
       if DEBUG and len(ret) > 0:
         print("kline recv: " + binascii.hexlify(ret))
       echo += ret
@@ -577,7 +606,7 @@ class Panda(object):
       ts = x[i:i+0xf]
       if DEBUG:
         print("kline send: " + binascii.hexlify(ts))
-      self._handle.bulkWrite(2, chr(bus).encode()+ts)
+      self._handle.bulkWrite(2, bytes([bus]) + ts)
       echo = self.kline_ll_recv(len(ts), bus=bus)
       if echo != ts:
         print("**** ECHO ERROR %d ****" % i)
@@ -592,3 +621,35 @@ class Panda(object):
 
   def send_heartbeat(self):
     self._handle.controlWrite(Panda.REQUEST_OUT, 0xf3, 0, 0, b'')
+
+  # ******************* RTC *******************
+  def set_datetime(self, dt):
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa1, int(dt.year), 0, b'')
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa2, int(dt.month), 0, b'')
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa3, int(dt.day), 0, b'')
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa4, int(dt.isoweekday()), 0, b'')
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa5, int(dt.hour), 0, b'')
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa6, int(dt.minute), 0, b'')
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xa7, int(dt.second), 0, b'')
+
+  def get_datetime(self):
+    dat = self._handle.controlRead(Panda.REQUEST_IN, 0xa0, 0, 0, 8)
+    a = struct.unpack("HBBBBBB", dat)
+    return datetime.datetime(a[0], a[1], a[2], a[4], a[5], a[6])
+
+  # ******************* IR *******************
+  def set_ir_power(self, percentage):
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xb0, int(percentage), 0, b'')
+
+  # ******************* Fan ******************
+  def set_fan_power(self, percentage):
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xb1, int(percentage), 0, b'')
+
+  def get_fan_rpm(self):
+    dat = self._handle.controlRead(Panda.REQUEST_IN, 0xb2, 0, 0, 2)
+    a = struct.unpack("H", dat)
+    return a[0]
+
+# ****************** Phone *****************
+  def set_phone_power(self, enabled):
+    self._handle.controlWrite(Panda.REQUEST_OUT, 0xb3, int(enabled), 0, b'')
