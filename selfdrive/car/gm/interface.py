@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 from cereal import car
+from common.numpy_fast import interp
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import create_event, EventTypes as ET
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.car.gm.values import DBC, CAR, ECU, ECU_FINGERPRINT, \
                                     SUPERCRUISE_CARS, AccState, FINGERPRINTS
-from selfdrive.car.gm.carstate import CarState, CruiseButtons, get_powertrain_can_parser
+from selfdrive.car.gm.carstate import CarState, CruiseButtons, get_powertrain_can_parser, get_chassis_can_parser
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, is_ecu_disconnected, gen_empty_fingerprint
 from selfdrive.car.interfaces import CarInterfaceBase
+
+FOLLOW_AGGRESSION = 0.15 # (Acceleration/Decel aggression) Lower is more aggressive
+
 
 ButtonType = car.CarState.ButtonEvent.Type
 
@@ -32,6 +36,7 @@ class CarInterface(CarInterfaceBase):
     self.CS = CarState(CP, canbus)
     self.VM = VehicleModel(CP)
     self.pt_cp = get_powertrain_can_parser(CP, canbus)
+    self.ch_cp = get_chassis_can_parser(CP, canbus)
     self.ch_cp_dbc_name = DBC[CP.carFingerprint]['chassis']
 
     self.CC = None
@@ -40,7 +45,47 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def compute_gb(accel, speed):
-    return float(accel) / 4.0
+  	# Ripped from compute_gb_honda in Honda's interface.py. Works well off shelf but may need more tuning
+    creep_brake = 0.0
+    creep_speed = 2.68
+    creep_brake_value = 0.10
+    if speed < creep_speed:
+      creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
+    return float(accel) / 4.8 - creep_brake
+
+  @staticmethod
+  
+  
+  def calc_accel_override(a_ego, a_target, v_ego, v_target):
+
+    # normalized max accel. Allowing max accel at low speed causes speed overshoots
+    max_accel_bp = [10, 20]    # m/s
+    max_accel_v = [0.85, 1.0] # unit of max accel
+    max_accel = interp(v_ego, max_accel_bp, max_accel_v)
+
+    # limit the pcm accel cmd if:
+    # - v_ego exceeds v_target, or
+    # - a_ego exceeds a_target and v_ego is close to v_target
+
+    eA = a_ego - a_target
+    valuesA = [1.0, 0.1]
+    bpA = [0.3, 1.1]
+
+    eV = v_ego - v_target
+    valuesV = [1.0, 0.1]
+    bpV = [0.0, 0.5]
+
+    valuesRangeV = [1., 0.]
+    bpRangeV = [-1., 0.]
+
+    # only limit if v_ego is close to v_target
+    speedLimiter = interp(eV, bpV, valuesV)
+    accelLimiter = max(interp(eA, bpA, valuesA), interp(eV, bpRangeV, valuesRangeV))
+
+    # accelOverride is more or less the max throttle allowed to pcm: usually set to a constant
+    # unless aTargetMax is very high and then we scale with it; this help in quicker restart
+
+    return float(max(max_accel, a_target / FOLLOW_AGGRESSION)) * min(speedLimiter, accelLimiter)
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), vin="", has_relay=False):
@@ -65,15 +110,25 @@ class CarInterface(CarInterfaceBase):
     ret.openpilotLongitudinalControl = ret.enableCamera
     tire_stiffness_factor = 0.444  # not optimized yet
 
+
+    # same tuning for Volt and CT6 for now
+    ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
+    ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
+    ret.steerRateCost = 1.0
+
     if candidate == CAR.VOLT:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
-      ret.minEnableSpeed = 18 * CV.MPH_TO_MS
+      ret.minEnableSpeed = 8 * CV.MPH_TO_MS
       ret.mass = 1607. + STD_CARGO_KG
       ret.safetyModel = car.CarParams.SafetyModel.gm
       ret.wheelbase = 2.69
       ret.steerRatio = 15.7
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12], [0.05]]
+      ret.steerRateCost = 0.7
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -150,7 +205,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerMaxBP = [0.]  # m/s
     ret.steerMaxV = [1.]
     ret.gasMaxBP = [0.]
-    ret.gasMaxV = [.5]
+    ret.gasMaxV = [0.5]
     ret.brakeMaxBP = [0.]
     ret.brakeMaxV = [1.]
 
@@ -165,7 +220,6 @@ class CarInterface(CarInterfaceBase):
     ret.startAccel = 0.8
 
     ret.steerActuatorDelay = 0.1  # Default delay, not measured yet
-    ret.steerRateCost = 1.0
     ret.steerLimitTimer = 0.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
     ret.steerControlType = car.CarParams.SteerControlType.torque
@@ -201,7 +255,8 @@ class CarInterface(CarInterfaceBase):
     # brake pedal
     ret.brake = self.CS.user_brake / 0xd0
     ret.brakePressed = self.CS.brake_pressed
-
+    ret.brakeLights = self.CS.frictionBrakesActive
+    
     # steering wheel
     ret.steeringAngle = self.CS.angle_steers
 
@@ -215,13 +270,14 @@ class CarInterface(CarInterfaceBase):
     ret.cruiseState.available = bool(self.CS.main_on)
     cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
     ret.cruiseState.enabled = cruiseEnabled
-    ret.cruiseState.standstill = self.CS.pcm_acc_status == 4
+    ret.cruiseState.standstill = False
 
     ret.leftBlinker = self.CS.left_blinker_on
     ret.rightBlinker = self.CS.right_blinker_on
     ret.doorOpen = not self.CS.door_all_closed
     ret.seatbeltUnlatched = not self.CS.seatbelt
     ret.gearShifter = self.CS.gear_shifter
+    ret.readdistancelines = self.CS.follow_level
 
     buttonEvents = []
 
@@ -251,6 +307,8 @@ class CarInterface(CarInterfaceBase):
         if not (cruiseEnabled and self.CS.standstill):
           be.type = ButtonType.accelCruise # Suppress resume button if we're resuming from stop so we don't adjust speed.
       elif but == CruiseButtons.DECEL_SET:
+        if not cruiseEnabled and not self.CS.lkMode:
+          self.lkMode = True
         be.type = ButtonType.decelCruise
       elif but == CruiseButtons.CANCEL:
         be.type = ButtonType.cancel
@@ -259,8 +317,20 @@ class CarInterface(CarInterfaceBase):
       buttonEvents.append(be)
 
     ret.buttonEvents = buttonEvents
+    
+    if cruiseEnabled and self.CS.lka_button and self.CS.lka_button != self.CS.prev_lka_button:
+      self.CS.lkMode = not self.CS.lkMode
+
+    if self.CS.distance_button and self.CS.distance_button != self.CS.prev_distance_button:
+       self.CS.follow_level -= 1
+       if self.CS.follow_level < 1:
+         self.CS.follow_level = 3
 
     events = []
+    
+    #if cruiseEnabled and (self.CS.left_blinker_on or self.CS.right_blinker_on):
+    #   events.append(create_event('manualSteeringRequiredBlinkersOn', [ET.WARNING]))
+
     if self.CS.steer_error:
       events.append(create_event('steerUnavailable', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE, ET.PERMANENT]))
     if self.CS.steer_not_allowed:
