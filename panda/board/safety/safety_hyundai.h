@@ -56,6 +56,7 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
     hyundai_cruise_engaged_last = cruise_engaged;
   }
+
 }
 
 static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
