@@ -3,8 +3,8 @@ const int HYUNDAI_MAX_RT_DELTA = 112;          // max delta torque allowed for r
 const uint32_t HYUNDAI_RT_INTERVAL = 250000;    // 250ms between real time checks
 const int HYUNDAI_MAX_RATE_UP = 3;
 const int HYUNDAI_MAX_RATE_DOWN = 7;
-const int HYUNDAI_DRIVER_TORQUE_ALLOWANCE = 50;
-const int HYUNDAI_DRIVER_TORQUE_FACTOR = 2;
+const int HYUNDAI_DRIVER_TORQUE_ALLOWANCE = 0.5;
+const int HYUNDAI_DRIVER_TORQUE_FACTOR = 200;
 
 const AddrBus HYUNDAI_TX_MSGS[] = {{832, 0}, {832, 1}, {1265, 1}, {1265, 2}, {1057, 0}};
 
@@ -20,8 +20,8 @@ static void hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus = GET_BUS(to_push);
   int addr = GET_ADDR(to_push);
 
-  if (addr == 897) {
-    int torque_driver_new = ((GET_BYTES_04(to_push) >> 11) & 0xfff) - 2048;
+  if (addr == 593) {
+    int torque_driver_new = ((GET_BYTES_04(to_push) & 0x7ff) * 0.0078125) - 8.0;
     // update array of samples
     update_sample(&hyundai_torque_driver, torque_driver_new);
   }
