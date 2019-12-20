@@ -112,7 +112,6 @@ def get_mdps_parser(CP):
 
   checks = [
     ("MDPS12", 50),
-    ("MDPS11", 100),
   ]
 
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 1)
