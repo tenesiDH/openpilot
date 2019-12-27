@@ -193,11 +193,17 @@ class SubMaster():
   def all_alive(self, service_list=None):
     if service_list is None:  # check all
       service_list = self.alive.keys()
+    for s in service_list:
+      if s not in self.ignore_alive and not self.alive[s]:
+        print("{} not alive".format(s))
     return all(self.alive[s] for s in service_list if s not in self.ignore_alive)
 
   def all_valid(self, service_list=None):
     if service_list is None:  # check all
       service_list = self.valid.keys()
+    for s in service_list:
+      if not self.valid[s]:
+        print("{} not valid".format(s))
     return all(self.valid[s] for s in service_list)
 
   def all_alive_and_valid(self, service_list=None):
