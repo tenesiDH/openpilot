@@ -85,9 +85,6 @@ def get_can_parser(CP):
     ("CF_Mdps_FailStat", "MDPS12", 0),
     ("CR_Mdps_OutTq", "MDPS12", 0)
     ]
-    checks += [
-      ("MDPS12", 50)
-    ]
   if CP.sccBus == -1:
     signals += [
       ("CRUISE_LAMP_M", "EMS16", 0),
@@ -123,10 +120,6 @@ def get_can_parser(CP):
       ("AEB_StopReq", "SCC12", 0),
       ("CR_VSM_Alive", "SCC12", 0),
       ("CR_VSM_ChkSum", "SCC12", 0),
-    ]
-    checks += [
-      ("SCC11", 50),
-      ("SCC12", 50),
     ]
   if CP.carFingerprint in FEATURES["use_cluster_gears"]:
     signals += [
@@ -166,9 +159,6 @@ def get_can2_parser(CP):
     ("CF_Mdps_FailStat", "MDPS12", 0),
     ("CR_Mdps_OutTq", "MDPS12", 0)
     ]
-    checks += [
-      ("MDPS12", 50)
-    ]
   if CP.sccBus == 1:
     signals += [
       ("MainMode_ACC", "SCC11", 0),
@@ -199,10 +189,6 @@ def get_can2_parser(CP):
       ("AEB_StopReq", "SCC12", 0),
       ("CR_VSM_Alive", "SCC12", 0),
       ("CR_VSM_ChkSum", "SCC12", 0)
-    ]
-    checks += [
-      ("SCC11", 50),
-      ("SCC12", 50),
     ]
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 1)
 
@@ -258,10 +244,6 @@ def get_camera_parser(CP):
       ("AEB_StopReq", "SCC12", 0),
       ("CR_VSM_Alive", "SCC12", 0),
       ("CR_VSM_ChkSum", "SCC12", 0),
-    ]
-    checks += [
-      ("SCC11", 50),
-      ("SCC12", 50),
     ]
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 2)
 
