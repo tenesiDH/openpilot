@@ -410,7 +410,7 @@ void CAN3_RX0_IRQ_Handler(void) { can_rx(2); }
 void CAN3_SCE_IRQ_Handler(void) { can_sce(CAN3); }
 
 void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook) {
-  if (skip_tx_hook || safety_tx_hook(to_push) != 0) {
+  if ((safety_tx_hook(to_push) != 0) || skip_tx_hook) { // run tx_hook then skip it 
     if (bus_number < BUS_MAX) {
       // add CAN packet to send queue
       // bus number isn't passed through
