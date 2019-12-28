@@ -72,7 +72,7 @@ static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   if (bus_num == 0 && (HKG_forward_BUS1 || HKG_forward_BUS2)) {
     bus_fwd = (HKG_forward_BUS1 && HKG_forward_BUS2) ? 12 : HKG_bus1 + HKG_bus2;
   }
-  if (bus_num == 1 && HKG_forward_BUS1) {
+  if (bus_num == 1 && HKG_forward_BUS1 && ((addr == 593 )|| (addr == 688) || (addr == 897)) ) {
     bus_fwd = HKG_bus2 * 10;
   }
   if (bus_num == 2 && HKG_forward_BUS2) {
