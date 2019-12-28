@@ -156,7 +156,31 @@ static void alloutput_init(int16_t param) {
 }
 
 static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
-  UNUSED(to_send);
+  int addr = GET_ADDR(to_send);
+  int bus = GET_BUS(to_send);
+
+  if ((addr == 832) && (bus == 1)) {
+    uint8_t dat[8];
+    int new_checksum = 0;
+    for (int i=0; i<8; i++) {
+      dat[i] = GET_BYTE(to_send, i);
+    }
+    dat[0] &= ~0x03;
+    dat[0] |= 0x02;
+    dat[3] &= ~0xE0;
+    dat[4] &= ~0x0C;
+    dat[4] |= 0x04;
+    dat[6] = new_checksum;
+    dat[7] = 0x02;
+    for (int i=0; i<6; i++) {
+      new_checksum += dat[i];
+    }
+    dat[6] = new_checksum % 256;
+
+    to_send->RDLR = dat[0] | dat[1] << 8 | dat[2] << 16 | dat[3] << 24;
+    to_send->RDHR = dat[4] | dat[5] << 8 | dat[6] << 16 | dat[7] << 24;
+  }
+
   return true;
 }
 
