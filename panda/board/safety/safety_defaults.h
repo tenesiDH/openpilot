@@ -106,7 +106,7 @@ static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     uint8_t dat[8];
     int New_Chksum2 = 0;
     for (int i=0; i<8; i++) {
-      dat[i] = GET_BYTE(to_fwd, i);
+      dat[i] = GET_BYTE(to_send, i);
     }
     if (HKG_MDPS12_cnt > 330) {
       int StrColTq = dat[0] | (dat[1] & 0x7) << 8;
@@ -123,10 +123,10 @@ static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       dat[6] &= 0xF;
       dat[6] |= (OutTq & 0xF) << 4;
       dat[7] = OutTq >> 4;
-      to_fwd->RDLR &= 0xFFF800;
-      to_fwd->RDLR |= StrColTq;
-      to_fwd->RDHR &= 0xFFFFF;
-      to_fwd->RDHR |= OutTq << 20;
+      to_send->RDLR &= 0xFFF800;
+      to_send->RDLR |= StrColTq;
+      to_send->RDHR &= 0xFFFFF;
+      to_send->RDHR |= OutTq << 20;
       HKG_last_StrColT = StrColTq;
       dat[3] = 0;
       if (!HKG_MDPS12_checksum) { 
@@ -154,7 +154,7 @@ static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
         crc %= 256;
         New_Chksum2 = crc;
       }
-      to_fwd->RDLR |= New_Chksum2 << 24;
+      to_send->RDLR |= New_Chksum2 << 24;
     }
     HKG_MDPS12_cnt += 1;
     HKG_MDPS12_cnt %= 345;
