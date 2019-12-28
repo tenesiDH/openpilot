@@ -78,8 +78,31 @@ static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   if (bus_num == 2 && HKG_forward_BUS2) {
     bus_fwd = HKG_bus1 * 10;
   }
-    // Code for LKA/LFA/HDA anti-nagging.
-  if (addr == 593 && bus_fwd != -1) {
+  return bus_fwd;
+}
+
+const safety_hooks nooutput_hooks = {
+  .init = nooutput_init,
+  .rx = default_rx_hook,
+  .tx = nooutput_tx_hook,
+  .tx_lin = nooutput_tx_lin_hook,
+  .fwd = default_fwd_hook,
+};
+
+// *** all output safety mode ***
+
+static void alloutput_init(int16_t param) {
+  UNUSED(param);
+  controls_allowed = true;
+  relay_malfunction = false;
+}
+
+static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
+  int addr = GET_ADDR(to_send);
+  int bus = GET_BUS(to_send);
+
+  // Code for LKA/LFA/HDA anti-nagging.
+  if (addr == 593 && bus == 2) {
     uint8_t dat[8];
     int New_Chksum2 = 0;
     for (int i=0; i<8; i++) {
@@ -136,27 +159,6 @@ static int default_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
     HKG_MDPS12_cnt += 1;
     HKG_MDPS12_cnt %= 345;
   }
-  return bus_fwd;
-}
-
-const safety_hooks nooutput_hooks = {
-  .init = nooutput_init,
-  .rx = default_rx_hook,
-  .tx = nooutput_tx_hook,
-  .tx_lin = nooutput_tx_lin_hook,
-  .fwd = default_fwd_hook,
-};
-
-// *** all output safety mode ***
-
-static void alloutput_init(int16_t param) {
-  UNUSED(param);
-  controls_allowed = true;
-  relay_malfunction = false;
-}
-
-static int alloutput_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
-  UNUSED(to_send);
   return true;
 }
 
